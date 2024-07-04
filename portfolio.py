@@ -128,8 +128,8 @@ This can be particularly relevant for investors whose own perceptions of climate
 Here's a straightforward strategy for hedging:
 
 - **Baseline Portfolio**: Consider your initial portfolio which is assumed to be negatively correlated with climate risk concerns.
-- **Climate Risk Hedging Portfolio**: Compose this portfolio mainly from assets with either the lowest climate risk betas or the highest greenness scores, implying these assets are positively correlated with climate risk mitigation.
-- **Combining Portfolios**: Mix the initial portfolio with a specified proportion of the climate risk hedging portfolio.
+- **Climate Risk Hedging Portfolio**: Compose this portfolio from assets with either the lowest climate risk betas or the highest greenness scores.
+- **Combining Portfolios**: Mix the initial portfolio with the climate risk hedging portfolio.
 
 **Formula Representation**:
 The total returns of the hedged portfolio at any given time \( t \) are the sum of the returns from the baseline portfolio and a 
