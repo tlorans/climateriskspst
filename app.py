@@ -5,12 +5,20 @@ uncertainty_page = st.Page("uncertainty.py", title = "Climate Change Uncertainty
 optimal_portfolio_page = st.Page("optimalportfolio.py", title = "Optimal Portfolio with Climate Change Uncertainty")
 expected_return_page = st.Page("expectedreturn.py", title = "Expected Return with Climate Change Uncertainty")
 hedging_portfolio_page = st.Page("hedgingportfolio.py", title = "Climate Risks Hedging Portfolio")
+unexpected_return_page = st.Page("unexpectedreturns.py", title = "Unexpected Returns: a Consequence of Resolving Climate Change Uncertainty")
+practical1_page = st.Page("practical1.py", title = "Practical Portfolio 1: Manage My Sensitivity!")
+practical2_page = st.Page("practical2.py", title = "Practical Implication 2: Make My Portfolio Great Again!")
+climate_beta_page = st.Page("climate_betas.py", title = "Climate Betas")
 
 pg = st.navigation([intro_page,
                     uncertainty_page,
                     optimal_portfolio_page,
                     expected_return_page,
-                    hedging_portfolio_page
+                    hedging_portfolio_page,
+                    unexpected_return_page,
+                    practical1_page,
+                    practical2_page,
+                    climate_beta_page
                     ])
 st.set_page_config(page_title="Climate Risks")
 pg.run()

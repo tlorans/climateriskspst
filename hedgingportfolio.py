@@ -143,8 +143,6 @@ expectation
 is higher than the market average, 
 will short the hedging portfolio, whereas investors with
 $\gamma_i < 0$ will go long on the hedging portfolio.
-The allocation fractions $\phi_i$ are shown in Figure \ref{fig:transitionriskhedgingportfolio},
-as a function of $\gamma_i$:
 """)
 
 st.write(r"""
