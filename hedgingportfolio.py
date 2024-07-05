@@ -157,3 +157,130 @@ there must be investors with $\gamma_i > 0$ and $\gamma_i < 0$,
 that is, it must exist diversity in the perception of climate risks,
 due to climate change ambiguity.
 """)
+
+# Footnote explanation
+st.write(r"""
+---  
+**Derivation of the Portfolio allocation:**
+         
+We now want to reexpress the investor's optimal 
+portfolio weights $X_i$ in terms of 
+climate transition risk betas.
+We can plug excess returns $\mu = \mu_m \beta_m + \bar{c}(1 - \rho^2_{mC}) \psi$
+into the portfolio weight:
+
+$$
+    \begin{aligned}
+        X_i = \frac{1}{a}\Sigma^{-1} ( \mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\
+        = \frac{1}{a} \Sigma^{-1}( \mu_m \beta_m  + \bar{c}(\sigma_{mC} -  \frac{1}{\sigma^2_m}\sigma_{\tilde{\epsilon}_1, m} \sigma_{m, C}) \psi - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\
+        = \frac{\mu_m}{a} \Sigma^{-1} \beta_m  + \frac{\bar{c}}{a} \Sigma^{-1} (\sigma_{mC} -  \frac{1}{\sigma^2_m}\sigma_{\tilde{\epsilon}_1, m} \sigma_{m, C}) \psi - \frac{c_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = \frac{\mu_m}{a} \Sigma^{-1} \beta_m - \frac{1}{a} \Sigma^{-1} \bar{c} \frac{\sigma_{mC}}{\sigma_m^2} \sigma_{\tilde{\epsilon}_1 m}  - \frac{1}{a} \Sigma^{-1} (c_i - \bar{c})\sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = \frac{\mu_m}{a} \Sigma^{-1} \beta_m - \frac{1}{a} \Sigma^{-1} \bar{c} \frac{\sigma_{mC}}{\sigma_m^2} \sigma_{\tilde{\epsilon}_1 m} - \frac{c_i - \bar{c}}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = \frac{\mu_m}{a} \Sigma^{-1} \beta_m - \frac{1}{a} \Sigma^{-1} \bar{c} \frac{\sigma_{mC}}{\sigma_m^2} \sigma_{\tilde{\epsilon}_1 m} - \frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    \end{aligned}
+$$
+
+with $\gamma_i = c_i - \bar{c}$.
+
+From the market expected return $\mu_m = a \sigma^2_m + \bar{c} \sigma_{mC}$,
+we note that $\bar{c} \sigma_{mC} = \mu_m - a \sigma^2_m$.
+We also note that $\beta_m = \frac{1}{\sigma^2_m} \sigma_{\tilde{\epsilon}_1, m} = \frac{1}{\sigma^2_m} \Sigma w_m$.
+We can rewrite the portfolio weight as:
+
+$$
+    \begin{aligned}
+        X_i = \frac{\mu_m}{a} \Sigma^{-1} \beta_m - \frac{1}{a} \Sigma^{-1} (\mu_m - a \sigma^2_m)\beta_m - \frac{\gamma_i}{a}\Sigma^{-1}\sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = \sigma^{2}_m \Sigma_{-1} \beta_m - \frac{\gamma_i}{a}\Sigma^{-1}\sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = w_m - \frac{\gamma_i}{a}\Sigma^{-1}\sigma_{\tilde{\epsilon}_1, \tilde{C}_1}
+    \end{aligned}
+$$
+
+
+This proposition implies three-fund separation, 
+as each investor's portfolio can be implemented with three 
+assets: (i) the risk-free asset, 
+(ii) the market portfolio, and (iii) the transition 
+risk hedging portfolio.
+The transition risk hedging portfolio weights 
+are proportional 
+to $\Sigma^{-1}\sigma_{\tilde{\epsilon}_1, \tilde{C}_1}$. 
+The fraction of an investor $i$'s wealth in 
+the risk-free asset, $1 - \mathbf{1}^T X_i = (\gamma_i/a)\mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}$, 
+can be positive or negative. 
+The investor's remaining wealth is invested 
+in stocks. Specifically, 
+the investor allocates a fraction $\phi_i$ 
+of her remaining wealth to the transition risk hedging 
+portfolio, and a fraction $1 - \phi_i$ to 
+the market portfolio.
+
+To see this, we note that the $N \times 1$ vector 
+of weights within investor $i$'s stock portfolio $w_i$ is
+$X_i$ normalized by the sum of its elements:
+
+$$
+    \begin{aligned}
+        w_i = X_i / \mathbf{1}^T X_i \\
+        = \frac{w_m - \frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{\mathbf{1}^T (w_m - \frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1})} \\
+    \end{aligned}
+$$
+
+We can expand the denominator:
+
+$$
+    \begin{aligned}
+        \mathbf{1}^T (w_m - \frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) = \mathbf{1}^T w_m  - \frac{\gamma_i}{a} \Sigma^{-1} \mathbf{1}^T \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        = 1 - \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    \end{aligned}
+$$
+
+because $\mathbf{1}^T w_m = 1$.
+Substitute back into the normalization formula
+and separate the terms in the numerator:
+
+$$
+    \begin{aligned}
+        w_i = \frac{w_m - \frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}} \\
+         = \frac{w_m}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}} - \frac{\frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}\\
+    \end{aligned}
+$$
+
+Using the identity $\frac{1}{1 - x} = 1 + \frac{x}{1 - x}$, 
+with $x = \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}$,
+we can rewrite 
+the first term:
+
+$$
+    \begin{aligned}
+        \frac{w_m}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}  = w_m (1 + \frac{ \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1 - \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}) \\
+    \end{aligned}
+$$
+
+We put it back into the formula for $w_i$:
+
+$$
+    \begin{aligned}
+        w_i = w_m (1 + \frac{ \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1 - \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}) - \frac{\frac{\gamma_i}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}\\
+        \end{aligned}
+$$
+
+$\Sigma^{-1}\sigma_{\tilde{\epsilon}_1, \tilde{C}_1}$ must be normalized to sum to 1:
+
+$$
+    w_{\psi} = \frac{1}{\mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}
+$$
+
+So we can rewrite the second term as:
+
+$$
+    \begin{aligned}
+        w_i = w_m (1 + \frac{ \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1 - \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}) - \frac{\frac{\gamma_i}{a}  \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1- \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}} w_{\psi}\\
+        = w_m \phi_i + w_{\psi} (1 - \phi_i) \\
+    \end{aligned}
+$$
+
+
+with $\phi_i = \frac{ \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}{1 - \frac{\gamma_i}{a} \mathbf{1}^T \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}}$.
+
+
+         """)

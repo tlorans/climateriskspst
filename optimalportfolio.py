@@ -151,3 +151,111 @@ risks will materialize ($c_i = 0$),
 the optimal portfolio weights are not affected by the
 covariance between the unexpected returns and the climate risks.
 """)
+
+
+
+# Footnote explanation
+st.write(r"""
+---  
+**Derivation of the Optimal Portfolio:**  
+Taking the expectation of the utility function from period 0,
+we get: 
+
+$$
+    E_0(V(\tilde{W}_{1,i}, X_i, \tilde{C}_1)) = E_0(-\exp{(-A_i W_{0,i} - c_i \tilde{C}_1)})
+$$
+
+We can replace $\tilde{W}_{1,i}$
+with the relation $\tilde{W}_{1,i} = W_{0,i}(1 + r_f + X_i^T \tilde{r}_1)$
+and define $a_i := A_i W_{0,i}$. 
+We want to make out from the expectation the 
+terms that we know about in period 0, and 
+reexpress the terms with the expectation as a function 
+of the portfolio weights $X_i$. 
+
+$$
+\begin{aligned}
+    E_0(V(\tilde{W}_{1,i}, X_i, \tilde{C}_1)) = E_0(-\exp{(-A_i W_{0,i} - c_i \tilde{C}_1)}) \\
+    = E_0(-\exp{(-a_i(1 + r_f + X_i^T \tilde{r}_1) - c_i \tilde{C}_1)}) \\
+    = -\exp{(-a_i(1 + r_f))} E_0(-\exp{(-a_i X_i^T \tilde{r}_1 - c_i \tilde{C}_1)}) \\
+    = -\exp{(-a_i(1 + r_f))} -\exp(a_i X_i^T E_0(\tilde{r}_1) +\\
+    \frac{1}{2}a^2_i X_i^T \text{Var}(\tilde{\epsilon}_1)X_i + a_i c_i X_i^T \text{Cov}(\tilde{\epsilon}_1, \tilde{C}_1) + \frac{1}{2}c_i^2 \text{Var}(\tilde{C}_1)) \\
+    = -\exp(-a_i(1 + r_f)) - \exp(-a_i X_i^T\mu  + \\
+    \frac{1}{2}a_i^2 X_i^T \Sigma X_i + a_i c_i X_i^T \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} + \frac{1}{2}c_i^2 \sigma^2_{\tilde{C}_1})
+\end{aligned}
+$$
+
+where $\sigma_{\tilde{\epsilon}_1, \tilde{C}_1} = \text{Cov}(\tilde{\epsilon}_1, \tilde{C}_1)$.
+
+Investor $i$ seeks to maximize its expected utility,
+by choosing the optimal portfolio weights $X_i$ at time 0.
+We need to find the first order conditions for the optimization problem.
+
+We combine the exponential terms:
+         
+$$
+    \begin{aligned}
+    E_0(V(\tilde{W}_1, X_i, \tilde{C}_1)) = -\exp(-a_i(1 + r_f) -a_i X_i^T\mu + \\
+    \frac{1}{2}a_i^2 X_i^T \Sigma X_i + a_i c_i X_i^T \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} + \frac{1}{2}c_i^2 \sigma^2_{\tilde{C}_1})
+    \end{aligned}
+$$
+
+and let $f(X_i)$ denotes the exponent: 
+         
+$$
+    E_0(V(\tilde{W}_1, X_i, \tilde{C}_1)) = -\exp(f(X_i))
+$$
+ 
+To differentiate $f(X_i)$ with respect to $X_i$, 
+ we use the chain rule $\frac{\partial h}{\partial X_i} = \frac{\partial h}{\partial f} \frac{\partial f}{\partial X_i}$.
+If $h = - \exp(f)$, then $\frac{\partial h}{\partial f} = -\exp(f)$. Thus: 
+         
+$$
+    \frac{\partial h}{\partial X_i} = -\exp(f) \frac{\partial f}{\partial X_i}
+$$
+
+We use the rules that $\frac{\partial x^T b}{\partial x} = b$ and 
+$\frac{\partial x^T A x}{\partial x} = 2Ax$:
+         
+$$
+    \begin{aligned}
+        \frac{\partial f}{\partial X_i} = -a_i \mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    \end{aligned}
+$$
+         
+Combining:
+         
+$$
+    \frac{\partial h}{\partial X_i} = -\exp(f) (-a_i\mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1})
+$$
+
+We set the derivative to zero:
+         
+$$
+    \begin{aligned}
+        -\exp(f)(-a_i\mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) = 0 \\
+        -a_i\mu  + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} = 0 \\
+    \end{aligned}
+$$
+         
+because the exponential term is always positive.
+ 
+We solve for $X_i$:
+         
+$$
+    \begin{aligned}
+        a_i^2 \Sigma X_i = a_i\mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\
+        a_i \Sigma X_i = \mu  - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        \Sigma X_i = \frac{1}{a_i}( \mu  - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\
+        X_i = \frac{1}{a_i}\Sigma^{-1} (\mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1})
+    \end{aligned}
+$$
+\end{enumerate}
+
+
+We assume that $a_i = a$ for all investors:
+
+$$
+    X_i = \frac{1}{a}\Sigma^{-1} ( \mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1})
+$$
+""", unsafe_allow_html=True)

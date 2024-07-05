@@ -222,3 +222,171 @@ Conversely, the higher the wealth-weighted average perception
     the more the alphas of stocks with negative climate risks betas $\psi_n$
     are negative.
             """)    
+
+
+# Footnote explanation
+st.write(r"""
+---  
+**Derivation of the Expected Returns:**
+
+The $n$th elements of investor $i$'s portfolio weight 
+vector $X_i$ is:
+
+$$
+    X_{i,n} =  \frac{W_{0,i,n}}{W_{0,i}}
+$$
+
+The total wealth invested in stock $n$ at time 0:
+
+
+$$
+    W_{0,i,n} := \int_i W_{0,i,n} di 
+$$
+
+The $n$th element of the market portfolio weight vector $w_m$ is:
+
+$$
+    w_{m,n} = \frac{W_{0,m,n}}{W_{0,m}}
+$$
+
+We reexpress $W_{0,n}$ in terms of individual investors' wealth 
+by using the definition of $W_{0,n}$:
+
+$$
+    w_{m,n} = \frac{1}{W_0} \int_i W_{0,i,n}di 
+$$
+
+with $W_{0,i,n} = W_{0,i}X_{i,n}$, we can rewrite 
+the equation: 
+
+$$
+    \begin{aligned}
+    w_{m,n} = \frac{1}{W_0} \int_i W_{0,i}X_{i,n}di \\
+    = \int_i \frac{W_{0,i}}{W_0}X_{i,n}di \\
+    = \int_i \omega_i X_{i,n}di \\
+    \end{aligned}
+$$
+
+with $\omega_i = W_{0,i}/W_0$ the proportion of
+wealth of investor $i$ at time 0.
+We now plug the optimal portfolio weights $X_i$ into the equation above
+to obtain the market weights $w_m$:
+
+$$
+    \begin{aligned}
+        w_{m,n} = \int_i \omega_i \frac{1}{a} \Sigma^{-1} ( \mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) di \\
+        = \frac{1}{a} \Sigma^{-1} \mu (\int_i \omega_i di) - \frac{1}{a} \Sigma^{-1} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} (\int_i \omega_i c_i di) \\
+    \end{aligned}
+$$
+
+We have $\int_i \omega_i c_i di := \bar{c} \geq 0$,
+the wealth-weighted average expectation about climate transition risk 
+across investors. The market portfolio weights are:
+
+$$
+    \begin{aligned}
+    w_m = \frac{1}{a} \Sigma^{-1} (\mu - \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\
+    = \frac{1}{a} \Sigma^{-1} \mu - \frac{1}{a} \Sigma^{-1} \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}
+    \end{aligned}
+$$
+
+
+Starting from the vector of marekt weights $w_m$, we now 
+can solve for $\mu$ the vector of expected returns:
+
+$$
+    \begin{aligned}
+        w_m = \frac{1}{a} \Sigma^{-1} \mu  - \frac{1}{a} \Sigma^{-1} \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        aw_m = \Sigma^{-1} \mu - \Sigma^{-1} \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+        aw_m  + \Sigma^{-1} \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} = \Sigma^{-1} \mu \\
+        \Sigma(aw_m + \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) = \mu \\
+        \mu = a\Sigma w_m + \bar{c} \Sigma \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    \end{aligned}
+$$
+
+Multiplying by $w_m$, we find the market equity premium ($\mu_m = w_m^T \mu$):
+
+$$
+    \begin{aligned}
+    \mu_m = a w_m^T \Sigma w_m + \bar{c} w_m^T \Sigma \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    = a w_m^T \Sigma w_m + \bar{c} w_m^T \Sigma \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
+    = a \sigma^2_m + \bar{c} \sigma_{mC}
+    \end{aligned}
+$$
+
+where we still maintain the assumption of an ESG-neutral market portfolio ($w_m^Tg = 0$),
+and we have the market portfolio variance 
+$\sigma^2_m = w_m^T \Sigma w_m$ and 
+$w_m^T \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} = \text{Cov}(\tilde{\epsilon}_1, \tilde{C}_1) = \sigma_{mC}$.
+
+We use the previous equation 
+to solve for $a$:
+
+$$
+    \begin{aligned}
+        \mu_m = a \sigma^2_m + \bar{c} \sigma_{mC} \\
+        a = \frac{\mu_m - \bar{c} \sigma_{mC}}{\sigma^2_m}
+    \end{aligned}
+$$
+
+Then, the expected excess returns can be reexpressed as:
+
+$$
+    \begin{aligned}
+        \mu = a\Sigma w_m - + \bar{c} \sigma_{mC} \\
+        = \frac{\mu_m - \bar{c} \sigma_{mC}}{\sigma^2_m} \Sigma w_m + \bar{c} \sigma_{mC} \\
+    \end{aligned}
+$$
+
+We know that $\frac{1}{\sigma^2_m}\Sigma w_m = \beta_m$, 
+the market beta:
+
+$$
+    \begin{aligned}
+        \mu =  \frac{\mu_m - \bar{c} \sigma_{mC}}{\sigma^2_m} \Sigma w_m + \bar{c} \sigma_{mC} \\
+        = (\mu_m - \bar{c} \sigma_{mC})\beta_m  + \bar{c} \sigma_{mC}\\
+        = \mu_m \beta_m - \bar{c} \sigma_{mC} \beta_m + \bar{c} \sigma_{mC} \\
+        = \mu_m \beta_m + \bar{c}(\sigma_{mC} - \beta_m \sigma_{mC})
+    \end{aligned}
+$$
+
+We know that $\beta_m = (\frac{1}{\sigma^2_m}\sigma_{\tilde{\epsilon}_1, m})$:
+
+$$
+    \begin{aligned}
+        \mu = \mu_m \beta_m + \bar{c}(\sigma_{mC} - \beta_m \sigma_{mC}) \\
+        = \mu_m \beta_m + \bar{c}(\sigma_{mC} -  \frac{1}{\sigma^2_m}\sigma_{\tilde{\epsilon}_1, m} \sigma_{m, C}) \\
+    \end{aligned}
+$$
+
+In the multivariate regression of $\tilde{\epsilon}_1$ on 
+$\tilde{\epsilon}_m$ and $\tilde{C}_1$, 
+the slope coefficients are given by:
+
+$$
+    \begin{aligned}
+    \begin{bmatrix} \sigma_{\tilde{\epsilon}_1, m} & \sigma_{\tilde{\epsilon}_1, C} \end{bmatrix} 
+    \begin{bmatrix} \sigma^2_{m} & \sigma_{m, C} \\ \sigma_{m, C} & \sigma^2_{C} \end{bmatrix}^{-1} \\
+        = \frac{1}{\sigma^2_m \sigma^2_C - \sigma^2_{mC}} \begin{bmatrix} \sigma_C^2 \sigma_{\tilde{\epsilon}_1, m} - \sigma_{mC} \sigma_{\tilde{\epsilon}_1, C} & \sigma_m^2 \sigma_{\tilde{\epsilon}_1, C} - \sigma_{mC} \sigma_{\tilde{\epsilon}_1, m} \end{bmatrix}
+\end{aligned}
+$$
+
+So the second column (the coefficient of $\tilde{C}_1$) is:
+
+$$
+    \psi = \frac{1}{\sigma^2_m \sigma^2_C - \sigma^2_{mC}} (\sigma_m^2 \sigma_{\tilde{\epsilon}_1, C} - \sigma_{mC} \sigma_{\tilde{\epsilon}_1, m})
+$$
+
+We can use $\psi$ to rewrite the expected returns:
+
+$$
+    \begin{aligned}
+    \mu = \mu_m \beta_m  + \bar{c}(\sigma_{mC} -  \frac{1}{\sigma^2_m}\sigma_{\tilde{\epsilon}_1, m} \sigma_{m, C}) \\
+    = \mu_m \beta_m  + \bar{c}\frac{\sigma^2_m \sigma^2_C - \sigma^2_{mC}}{\sigma^2_m} \psi \\
+    = \mu_m \beta_m + \bar{c}(1 - \rho^2_{mC}) \psi 
+    \end{aligned}
+$$
+
+recalling that $\sigma_C = 1$.
+           
+""")
