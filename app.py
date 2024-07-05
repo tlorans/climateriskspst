@@ -2,13 +2,16 @@ import streamlit as st
 
 intro_page = st.Page("introduction.py", title = "Climate Risks and Equity Portfolio")
 uncertainty_page = st.Page("uncertainty.py", title = "Climate Change Uncertainty")
-capm_page = st.Page("capm.py", title = "CAPM with Climate Risks")
-portfolio_page = st.Page('portfolio.py', title = "Portfolio Construction")
+optimal_portfolio_page = st.Page("optimalportfolio.py", title = "Optimal Portfolio with Climate Change Uncertainty")
+expected_return_page = st.Page("expectedreturn.py", title = "Expected Return with Climate Change Uncertainty")
+hedging_portfolio_page = st.Page("hedgingportfolio.py", title = "Climate Risks Hedging Portfolio")
 
 pg = st.navigation([intro_page,
-                    uncertainty_page, 
-                    capm_page,
-                    portfolio_page])
+                    uncertainty_page,
+                    optimal_portfolio_page,
+                    expected_return_page,
+                    hedging_portfolio_page
+                    ])
 st.set_page_config(page_title="Climate Risks")
 pg.run()
 
