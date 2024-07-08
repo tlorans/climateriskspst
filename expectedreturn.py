@@ -9,7 +9,7 @@ st.title("Climate Risks Beta and Alpha with Aggregated Beliefs")
 st.write(r"""
 We now turn to the implication in terms of climate risks beta 
 (sensitivity of stocks to climate risks) and alpha (climate risks premium) 
-in the context of the PST model (2021) \cite{pastor2021sustainable} (hereafter PST).
+in the context of the PST model (2021).
 
 We first need to determine the implication of aggregation of investors' beliefs
 on the market portfolio weights.
@@ -31,7 +31,6 @@ st.latex(r"""
 st.write(r"""
 where $\bar{c} = \int_i \omega_i c_i di \geq 0$ is the wealth-weighted average
 expectation about climate risks across investors
-(details in Appendix \ref{sec:expectedreturns}) 
 and $\mathbf{1}^T w_m = 1$.
 
 Solving for the expected returns $\mu$ gives:
@@ -92,7 +91,6 @@ risks betas
 (slope coefficients on $\tilde{C}_1$ in a multivariate 
 regressions of $\tilde{\epsilon}_1$ on $\tilde{\epsilon}_m$ and $\tilde{C}_1$),
 and $\rho_{mC}$ is the correlation between $\tilde{\epsilon}_m$ and $\tilde{C}_1$
-(details in the companion paper.
          """)
 
 st.write(r"""

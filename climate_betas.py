@@ -10,10 +10,10 @@ comes the question of how to estimate these climate betas.
          """)
 
 st.write(r"""
-In PST (2021) \cite{pastor2021sustainable}, the assumption is that 
+In PST (2021), the assumption is that 
 some characteristics
 of stocks, approximated with 
-environmental scores in Pastor et al. (2022)) $g_n$,
+environmental scores in Pastor *et al.* (2022)) $g_n$,
 may be negatively correlated with $\psi_n$. 
 For example, in the case of transition risks,
 "greener" firms may have negative $\psi_n$,
@@ -56,16 +56,26 @@ of the stocks $g$.
 """)
 
 st.write(r"""
-Another approach is mimicking portfolio from Lamont (2001) \cite{lamont2001econometric},
-as advocated by Engle \textit{et al.} (2020) \cite{engle2020hedging}. 
+Another approach is mimicking portfolio from Lamont (2001) [1],
+as advocated by Engle *et al.* (2020) [2]. 
 We may not observe $\tilde{C}_1$ directly, and 
 therefore estimate $\psi_n$ by regressing the unexpected returns
 $\tilde{\epsilon}_1$ on the climate risks $\tilde{C}_1$. But 
 we can observe the change in perception of climate risks 
 ($\bar{c}_1 - E_0(\bar{c}_1)$) by taking unexpected change of climate concerns 
-from news articles, as in Pastor \textit{et al.} (2022). 
+from news articles, as in Pastor *et al.* (2022). 
 We can therefore estimate $\psi_n$ by regressing unexpected returns
 $\tilde{\epsilon}_1$ on the change in perception of climate risks 
 ($\bar{c}_1 - E_0(\bar{c}_1)$).
 """)
 
+
+st.markdown("""
+
+## References
+            
+[1]: Lamont, O. A. (2001). Economic tracking portfolios. Journal of Econometrics, 105(1), 161-184.
+            
+[2]: Engle, R. F., Giglio, S., Kelly, B., Lee, H., & Stroebel, J. (2020). Hedging climate change news. The Review of Financial Studies, 33(3), 1184-1216.
+            
+            """)

@@ -89,7 +89,7 @@ while the market's concerns about climate risks increase.
 This wedge between expected and realized returns is central to the PST model.
 
 Armed with the previous analytical results, 
-Pastor et al. (2022) have shown that outperformance 
+Pastor *et al.* (2022) [1] have shown that outperformance 
 of "green" stocks over "brown" stocks during the last decade 
 likely reflects an unanticipated 
 increase in the market's concerns about climate risks.
@@ -116,15 +116,15 @@ In the second approach, $x_t$ is the unanticipated change in
 perception of climate risks, with $E(x_t) = 0$. From PST (2022), 
 $a = \mu$ because $x_t$ has zero mean ex ante. Therefore, the idea 
 is to estimate $\mu$ by the sample estimate of $a$. 
-To proxy for unexpected changes in climate risks perception, Pastor \textit{et al.} (2022)
-uses a sentiment index constructed from news articles, from Ardia \textit{et al.} (2021).
+To proxy for unexpected changes in climate risks perception, Pastor *et al.* (2022)
+uses a sentiment index constructed from news articles, from Ardia *et al.* (2021) [2].
          
 To get a sense of the analysis, we simulate a fictional 
 portfolio realized returns with a positive correlation to climate transition concern. 
 This simulate a long-only version of the climate risks hedging portfolio from the 
 theoretical section, formed as a long-only position in the assets with 
 the lowest climate betas $\psi_n$.
-Figure below shows the cumulative shocks on a climate transition concern index (Apel \textit{et al.}, 2023) 
+Figure below shows the cumulative shocks on a climate transition concern index (Apel *et al.*, 2023) [3]
 and the cumulative returns of a simulated assets with negative correlation between climate transition concerns and asset returns.
 """)
 
@@ -152,7 +152,7 @@ st.write(r"""
 
 Then, the idea is to estimate a counterfactual asset return, 
 which is the asset's return in the absence of changes in climate risks perception
-(estimated as $\hat{a} + \epsilon_t$). As we see in Figure \ref{fig:counterfactual},
+(estimated as $\hat{a} + \epsilon_t$). As we see in Figure above,
 the counterfactual portfolio turned to be negative for most of the period,
 illustrating the notion that expected returns (counterfactual returns here)
 are negative for stocks with negative climate betas. In a period 
@@ -165,7 +165,7 @@ concerns on the portfolio's returns.
 By contrast, an investor's portfolio may be negatively correlated 
 with climate risks concerns. It may be the case for portfolio tilted 
 towards value stocks, which are negatively correlated with climate concerns 
-as shown by Pastor \textit{et al.} (2022). In this case, the investor's
+as shown by Pastor *et al.* (2022). In this case, the investor's
 portfolio may have underperformed during the last decade,
 as the market's concerns about climate risks increased.
 A simple core-satellite approach may be used to hedge 
@@ -249,3 +249,13 @@ fig = go.Figure(data=[trace1, trace2, trace3], layout=layout)
 
 # Display plot
 st.plotly_chart(fig)
+
+st.markdown("""
+## References
+            
+[1]: Pástor, Ľ., Stambaugh, R. F., & Taylor, L. A. (2022). Dissecting green returns. Journal of financial economics, 146(2), 403-424.
+            
+[2]: Ardia, D., Bluteau, K., Boudt, K., & Inghelbrecht, K. (2023). Climate change concerns and the performance of green vs. brown stocks. Management Science, 69(12), 7607-7632.
+
+[3]: Apel, M., Betzer, A., & Scherer, B. (2023). Real-time transition risk. Finance Research Letters, 53, 103600.
+""")
