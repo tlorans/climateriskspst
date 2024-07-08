@@ -94,7 +94,7 @@ sigma_epsilon_C1 = np.array([-0.8, 0.9, -0.6, 0.7, -0.4])  # Covariance with cli
 a = 2  # Risk aversion coefficient
 
 # Interactive slider for c_i
-c_i = st.sidebar.slider("Climate Risk Perception ($c_i$)", -1.0, 1.0, 0.0, 0.01)
+c_i = st.sidebar.slider("Climate Risk Perception ($c_i$)", 0., 2., 0.0, 0.01)
 
 # Calculate the optimal portfolio
 X_i = optimal_portfolio(a, c_i, mu, Sigma, sigma_epsilon_C1)
