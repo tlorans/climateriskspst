@@ -18,7 +18,7 @@ pg = st.navigation([intro_page,
                     unexpected_return_page,
                     practical1_page,
                     practical2_page,
-                    climate_beta_page
+                    # climate_beta_page
                     ])
 st.set_page_config(page_title="Climate Risks")
 pg.run()
