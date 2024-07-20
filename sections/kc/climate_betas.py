@@ -3,13 +3,20 @@ import numpy as np
 import plotly.graph_objs as go
 import numpy as np
 
+
+# no_sidebar_style = """
+# <style>
+#     div[data-testid="stSidebarNav"] {display: none;}
+# </style>
+# """
+# st.markdown(no_sidebar_style, unsafe_allow_html=True)
 st.title('Climate Betas')
 
 st.write(r"""
 We have seen in the previous sections that climate risks hedging 
 portfolio is proportional to the climate risks betas $\psi_n$. Now 
 comes the question of how to estimate these climate betas.
-         """)
+        """)
 
 st.markdown("""
 ## The Narrative Approach
@@ -118,7 +125,7 @@ as advocated by Engle *et al.* (2020) [2].
 We may not observe $\tilde{C}_1$ directly, and 
 therefore estimate $\psi_n$ by regressing the unexpected returns
 $\tilde{\epsilon}_1$ on the climate risks $\tilde{C}_1$. 
-         
+        
 But we can observe the change in perception of climate risks 
 ($\bar{c}_1 - E_0(\bar{c}_1)$) by taking unexpected change of climate concerns 
 from news articles, as in Pastor *et al.* (2022). 
@@ -167,9 +174,9 @@ st.markdown("""
 st.write(r"""
 The idea here, exposed by Alekseev et al. (2022), is to exploit changes from 
 individual portfolio holdings to estimate climate betas.
-         
+        
 Going back to the optimal portfolio of investor $i$ in PST (2021), we have:
-         """)
+        """)
 
 st.latex(r"""
 
@@ -183,7 +190,7 @@ The investor $i$ may be affected by an idiocyncratic shock that may change
 his perception of climate risks $c_i$. We can then estimate the climate betas
 as the change in the optimal portfolio weights following the change in perception
 of climate risks.
-         """)
+        """)
 
 
 # Function to calculate the optimal portfolio

@@ -4,6 +4,7 @@ import plotly.graph_objs as go
 import numpy as np
 
 
+
 st.title("Climate Risks Beta and Alpha with Aggregated Beliefs")
 
 st.write(r"""
@@ -17,7 +18,7 @@ We define $\omega_i := W_{0,i}/W_0$ the proportion of
 wealth of investor $i$ at time 0, where $W_0 = \int_i W_{0,i} di$.
 Market clearing conditions implies that 
 the vector of market portfolio weights $w_m$ is:
-         """)
+        """)
 
 st.latex(r"""
 \begin{equation}
@@ -26,7 +27,7 @@ st.latex(r"""
     = \frac{1}{a} \Sigma^{-1} \mu - \frac{1}{a} \Sigma^{-1} \bar{c} \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}
     \end{aligned}
 \end{equation}
-         """)
+        """)
 
 st.write(r"""
 where $\bar{c} = \int_i \omega_i c_i di \geq 0$ is the wealth-weighted average
@@ -49,9 +50,9 @@ Multiplying by $w_m$, we find the market equity premium ($\mu_m = w_m^T \mu$):
 
 st.latex(r"""
 \begin{equation}
-   \mu_m = a \sigma^2_m + \bar{c} \sigma_{mC}
+\mu_m = a \sigma^2_m + \bar{c} \sigma_{mC}
 \end{equation}
-         """)
+        """)
 
 st.write(r"""
 
@@ -70,7 +71,7 @@ st.latex(r"""
         a = \frac{\mu_m - \bar{c} \sigma_{mC}}{\sigma^2_m}
     \end{aligned}
 \end{equation}
-         
+        
 """)
 
 st.write(r"""
@@ -91,7 +92,7 @@ risks betas
 (slope coefficients on $\tilde{C}_1$ in a multivariate 
 regressions of $\tilde{\epsilon}_1$ on $\tilde{\epsilon}_m$ and $\tilde{C}_1$),
 and $\rho_{mC}$ is the correlation between $\tilde{\epsilon}_m$ and $\tilde{C}_1$
-         """)
+        """)
 
 st.write(r"""
 
@@ -112,7 +113,7 @@ A stock with a negative $\psi_n$ that
     provides investors with a climate risks hedge,
     has a lower expected return than it would in 
     the absence of climate risks.
-         Conversely,
+        Conversely,
     a stock with a positive $\psi_n$, 
     which performs particularly poorly 
     when the climate worsens unexpectedly, 
@@ -134,7 +135,7 @@ st.write(r"""
 With the assumption that $\bar{c} > 0$, 
 stocks with positive $\psi_n$ have positive alphas,
 and stocks with negative $\psi_n$ have negative alphas.
-         """)
+        """)
 
 
 Sigma = np.array([
@@ -386,5 +387,5 @@ $$
 $$
 
 recalling that $\sigma_C = 1$.
-           
+        
 """)

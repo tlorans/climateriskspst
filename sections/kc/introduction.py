@@ -1,5 +1,6 @@
 import streamlit as st 
 
+
 st.markdown("""
 # Climate Risks
 
@@ -7,7 +8,7 @@ st.markdown("""
 Two broad categories are mainly considered in the literature:
 - **Physical climate risk:** Includes risks of the direct impairment of productive assets due to climate change, such as floods, hurricanes, or droughts.
 - **Transition risk:** Includes risks to cash flows and asset values due to *climate mitigation policies* (Giglio *et al.* 2021 [2]).
-  
+
 Both are sources of uncertainty. We do not know the exact future evolution of the climate, nor the exact future evolution of climate policies.
 
 ## Climate Risks Hedging

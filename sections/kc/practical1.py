@@ -4,6 +4,7 @@ import plotly.graph_objs as go
 import numpy as np
 
 
+    
 # Function to calculate and plot
 def plot_exclusion(climate_betas, initial_weights, percentage_to_exclude):
     num_assets = len(climate_betas)

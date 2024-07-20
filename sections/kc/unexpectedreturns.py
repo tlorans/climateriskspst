@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objs as go
 import numpy as np
 
+
 def plot_with_changes(psi, rho_mC, z_c, delta_c):
     # Compute unexpected returns for various scenarios
     unexpected_returns_no_change = psi * (0 - (0.5 - 0.5) * (1 - rho_mC**2))
@@ -34,7 +35,7 @@ to study the impact of change in perception of climate risks on stock prices.
 It may reflects the 
 progressive learning about climate change by investors, as new information
 becomes available. 
-         """)
+        """)
 
 st.image('images_tick-1.png', caption='One-Period Overlapping Generation Model')
 
@@ -104,19 +105,19 @@ st.latex(r"""
     = \frac{\tilde{u}_n}{1 + \bar{c}_1(1 - \rho^2_{mC})\psi_n}
     \end{aligned}
 \end{equation}
-         """)
+        """)
 st.write(r"""
 Which can be approximated: [1]
 """)
 
 st.latex(r"""
-         \begin{equation}
+        \begin{equation}
     p_{1,n} \approx \tilde{u}_n - \bar{c}(1 - \rho^2_{mC})\psi_n
 \end{equation}
 """)
 
 st.write(r"""
-         Taking the expectation at time 0:
+        Taking the expectation at time 0:
 """)
 
 st.latex(r"""
@@ -126,7 +127,7 @@ st.latex(r"""
 """)
 
 st.write(r"""
-         The unexpected returns for $Gen-0$ is: [2]
+        The unexpected returns for $Gen-0$ is: [2]
 """)
 
 st.latex(r"""
@@ -139,7 +140,7 @@ st.latex(r"""
     = \beta_m \tilde{z}_m + \psi \tilde{f}_c + \tilde{\eta}
     \end{aligned}
 \end{equation}
-         """)
+        """)
 
 st.write(r"""
 where $\tilde{f}_c = \tilde{z}_c - (\bar{c}_1 - E_0(\bar{c}_1))(1 - \rho^2_{mC})$.
@@ -151,7 +152,7 @@ represents the discount rate channel.
 This result drive a wedge between expected and realized returns for $Gen-0$ investors. 
 If climate risks concerns strenghen unexpectedly, so that $\tilde{f}_c > 0$ 
 (ie. $\bar{c}_1 > E_0(\bar{c}_1)$).
-         """)
+        """)
 
 # Sidebar for climate shock
 z_c = st.sidebar.slider('Climate Shock (z_c)', -1.0, 0.0, -1.0, key='z_c_slider')
@@ -175,7 +176,7 @@ st.write(r"""
 A firm's unexpected return is expected to be positive for firms with 
 negative $\psi_n$. 
 It is expected to be negative for firms with positive $\psi_n$.
-         """)
+        """)
 
 # Footnote explanation
 st.write(r"""
@@ -198,7 +199,7 @@ $$
 &= \tilde{u}_n - \bar{c}_1(1 - \rho^2_{mC})\psi_n
 \end{aligned}
 $$
-         
+        
 [2] We follow Pastor et al. (2021), 
     where in a one-period model, unexpected loss price 
     is equal to unexpected returns:

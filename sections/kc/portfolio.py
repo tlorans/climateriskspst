@@ -4,6 +4,8 @@ import plotly.graph_objs as go
 import numpy as np
 import pandas as pd
 
+
+    
 def simulate_portfolio_adjustment(num_assets, percentage_to_exclude):
     # Generate synthetic greenness scores and initial weights
     np.random.seed(42)  # for reproducibility
@@ -82,9 +84,9 @@ def simulate_and_plot_returns(specified_weight, x_t):
     fig.add_trace(go.Scatter(x=x_t.index, y=cum_hedged_returns, mode='lines', name='Hedged Portfolio', line=dict(dash='dash')))
 
     fig.update_layout(title='Compounded Cumulative Returns Comparison',
-                      xaxis_title='Date',
-                      yaxis_title='Compounded Cumulative Returns',
-                      template='plotly_white')
+                    xaxis_title='Date',
+                    yaxis_title='Compounded Cumulative Returns',
+                    template='plotly_white')
 
     return fig
 

@@ -14,7 +14,7 @@ We have $N$ firms, and we denote $\tilde{r}_1$ the
 vector of excess returns of the $N$ firms from time 0 to time 1.
 $\tilde{r}_1$ is assumed to be normally distributed:
 
-         """)
+        """)
 
 st.latex(r"""
 \begin{equation}
@@ -28,7 +28,7 @@ the expected returns.
 $X_i$ is a $N \times 1$ vector of portfolio weights,
 and $W_{0,i}$ is the wealth of investor $i$ at time 0.
 The wealth of investor $i$ at time 1 is:
-         """)
+        """)
 
 st.latex(r"""
 
@@ -42,7 +42,7 @@ st.write(r"""
 where $r_f$ is the risk free rate.
 
 The investor has an exponential utility function:
-             
+            
     """)
 
 st.latex(r"""
@@ -137,7 +137,7 @@ with $a_i = A_i W_{0,i}$, the relative
 investor $i$'s risk aversion and we assume 
 $a_i = a$ for simplicity. We have $\sigma_{\tilde{\epsilon}_1, \tilde{C}_1}$
 the covariance between the unexpected returns and the climate risks.
-         """)
+        """)
 
 st.write(r"""
 The higher 
@@ -192,7 +192,7 @@ by choosing the optimal portfolio weights $X_i$ at time 0.
 We need to find the first order conditions for the optimization problem.
 
 We combine the exponential terms:
-         
+        
 $$
     \begin{aligned}
     E_0(V(\tilde{W}_1, X_i, \tilde{C}_1)) = -\exp(-a_i(1 + r_f) -a_i X_i^T\mu + \\
@@ -201,47 +201,47 @@ $$
 $$
 
 and let $f(X_i)$ denotes the exponent: 
-         
+        
 $$
     E_0(V(\tilde{W}_1, X_i, \tilde{C}_1)) = -\exp(f(X_i))
 $$
- 
+
 To differentiate $f(X_i)$ with respect to $X_i$, 
- we use the chain rule $\frac{\partial h}{\partial X_i} = \frac{\partial h}{\partial f} \frac{\partial f}{\partial X_i}$.
+we use the chain rule $\frac{\partial h}{\partial X_i} = \frac{\partial h}{\partial f} \frac{\partial f}{\partial X_i}$.
 If $h = - \exp(f)$, then $\frac{\partial h}{\partial f} = -\exp(f)$. Thus: 
-         
+        
 $$
     \frac{\partial h}{\partial X_i} = -\exp(f) \frac{\partial f}{\partial X_i}
 $$
 
 We use the rules that $\frac{\partial x^T b}{\partial x} = b$ and 
 $\frac{\partial x^T A x}{\partial x} = 2Ax$:
-         
+        
 $$
     \begin{aligned}
         \frac{\partial f}{\partial X_i} = -a_i \mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} \\
     \end{aligned}
 $$
-         
+        
 Combining:
-         
+        
 $$
     \frac{\partial h}{\partial X_i} = -\exp(f) (-a_i\mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1})
 $$
 
 We set the derivative to zero:
-         
+        
 $$
     \begin{aligned}
         -\exp(f)(-a_i\mu + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) = 0 \\
         -a_i\mu  + a_i^2 \Sigma X_i + a_i c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1} = 0 \\
     \end{aligned}
 $$
-         
+        
 because the exponential term is always positive.
- 
+
 We solve for $X_i$:
-         
+        
 $$
     \begin{aligned}
         a_i^2 \Sigma X_i = a_i\mu - c_i \sigma_{\tilde{\epsilon}_1, \tilde{C}_1}) \\

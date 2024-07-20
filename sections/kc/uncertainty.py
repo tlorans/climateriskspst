@@ -71,7 +71,7 @@ st.latex(
 )
 
 st.write(r"""
-             
+            
 where $\Delta y$ is the output growth, $\mu_y$ is the expected growth rate 
 of the economy, and $\phi$ is a scaling factor that converts the climate shock 
 into economic terms. In the case of physical climate risks, $\phi$ could represent
@@ -83,7 +83,7 @@ We do not know the value of the shock, but we know its probability distribution 
 We assume that we know the value of $\phi$.
 This is the risk component of uncertainty. 
 Risk represent the uncertainty about outcomes, with known probabilities.
-         """)
+        """)
 
 
 # Sidebar controls
@@ -97,7 +97,7 @@ fig1 = plot_single_histogram(economic_impact_baseline, 'Distribution of Economic
 st.plotly_chart(fig1)
 
 st.write(r"""
-         However, uncertainty is not only about risk. Especially 
+        However, uncertainty is not only about risk. Especially 
 in the context of climate change, that requires to model complex dynamic systems.
 For example, it may be that alternative models
 predict different values of $\phi$. 
@@ -112,7 +112,7 @@ fig2 = plot_comparative_histogram(economic_impact_baseline, economic_impact_vari
 st.plotly_chart(fig2)
 
 st.write(r"""
-         This is the specificity of climate risks, taken into account 
+        This is the specificity of climate risks, taken into account 
 in the PST model. In this model, there is a continuum of investors $i$. 
 Investors have different beliefs about future climate risks. 
 $c_i \geq 0$ is a scalar that represents the investor's perception 

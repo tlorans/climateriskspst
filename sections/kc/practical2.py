@@ -5,6 +5,7 @@ import plotly.graph_objs as go
 import statsmodels.api as sm
 
 
+    
 # Assuming you have 'climateconcerns.xlsx' available in the correct directory
 def load_data():
     return pd.read_excel('data/climateconcerns.xlsx', sheet_name='monthly', index_col='Date')['TRI_monthly'].dropna()
@@ -54,14 +55,14 @@ def create_plots(x_t, actual_returns, counterfactual_returns):
 
     fig1 = go.Figure(data=[shock_trace, actual_trace])
     fig1.update_layout(title='Cumulative Climate Concerns vs. Realized Returns',
-                       xaxis_title='Time',
-                       yaxis_title='Cumulative Returns')
+                    xaxis_title='Time',
+                    yaxis_title='Cumulative Returns')
     
     fig2 = go.Figure(data=[actual_trace, counterfactual_trace])
     fig2.update_layout(title='Cumulative Realized vs. Counterfactual Returns',
-                       xaxis_title='Time',
-                       yaxis_title='Cumulative Returns',
-                       yaxis=dict(zeroline=True, zerolinewidth=1, zerolinecolor='Black'))
+                    xaxis_title='Time',
+                    yaxis_title='Cumulative Returns',
+                    yaxis=dict(zeroline=True, zerolinewidth=1, zerolinecolor='Black'))
 
     return fig1, fig2
 
@@ -99,7 +100,7 @@ ex post data. To measure it, they are two types of estimators:
 - $\bar{r}$, the asset's sample average return 
 - $\hat{a} = \bar{r} - \hat{b} \bar{x}$, where the estimated $\hat{a}$ and $\hat{b}$ are obtained from a regression of the asset's return on additional 
 information $x_t$:
-         """)
+        """)
 
 st.latex(r"""
 \begin{equation}
@@ -118,7 +119,7 @@ $a = \mu$ because $x_t$ has zero mean ex ante. Therefore, the idea
 is to estimate $\mu$ by the sample estimate of $a$. 
 To proxy for unexpected changes in climate risks perception, Pastor *et al.* (2022)
 uses a sentiment index constructed from news articles, from Ardia *et al.* (2021) [2].
-         
+        
 To get a sense of the analysis, we simulate a fictional 
 portfolio realized returns with a positive correlation to climate transition concern. 
 This simulate a long-only version of the climate risks hedging portfolio from the 
@@ -170,8 +171,8 @@ portfolio may have underperformed during the last decade,
 as the market's concerns about climate risks increased.
 A simple core-satellite approach may be used to hedge 
 unexpected changes in climate risks perception.
-         
-         """)
+        
+        """)
 
 st.write(r"""
 Let $R_t$ be the returns of the investor's portfolio at time $t$, 
@@ -189,7 +190,7 @@ The returns of the hedged portfolio $H_t$ at time $t$ are given by:
 
 st.latex(r"""
 \begin{equation}
-         H_t = (1 - \omega) R_t + \omega C_t
+        H_t = (1 - \omega) R_t + \omega C_t
 \end{equation}
 """)
 
@@ -197,7 +198,7 @@ st.write(r"""
 $\omega$ may be chosen as a function of the investor's own perception 
 of climate risks, or future change in climate risks perception. $R_t$ 
 acts as the core of the portfolio, while $C_t$ acts as the satellite.
-         """)
+        """)
 
 # Slider for weight adjustment
 omega = st.sidebar.slider('Weight for Climate Risk Mimicking Portfolio', 0.0, 1.0, 0.9, 0.01)
