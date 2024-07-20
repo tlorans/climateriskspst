@@ -166,7 +166,7 @@ mu_m = a * sigma_m2
 beta_m = Sigma.dot(w_m) / sigma_m2
 
 # Slider for bar_c value
-bar_c = st.sidebar.slider("Average Climate Risk Perception", 0.0, 1., 0.5, 0.01)
+bar_c = st.slider("Average Climate Risk Perception", 0.0, 1., 0.5, 0.01)
 
 # Calculate the alphas for the chosen bar_c
 alphas = bar_c * (1 - rho_mC ** 2) * psi

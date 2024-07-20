@@ -134,7 +134,7 @@ and the cumulative returns of a simulated assets with negative correlation betwe
 x_t = load_data()
 
 # Slider for correlation adjustment
-correlation = st.sidebar.slider('Correlation with Climate Concerns', 0., 1.0, 0.6, 0.01)
+correlation = st.slider('Correlation with Climate Concerns', 0., 1.0, 0.6, 0.01)
 
 # Compute returns based on the selected correlation
 returns = calculate_returns(x_t, correlation)
@@ -201,7 +201,7 @@ acts as the core of the portfolio, while $C_t$ acts as the satellite.
         """)
 
 # Slider for weight adjustment
-omega = st.sidebar.slider('Weight for Climate Risk Mimicking Portfolio', 0.0, 1.0, 0.9, 0.01)
+omega = st.slider('Weight for Climate Risk Mimicking Portfolio', 0.0, 1.0, 0.9, 0.01)
 
 # Generate returns
 x_t = load_data()

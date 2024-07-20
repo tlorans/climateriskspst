@@ -37,7 +37,7 @@ progressive learning about climate change by investors, as new information
 becomes available. 
         """)
 
-st.image('images_tick-1.png', caption='One-Period Overlapping Generation Model')
+st.image('kc/images_tick-1.png', caption='One-Period Overlapping Generation Model')
 
 st.write(r"""    
 PST adopts a one-period overlapping generation 
@@ -155,11 +155,11 @@ If climate risks concerns strenghen unexpectedly, so that $\tilde{f}_c > 0$
         """)
 
 # Sidebar for climate shock
-z_c = st.sidebar.slider('Climate Shock (z_c)', -1.0, 0.0, -1.0, key='z_c_slider')
+z_c = st.slider('Climate Shock (z_c)', -1.0, 0.0, -1.0, key='z_c_slider')
 
 # Sliders for change in perception
 bar_c_0 = 0.5
-delta_c = st.sidebar.slider('Increase in Perception of Climate Risk', 0.0, 2.0, 1.5, key='delta_c_slider')
+delta_c = st.slider('Increase in Perception of Climate Risk', 0.0, 2.0, 1.5, key='delta_c_slider')
 
 # Fixed correlation factor
 rho_mC = 0.5

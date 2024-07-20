@@ -86,10 +86,9 @@ Risk represent the uncertainty about outcomes, with known probabilities.
         """)
 
 
-# Sidebar controls
-num_simulations = st.sidebar.slider("Number of Simulations", 100, 10000, 1000, key='num_sim')
-phi_variable = st.sidebar.slider("Scaling Factor (Phi) for Comparative Plot", 0., 2.0, 1.0, 0.1, key='phi_slider')
-c_i_variable = st.sidebar.slider("Investor's Perception of Climate Risks (c_i)", 0., 2.0, 1.0, 0.1, key='c_i_slider')
+num_simulations = st.slider("Number of Simulations", 100, 10000, 1000, key='num_sim')
+phi_variable = st.slider("Scaling Factor (Phi) for Comparative Plot", 0., 2.0, 1.0, 0.1, key='phi_slider')
+c_i_variable = st.slider("Investor's Perception of Climate Risks (c_i)", 0., 2.0, 1.0, 0.1, key='c_i_slider')
 
 # Simulation for the first plot
 economic_impact_baseline = simulate_economic_impact(0, 1, 1, num_simulations)
@@ -133,42 +132,3 @@ utility_impact = simulate_economic_impact(0, c_i_variable, 1, num_simulations)
 fig3 = plot_utility(utility_impact, c_i_variable, 'Climate Shocks Impact on Investor i Utility')
 st.plotly_chart(fig3)
 
-
-# st.markdown("""
-
-# ### Ambiguity
-
-# Ambiguity deals with the uncertainty associated with evaluating different models. 
-# We may not only lack knowledge about outcomes but also about the underlying probabilities themselves. 
-# In our model, ambiguity surrounds the parameters like the variance of the climate shock \(J\) and the scaling factor \(\phi\).
-
-#             """)
-
-# # Plot 2 controls
-# mu_user = st.slider("Mean of Shock (mu)", -0.1, 0.1, 0.0, 0.01, key='mu')
-# phi_user = st.slider("Scaling Factor (phi)", -1.0, 0., -0.5, 0.1, key='phi')
-# sigma_user = st.slider("Standard Deviation of Shock (sigma)", 0.01, 0.5, 0.1, 0.01, key='sigma')
-# # Generate user-defined economic impact
-# economic_impact_user = simulate_economic_impact(mu_user, phi_user, sigma_user, num_simulations)
-
-# # Plot 2
-# st.plotly_chart(plot_histogram([economic_impact_base, economic_impact_user], ['Model A', 'Model B'], 'Comparison of Economic Impact Distributions'))
-
-
-# st.markdown("""
-# ### Misspecification
-
-# Misspecification addresses the inherent limitations of models as approximations. 
-# Every model, by necessity, omits certain aspects of reality. 
-# In the case of our model, misspecification might arise if, for instance, the climate shock is not actually normally distributed as assumed.
-# """)
-
-# # Plot 3 controls
-# # Correcting the select box options to match expected values
-# distribution_choice = st.selectbox("Distribution Type", ['normal', 'uniform'], key='dist_type')
-
-# # Generate distribution based on user choice
-# economic_impact_dist = simulate_economic_impact(mu_user, phi_user, sigma_user, num_simulations, distribution_choice)
-
-# # Plot 3
-# st.plotly_chart(plot_histogram([economic_impact_base, economic_impact_dist], ['Model A', f'{distribution_choice.capitalize()} Distribution'], 'Impact of Different Distributions'))

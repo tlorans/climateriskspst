@@ -129,7 +129,7 @@ where $1\{\}$ takes the value 1 if the condition is true, and 0 otherwise.
 
 
 # Slider for percentage of stocks to exclude
-percentage_to_exclude = st.sidebar.slider('Percentage of Stocks to Exclude', 0.0, 1.0, 0.20, 0.01)
+percentage_to_exclude = st.slider('Percentage of Stocks to Exclude', 0.0, 1.0, 0.20, 0.01)
 
 # Fixed parameters
 num_assets = 20

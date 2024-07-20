@@ -4,12 +4,6 @@ import plotly.graph_objs as go
 import numpy as np
 
 
-# no_sidebar_style = """
-# <style>
-#     div[data-testid="stSidebarNav"] {display: none;}
-# </style>
-# """
-# st.markdown(no_sidebar_style, unsafe_allow_html=True)
 st.title('Climate Betas')
 
 st.write(r"""
@@ -36,8 +30,8 @@ In that case, with $\zeta > 0$, we have:
 
 
 # Slider for zeta
-zeta = st.sidebar.slider('Select a value for zeta', min_value=-1., max_value=1., value=1.0, step=0.1)
-c_bar = st.sidebar.slider('Select a value for c_bar', min_value=0., max_value=10.0, value=1.0, step=0.1)
+zeta = st.slider('Select a value for zeta', min_value=-1., max_value=1., value=1.0, step=0.1)
+c_bar = st.slider('Select a value for c_bar', min_value=0., max_value=10.0, value=1.0, step=0.1)
 
 
 st.latex(r"""
@@ -217,7 +211,7 @@ a = 2  # Risk aversion coefficient
 
 # Interactive slider for c_i
 c_i = 0.5
-delta_c_i = st.sidebar.slider("Change in Climate Risk Perception (Δ$c_i$)", 0., 1.0, 0.1, 0.01)
+delta_c_i = st.slider("Change in Climate Risk Perception (Δ$c_i$)", 0., 1.0, 0.1, 0.01)
 
 # Calculate the optimal portfolio for the initial c_i
 X_i_initial = optimal_portfolio(a, c_i, mu, Sigma, sigma_epsilon_C1)
