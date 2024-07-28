@@ -25,7 +25,9 @@ page = st.session_state.page
 go_home_page = st.Page(go_home, title="Home", icon="🏠", default=(page is None))
 
 # Define pages
-portfolio_page = st.Page("pc/portfolio_construction.py", title="Portfolio Construction", default=(page=="Portfolio Construction"))
+pc_pages = [
+    st.Page("pc/data_model.py", title="Modelling Data with Pydantic", default=(page=="Portfolio Construction")),
+]
 
 kc_pages = [
     st.Page("kc/introduction.py", title="Climate Risks and Equity Portfolio", default = (page == "Knowledge Center")),
@@ -49,7 +51,7 @@ page_dict = {}
 if st.session_state.page == "Knowledge Center":
     page_dict["Knowledge Center"] = kc_pages
 elif st.session_state.page == "Portfolio Construction":
-    page_dict["Portfolio Construction"] = [portfolio_page]
+    page_dict["Portfolio Construction"] = pc_pages
 
 if len(page_dict) > 0:
     pg = st.navigation({"": [go_home_page]} | page_dict)
