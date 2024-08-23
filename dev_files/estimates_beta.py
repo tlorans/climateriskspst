@@ -31,7 +31,6 @@ ret_monthly = (
     .get(["Date", "Ticker", "R"])
 )
 
-print(ret_monthly.head())
 
 print((ret_monthly
        .groupby(['Ticker'])['R'].describe()
@@ -41,7 +40,6 @@ print((ret_monthly
 
 ### Download Fama-French factors
 import pandas_datareader as pdr 
-
 factors_ff3_monthly = (pdr.DataReader(
                         name = 'F-F_Research_Data_5_Factors_2x3',
                         data_source = 'famafrench',
@@ -51,28 +49,49 @@ factors_ff3_monthly = (pdr.DataReader(
                     .divide(100)
                     .reset_index(names = 'Date')
                     .assign(Date = lambda x: pd.to_datetime(x['Date'].astype(str)) + pd.offsets.MonthEnd(0))
+                    .rename(columns = {'Mkt-RF':'Rm_minus_Rf',
+                                       'RF':'Rf'})
+                    .get(['Date', 'Rm_minus_Rf', 'Rf'])
 )
 
-print(factors_ff3_monthly.head())
-
-
-monthly_data = (
-    ret_monthly
-    .merge(factors_ff3_monthly, on = 'Date', how = 'left')
-    .assign(
-        Rm = lambda x: x['Mkt-RF'] + x['RF'],
-    )
-    .get(['Date', 'Ticker', 'R', 'Rm'])
+print(factors_ff3_monthly['Rm_minus_Rf']
+      .groupby(factors_ff3_monthly['Date'].dt.year)
+      .describe()
+        .round(3)
 )
 
-print(monthly_data.head())
+## Plot Cumulative Market Return
+from plotnine import *
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+plot_market = (
+    ggplot(factors_ff3_monthly.assign(Cumulative_Market_Return = lambda x: (1 + x['Rm_minus_Rf']).cumprod()),
+           aes(x = 'Date', y = 'Cumulative_Market_Return')) +
+    geom_line() +
+    scale_x_datetime(breaks = date_breaks('2 years'), labels = date_format('%Y')) +
+    labs(x = "Date", y = "Market Return")
+)
+
+plot_market.show() 
+
 
 ### Estimate beta
 import statsmodels.formula.api as smf
 from regtabletotext import prettify_result
 
+monthly_data = (
+    ret_monthly
+    .merge(factors_ff3_monthly, on = 'Date', how = 'left')
+    .assign(
+        R_minus_Rf = lambda x: x['R'] - x['Rf'],
+    )
+    .get(['Date', 'Ticker', 'R_minus_Rf', 'Rm_minus_Rf'])
+)
+
+
 model_beta = (
-    smf.ols("R ~ Rm",
+    smf.ols("R_minus_Rf ~ Rm_minus_Rf",
     data = monthly_data.query("Ticker == 'ABBV'")
     )
     .fit()
@@ -80,51 +99,51 @@ model_beta = (
 
 print(prettify_result(model_beta))
 
-### Rolling Window
-from statsmodels.regression.rolling import RollingOLS
+# # ### Rolling Window
+# # from statsmodels.regression.rolling import RollingOLS
 
-window_size = 60
-min_obs = 48 
+# # window_size = 60
+# # min_obs = 48 
 
-def roll_capm_estimation(data, window_size, min_obs):
+# # def roll_capm_estimation(data, window_size, min_obs):
 
-    data = data.sort_values('Date')
+# #     data = data.sort_values('Date')
 
-    result = (
-        RollingOLS.from_formula(
-            formula = "R ~ Rm",
-            data = data,
-            window = window_size,
-            min_nobs = min_obs,
-            missing = 'drop'   
-        )
-        .fit()
-        .params.get('Rm')
-    )
-    result.index = data.index
+# #     result = (
+# #         RollingOLS.from_formula(
+# #             formula = "R ~ Rm",
+# #             data = data,
+# #             window = window_size,
+# #             min_nobs = min_obs,
+# #             missing = 'drop'   
+# #         )
+# #         .fit()
+# #         .params.get('Rm')
+# #     )
+# #     result.index = data.index
 
-    return result
+# #     return result
 
-rolling_beta = (
-    monthly_data
-    .groupby('Ticker')
-    .apply(lambda x: x.assign(beta = roll_capm_estimation(x, window_size, min_obs)))
-    .reset_index(drop = True)
-    .dropna()
-)
+# # rolling_beta = (
+# #     monthly_data
+# #     .groupby('Ticker')
+# #     .apply(lambda x: x.assign(beta = roll_capm_estimation(x, window_size, min_obs)))
+# #     .reset_index(drop = True)
+# #     .dropna()
+# # )
 
-print(rolling_beta.head())
+# # print(rolling_beta.head())
 
-from plotnine import *
-from mizani.breaks import date_breaks
-from mizani.formatters import percent_format, date_format
+# # from plotnine import *
+# # from mizani.breaks import date_breaks
+# # from mizani.formatters import percent_format, date_format
 
-plot_beta = (
-    ggplot(rolling_beta,
-           aes(x = 'Date', y = 'beta', color = 'Ticker')) +
-    geom_line() +
-    scale_x_datetime(breaks = date_breaks('2 years'), labels = date_format('%Y')) +
-    labs(x = "Date", y = "Beta")
-)
+# # plot_beta = (
+# #     ggplot(rolling_beta,
+# #            aes(x = 'Date', y = 'beta', color = 'Ticker')) +
+# #     geom_line() +
+# #     scale_x_datetime(breaks = date_breaks('2 years'), labels = date_format('%Y')) +
+# #     labs(x = "Date", y = "Beta")
+# # )
 
-plot_beta.show()
+# # plot_beta.show()

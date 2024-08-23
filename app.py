@@ -34,6 +34,8 @@ portfolio_page = [st.Page("pc/introduction.py", title="Introduction", default=(p
 empirics_pages = [
     st.Page("emp/introduction.py", title = "Introduction", default=(page == 'Empirics')),
     st.Page("emp/capm.py", title="Testing the CAPM"),
+    st.Page("emp/famafrench.py", title="Fama-French Factors"),
+    st.Page("emp/greenfactor.py", title="Green Factor"),
 ]
 
 kc_pages = [
