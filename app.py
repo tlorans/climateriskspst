@@ -3,7 +3,7 @@ import streamlit as st
 if "page" not in st.session_state:
     st.session_state.page = None
 
-PAGES = ["Theory", "Empirics", "Portfolio Construction"]
+PAGES = ["Risk", "Hedging"]
 
 def set_page(page):
     st.session_state.page = page
@@ -12,12 +12,10 @@ def set_page(page):
 def home_page():
     st.header("Welcome")
     st.write("Please choose a section to navigate:")
-    if st.button("Theory"):
-        set_page("Theory")
-    if st.button("Empirics"):
-        set_page("Empirics")
-    if st.button("Portfolio Construction"):
-        set_page("Portfolio Construction")
+    if st.button("Risk"):
+        set_page("Risk")
+    if st.button("Hedging"):
+        set_page("Hedging")
 
 def go_home():
     st.session_state.page = None
@@ -27,26 +25,15 @@ page = st.session_state.page
 go_home_page = st.Page(go_home, title="Home", icon="🏠", default=(page is None))
 
 # Define pages
-portfolio_page = [st.Page("pc/introduction.py", title="Introduction", default=(page=="Portfolio Construction")),
-                  st.Page("pc/parametric_portfolio_policies.py", title="Parametric Portfolio Policies"),
+risk_pages = [st.Page("risk/introduction.py", title="Introduction", default=(page=="Risk")),
+                st.Page("risk/risk_factor.py", title="Risk Factor"),
+                st.Page("risk/sources_risk.py", title="Sources of Risk"),
 ]
 
-empirics_pages = [
-    st.Page("emp/introduction.py", title = "Introduction", default=(page == 'Empirics')),
-    st.Page("emp/capm.py", title="Testing the CAPM"),
-    st.Page("emp/famafrench.py", title="Fama-French Factors"),
-    st.Page("emp/greenfactor.py", title="Green Factor"),
+hedging_pages = [
+    st.Page("hedging/introduction.py", title = "Introduction", default=(page == 'Empirics')),
 ]
 
-kc_pages = [
-    st.Page("kc/introduction.py", title="Climate Risks and Equity Portfolio", default = (page == "Theory")),
-    st.Page("kc/uncertainty.py", title="Climate Change Uncertainty"),
-    st.Page("kc/optimalportfolio.py", title="Optimal Portfolio with Climate Change Uncertainty"),
-    st.Page("kc/expectedreturn.py", title="Expected Return with Climate Change Uncertainty"),
-    st.Page("kc/hedgingportfolio.py", title="Climate Risks Hedging Portfolio"),
-    st.Page("kc/unexpectedreturns.py", title="Unexpected Returns: a Consequence of Resolving Climate Change Uncertainty"),
-
-]
 
 # Main navigation setup
 
@@ -55,12 +42,11 @@ st.title("Climate Risks")
 
 page_dict = {}
 
-if st.session_state.page == "Theory":
-    page_dict["Theory"] = kc_pages
+if st.session_state.page == "Risk":
+    page_dict["Risk"] = risk_pages
 elif st.session_state.page == "Empirics":
-    page_dict["Empirics"] = empirics_pages
-elif st.session_state.page == "Portfolio Construction":
-    page_dict["Portfolio Construction"] = [portfolio_page]
+    page_dict["Empirics"] = hedging_pages
+
 
 if len(page_dict) > 0:
     pg = st.navigation({"": [go_home_page]} | page_dict)
