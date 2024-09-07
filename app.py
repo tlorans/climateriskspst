@@ -27,6 +27,8 @@ go_home_page = st.Page(go_home, title="Home", icon="🏠", default=(page is None
 # Define pages
 risk_pages = [st.Page("risk/introduction.py", title="Introduction", default=(page=="Risk")),
                 st.Page("risk/risk_factor.py", title="Risk Factor"),
+                st.Page("risk/climate_risk_factor.py", title="Climate Risk Factor"),
+                st.Page("risk/unpriced_risk.py", title="Unpriced Risk"),
                 st.Page("risk/sources_risk.py", title="Sources of Risk"),
 ]
 
