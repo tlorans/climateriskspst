@@ -164,3 +164,4 @@ cython_debug/
 credentials.txt
 # *.csv
 *.h5
+dev_files/
