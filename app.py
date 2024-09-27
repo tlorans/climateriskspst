@@ -44,7 +44,7 @@ third_part = [st.Page("climate_risks_unexpected_returns/theory.py", title = "The
     ]
 
 fourth_part = [st.Page("hedging_unrewarded_risks/targeted.py", title = "Hedging Portfolio", default=(page=="Hedging Unrewarded Risks")),
-               st.Page("hedging_unrewarded_risks/agnostic.py", title = "Smart Factor Diversification"),
+               st.Page("hedging_unrewarded_risks/project.py", title = "Project 4"),
 ]
 
 
