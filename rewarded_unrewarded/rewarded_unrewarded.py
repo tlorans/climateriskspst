@@ -15,7 +15,15 @@ A common practice in the academic finance literature
 has been to create characteristic portfolios by sorting on 
 characteristics positively associated with expected returns (see previous section).
 The resultant portfolios, which go long a portfolio of high characteristic
-firms and short a portfolio of low characteristic firms serve as a proxy for the risk factor returns (see Fama and French 1993, 2015 as prominent examples).
+firms and short a portfolio of low characteristic firms serve as a proxy for 
+the risk factor returns (see Fama and French 1993, 2015 as prominent examples).
+
+The procedure helps to distinguish between rewarded and unrewarded risks factors.
+Rewarded risks are risks that are compensated by a risk premium, that is 
+they are associated with higher expected returns. 
+Unrewarded risks are risks that are not compensated by a risk premium. While 
+they are source of common variation in returns, they are not associated with
+higher expected returns.     
          """)
 
 st.subheader('Rewarded Risk')
@@ -348,8 +356,7 @@ st.write(r"""
          The portfolio $c$ is not efficient because it loads on the unrewarded factor $g$.
 Loading on the unrewarded factor $g$ is a source of risk (additional variance in the denominator of the Sharpe ratio)
 that is not rewarded by the market (no risk premium $\lambda_g$ on $g$, and therefore no supplementary expected return in the numerator of the Sharpe ratio).
-This simple example give us the broad idea about unrewarded risk exposure,
-and how they undermine the efficiency of a portfolio."""
+"""
          )
 
 # Step 1: Compute the means of beta and gamma
@@ -377,12 +384,13 @@ st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
 
 
 st.write(r"""
-Asset pricing theory suggest that one of the main challenge 
-         in finance is the efficient diversification of unrewarded risks, 
-         where "diversification" means "reduction" or "cancellation" (as in "diversify away")
-            and "unrewarded" means "not compensated by a risk premium".
-         Indeed, unrewarded risks are by definition not attractive for investors 
-         who are inherently risk-averse and therefore only willing to take 
-         risks if there is an associated reward to be expected in exchange for such 
-         risk-taking, as shown by Markowitz (1952). (Amenc $\textit {et al.}$, 2014)
+We have seen that unrewarded risks matter.
+In fact, asset pricing theory suggest that one of the main challenge 
+in finance is the efficient diversification of unrewarded risks, 
+where "diversification" means "reduction" or "cancellation" (as in "diversify away")
+and "unrewarded" means "not compensated by a risk premium".
+Indeed, unrewarded risks are by definition not attractive for investors 
+who are inherently risk-averse and therefore only willing to take 
+risks if there is an associated reward to be expected in exchange for such 
+risk-taking, as shown by Markowitz (1952). (Amenc $\textit {et al.}$, 2014)
          """)
