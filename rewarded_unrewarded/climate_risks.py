@@ -9,11 +9,14 @@ import plotly.graph_objs as go
 
 st.title('Climate Risks: Rewarded or Unrewarded Risks?')
 
+st.subheader('Chasing the Climate Risks Premium')
 
 st.write(r"""
 Use Venturini review
          """)
 
+
+st.subheader('Climate Risks and Unexpected Returns')
 
 st.write(r"""
 Introduce Ardia and Pastor thesis to come in the next section that explains mixed results. 
