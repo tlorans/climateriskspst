@@ -27,7 +27,7 @@ page = st.session_state.page
 go_home_page = st.Page(go_home, title="Home", icon="🏠", default=(page is None))
 
 # Define pages
-first_part = [st.Page("rewarded_unrewarded/what_are_climate_risks.py", title = "What are Climate Risks?", default=(page=="Rewarded and Unrewarded Risks")),
+first_part = [st.Page("rewarded_unrewarded/what_are_climate_risks.py", title = "Climate Risks and Stock Returns", default=(page=="Rewarded and Unrewarded Risks")),
                 st.Page("rewarded_unrewarded/rewarded_unrewarded.py",title ="Rewarded and Unrewarded Risks"),
                 st.Page("rewarded_unrewarded/climate_risks.py", title = "Climate Risks"),
               st.Page("rewarded_unrewarded/project.py", title = "Project 1"),
