@@ -4,6 +4,7 @@ import plotly.graph_objs as go
 import numpy as np
 import sympy as sp
 import sympy.stats as stats
+import plotly.graph_objs as go
 
 
 st.title('Rewarded and Unrewarded Risk in Finance')
@@ -357,3 +358,26 @@ that is not rewarded by the market (no risk premium $\lambda_g$ on $g$, and ther
 This simple example give us the broad idea about unrewarded risk exposure,
 and how they undermine the efficiency of a portfolio."""
          )
+
+# Step 1: Compute the means of beta and gamma
+beta_mean = sp.Rational(sum(beta_input), N)
+gamma_mean = sp.Rational(sum(gamma_input), N)
+
+# Step 2: Compute the covariance between beta and gamma
+cov_beta_gamma = sp.Rational(0, 1)
+for i in range(N):
+    cov_beta_gamma += (beta[i] - beta_mean) * (gamma[i] - gamma_mean)
+cov_beta_gamma /= N
+
+# Step 3: Compute the standard deviations of beta and gamma
+std_beta = sp.sqrt(sum((beta[i] - beta_mean)**2 for i in range(N)) / N)
+std_gamma = sp.sqrt(sum((gamma[i] - gamma_mean)**2 for i in range(N)) / N)
+
+# Step 4: Compute the correlation
+correlation = cov_beta_gamma / (std_beta * std_gamma)
+
+# Display the correlation formula
+st.write(r"""
+The symbolic correlation between $\beta$ and $\gamma$ is:
+""")
+st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
