@@ -7,7 +7,7 @@ import sympy.stats as stats
 import plotly.graph_objs as go
 
 
-st.title('Rewarded and Unrewarded Risk in Finance')
+st.title('Rewarded and Unrewarded Risks in Finance')
 
 
 st.write(r"""
@@ -381,3 +381,5 @@ st.write(r"""
 The symbolic correlation between $\beta$ and $\gamma$ is:
 """)
 st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
+
+
