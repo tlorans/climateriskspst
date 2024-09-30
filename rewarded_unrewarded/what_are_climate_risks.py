@@ -11,12 +11,10 @@ st.subheader('Characteristics and Cross Section of Stock Returns')
 
 
 st.write(r"""
-         The literature in asset pricing has found that the cross-section of stock returns is related to firm characteristics.
-Those characteristics may proxy exposure to some underlying risk factors. That is, they 
-may help to identify stocks that behave poorly in bad times, and thus have high expected returns.
-         
-Fama and French (2015) use the dividend discount model to motivate the use of a combination of firm 
-characteristics based on valuation, profitability and investment to explain the cross-section of stock returns:
+The asset pricing literature has found that stock returns across different firms can be explained by their characteristics. 
+These characteristics may act as proxies for underlying risk factors, helping to identify stocks that are more likely to perform poorly during bad times, thus carrying higher expected returns.
+
+Fama and French (2015) use the dividend discount model to link firm characteristics—valuation, profitability, and investment—with stock returns. The following equation represents the model:
 """)
 
 st.latex(r'''
@@ -26,10 +24,14 @@ st.latex(r'''
             ''')
 
 st.write(r"""
-where $M_t$ is the market value of equity, $Y_{t+1}$ is the expected future earnings, 
-$dB_{t+1}$ is the expected change in book value of equity, and $r$ is, approximately, the expected return.
-You can solve for $r$ to get the expected return:
-         """)
+Where:
+- $M_t$: Market value of equity,
+- $Y_{t+1}$: Expected future earnings,
+- $dB_{t+1}$: Expected change in book value of equity,
+- $r$: Expected return.
+
+By solving for $r$, we obtain the expected return:
+""")
 
 
 # Define the equation: r = (Y_{t+1} - dB_{t+1}) / M_t - 1
@@ -60,10 +62,8 @@ expected_return_case_1 = sp.solve(ddm_numeric_case_1, r)[0]
 
 
 st.write(r"""
-This model implies three statements about expected returns. First, 
-         if we fix everything except the current value of the stock, $M_t$,
-         and the expected stock return, $r$, then a lower value of $M_t$, or 
-         equivalently a higher book-to-market ratio, implies a higher expected return:
+This model suggests the following relationship between expected returns and firm characteristics:
+1. **Valuation**: If we hold everything else constant and only vary the market value ($M_t$), a lower $M_t$ (or a higher book-to-market ratio) implies a higher expected return.
 """)
 
 
@@ -74,18 +74,12 @@ latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(defa
 st.latex(latex_eq)
 
 st.write(r"""
-Zhang (2005) provides a rationale for the value premium based on costly 
-         reversibility of investments. The stock price 
-         of value firms is mainly made up of tangible assets 
-         which are hard to reduce while growth firm's stock price is mainly driven by growth options.
-         Therefore value firms are much more affected by bad times.
-         """)
+For example, Zhang (2005) explains the value premium by arguing that value firms are more affected by bad economic times, as their assets are harder to adjust compared to growth firms. As a result, value firms tend to offer higher expected returns due to their greater exposure to risks in bad times.
+""")
 
 st.write(r"""
-Next, if we fix $M_t$ and the values of everything except the expected future earnings and 
-         the expected stock return, the equation tells us that higher expected earnings imply 
-         a higher expected return:
-         """)
+2. **Profitability**: If we fix the market value ($M_t$) and only vary the expected future earnings ($Y_{t+1}$), higher expected earnings imply a higher expected return.
+""")
 
 
 # Substitute user input values into the equation
@@ -102,21 +96,12 @@ latex_eq = r"\begin{equation} r = \frac{" + str(Y_t1_val) + " - " + str(default_
 st.latex(latex_eq)
 
 st.write(r"""
-A problem with risk-based explanations of this link between 
-profitability and expected return is that these characteristics would intuitively 
-         suggest that these firms are less risky.
-However, on the other hand, more profitable firms tend to be growth firms,
-         which have more of their cash flow in the distant future. 
-         More distant cash flows are more uncertain and should require a risk premium.
-         Another risk-based explanation is that higher profitability should attract 
-         more competition, threatening profit margins (and thus making future cash flows less certain).
-         And that, too, creates more risk and should require a risk premium.
+While profitability might intuitively suggest lower risk, firms with higher profitability often have more of their cash flow far into the future, making these cash flows more uncertain. Additionally, profitable firms may attract competition, which can threaten future profit margins and increase risk.
 """)
 
 st.write(r"""
-Finally, for fixed values of $M_t$ and expected earnings, higher expected growth in 
-book equity - investment - implies a lower expected return:
-         """)
+3. **Investment**: If we hold the market value and expected earnings constant, higher expected growth in book equity (investment) implies a lower expected return.
+""")
 
 # Substitute user input values into the equation
 ddm_numeric_case_3 = ddm_eq.subs({M_t: default_M, Y_t1: default_Y_t1, dB_t1: dB_t1_val})
@@ -131,41 +116,20 @@ latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(dB_t
 st.latex(latex_eq)
 
 st.write(r"""
-Controlling for a firm's market value and expected profitability, 
-         a company that must invest heavily to sustain its 
-         profits should have lower contemporaneous free cash flows to investors 
-         than a company with similar profits but lower investment. 
-         """)
+This relationship suggests that firms investing heavily to sustain profits may have lower free cash flow available for investors, leading to lower expected returns compared to firms with lower investment needs.
+""")
 
 
 st.subheader('Could Climate Risks-Related Characteristics Explain Stock Returns?')
 
 
-
 st.write(r"""
-The literature considers the price effects of at least two broad categories of climate-related risk 
-factors: physical climate risk and transition risk. Physical climate risk includes 
-risks of the direct impairment of productive assets resulting from climate change. 
-Transition risk includes risks to cash flows arising from a possible transition to a low-carbon economy.
-         
-A central element is that assets are differentially exposed to the climate 
-         risk factors. For example, the threat of damage from rising sea levels 
-         to firm's production facilities close to the sea could be considered a physical climate risk.
-One example of a transition risk is the possible introduction of a carbon tax that might leave fossil fuel componaies 
-         with stranded assets that no longer profitable to operate. 
+The literature on climate finance discusses two broad categories of climate-related risks:
+1. **Physical Climate Risk**: Risks arising from the direct impact of climate change on assets, such as sea level rise or extreme weather events damaging production facilities.
+2. **Transition Risk**: Risks associated with the transition to a low-carbon economy, such as carbon taxes that may reduce the profitability of fossil fuel companies.
 
-Different assets may be positively or negatively exposed to these types of climate risks. 
-In other words, realizations of both physical and transition risks will have winners and losers 
-         in asset markets. For example, while coal companies would likely suffer 
-         from realizations of transition risks, renewable enrgy companies might benefit.
+Assets may have different exposures to these risks, meaning that climate risk realizations could create both winners and losers in the market. For example, while coal companies might suffer from transition risks, renewable energy companies may benefit.
 
-A key challenge is therefore to obtain measures of different assets' exposures to both physical and climate risks.
-         
-For example, 
-studies in climate finance tend to assume that the higher a company's emissions, the "browner"
-that firm is (Bolton and Kacperczyj, 2021). The opposite holds for "green" firms.  
-         
-Therefore, as in the case of established characteristics related to the cross-section of stock returns,
-we could expect that firms with higher exposure to climate risks, proxied by some climate-related characteristics, would have higher expected returns. 
+Similar to traditional firm characteristics, we can expect that firms more exposed to climate risks may also exhibit higher expected returns, as investors require compensation for these additional risks.
 """)
 
