@@ -7,21 +7,19 @@ import sympy.stats as stats
 import plotly.graph_objs as go
 
 
-st.title('Rewarded and Unrewarded Risks in Finance')
+st.title('Rewarded and Unrewarded Risks')
 
 
 st.write(r"""
-Asset pricing theory suggest that one of the main challenge 
-         in finance is the efficient diversification of unrewarded risks, 
-         where "diversification" means "reduction" or "cancellation" (as in "diversify away")
-            and "unrewarded" means "not compensated by a risk premium".
-         Indeed, unrewarded risks are by definition not attractive for investors 
-         who are inherently risk-averse and therefore only willing to take 
-         risks if there is an associated reward to be expected in exchange for such 
-         risk-taking, as shown by Markowitz (1952). (Amenc $\textit {et al.}$, 2014)
+A common practice in the academic finance literature 
+has been to create characteristic portfolios by sorting on 
+characteristics positively associated with expected returns (see previous section).
+The resultant portfolios, which go long a portfolio of high characteristic
+firms and short a portfolio of low characteristic firms serve as a proxy for the risk factor returns (see Fama and French 1993, 2015 as prominent examples).
          """)
 
 st.subheader('Rewarded Risk')
+
 
 st.write(r"""
 Following Daniel $\textit {et al.}$ (2020), 
@@ -223,11 +221,6 @@ st.write(r"""
 
 st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio)}")
 
-st.write(r"""
-         The portfolio $c$ is efficient because it loads on the rewarded factor $f$,
-         while the idiosyncratic risk is diversified away."""
-         )
-
 
 st.subheader('Unrewarded Risk')
 
@@ -383,3 +376,13 @@ The symbolic correlation between $\beta$ and $\gamma$ is:
 st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
 
 
+st.write(r"""
+Asset pricing theory suggest that one of the main challenge 
+         in finance is the efficient diversification of unrewarded risks, 
+         where "diversification" means "reduction" or "cancellation" (as in "diversify away")
+            and "unrewarded" means "not compensated by a risk premium".
+         Indeed, unrewarded risks are by definition not attractive for investors 
+         who are inherently risk-averse and therefore only willing to take 
+         risks if there is an associated reward to be expected in exchange for such 
+         risk-taking, as shown by Markowitz (1952). (Amenc $\textit {et al.}$, 2014)
+         """)
