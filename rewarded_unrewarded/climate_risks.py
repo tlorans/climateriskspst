@@ -81,6 +81,7 @@ st.dataframe(df)
 st.subheader('Climate Risks and Unexpected Returns')
 
 st.write(r"""
-Introduce Ardia and Pastor thesis to come in the next section that explains mixed results. 
-         Climate Risks effects are currently unexpected returns.
+The empirical findings in Ardia $\textit{et al.}$ (2021) and 
+Pastor $\textit{et al.}$ (2021) gives an interpretation of the mixed 
+results in the literature. 
          """)
