@@ -6,18 +6,17 @@ import sympy.stats as stats
 
 st.title('Climate Risks and Stock Returns')
 
-st.write(r"""
-         We start by a short introduction to why some characteristics may be linked to expected returns according 
-         to empirical asset pricing, and then briefly 
-            discuss the implications of climate risks on asset pricing.
-         """)
 
 st.subheader('Characteristics and Cross Section of Stock Returns')
 
 
 st.write(r"""
-         Fama and French (2015) use the dividend discount model to motivate the use of a combination of firm 
-         characteristics based on valuation, profitability and investment to explain the cross-section of stock returns:
+         The literature in asset pricing has found that the cross-section of stock returns is related to firm characteristics.
+Those characteristics may proxy exposure to some underlying risk factors. That is, they 
+may help to identify stocks that behave poorly in bad times, and thus have high expected returns.
+         
+Fama and French (2015) use the dividend discount model to motivate the use of a combination of firm 
+characteristics based on valuation, profitability and investment to explain the cross-section of stock returns:
 """)
 
 st.latex(r'''
@@ -144,12 +143,29 @@ st.subheader('Could Climate Risks-Related Characteristics Explain Stock Returns?
 
 
 st.write(r"""
-Climate risks are categorized into physical and transition risks (Carney, 2015). Physical risks arise from climate and weather events that impact company operations or society (Tankov and Tantet, 2019). These can be:
-- Acute (e.g., extreme weather events).
-- Chronic (e.g., long-term shifts in climate patterns).
-
-Transition risks relate to scenarios leading to a low-carbon economy and the impact on fossil fuels and related sectors (Curtin et al., 2019).
+The literature considers the price effects of at least two broad categories of climate-related risk 
+factors: physical climate risk and transition risk. Physical climate risk includes 
+risks of the direct impairment of productive assets resulting from climate change. 
+Transition risk includes risks to cash flows arising from a possible transition to a low-carbon economy.
          
-Giglio ... characteristics
+A central element is that assets are differentially exposed to the climate 
+         risk factors. For example, the threat of damage from rising sea levels 
+         to firm's production facilities close to the sea could be considered a physical climate risk.
+One example of a transition risk is the possible introduction of a carbon tax that might leave fossil fuel componaies 
+         with stranded assets that no longer profitable to operate. 
+
+Different assets may be positively or negatively exposed to these types of climate risks. 
+In other words, realizations of both physical and transition risks will have winners and losers 
+         in asset markets. For example, while coal companies would likely suffer 
+         from realizations of transition risks, renewable enrgy companies might benefit.
+
+A key challenge is therefore to obtain measures of different assets' exposures to both physical and climate risks.
+         
+For example, 
+studies in climate finance tend to assume that the higher a company's emissions, the "browner"
+that firm is (Bolton and Kacperczyj, 2021). The opposite holds for "green" firms.  
+         
+Therefore, as in the case of established characteristics related to the cross-section of stock returns,
+we could expect that firms with higher exposure to climate risks, proxied by some climate-related characteristics, would have higher expected returns. 
 """)
 
