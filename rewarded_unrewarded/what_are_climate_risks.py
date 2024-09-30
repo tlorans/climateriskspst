@@ -67,3 +67,23 @@ st.write(r"""
 
 Data on firm innovation, emissions, and investor flows towards green funds are critical for modeling these transition risks.
 """)
+
+st.subheader('Asset Pricing Implications')
+
+st.write(r"""
+The climate risk drivers described above can impact the cross-section of stock returns. Modeling how these risks systematically affect the equity market presents challenges for asset pricing. However, recent literature in climate finance has identified two primary ways to link these risks to equity prices at a macro level.
+""")
+
+st.write(r"""
+According to Giglio et al. (2020), financial models of climate risks vary based on researchers' beliefs about climate change uncertainty. There is ongoing debate on whether climate risks are a low-probability, catastrophic outcome (Weitzman, 2009) or a stochastic process tied to current aggregate consumption (Nordhaus, 1977). One key objective of these models is to estimate the social cost of carbon (Bansal et al., 2019), a metric with significant policy implications. 
+
+Initially, estimates of the social cost of carbon were largely derived from macroeconomic theories. However, Bansal et al. (2019) suggested that equity markets might offer an independent assessment of climate risks. Empirical evidence in this area could improve macro-financial models and lead to more accurate estimates of the social cost of carbon.
+""")
+
+st.write(r"""
+Other approaches focus on developing equilibrium models that align environmental, social, and corporate governance (ESG) criteria with asset return dynamics (Avramov et al., 2021; Pastor et al., 2020; Pedersen et al., 2020). ESG investing is closely related to climate considerations. While many models consider the indirect effects of sustainability preferences on asset prices, Pastor et al. (2020) developed a model where climate risks directly influence equilibrium returns, as they are embedded in investors' utility functions.
+""")
+
+st.write(r"""
+In both approaches, theoretical predictions depend on how financial markets price climate risks. Empirical asset pricing tests of security returns play a crucial role in determining whether and how these risks are reflected in the equity market.
+""")
