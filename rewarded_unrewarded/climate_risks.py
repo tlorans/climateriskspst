@@ -17,56 +17,44 @@ Reasoning in terms of portfolio,
             are rewarded or unrewarded in the cross-section of stock returns.
          """)
 
-st.subheader('Chasing the Climate Risks Premium')
+st.subheader('Is There a Climate Risks $\lambda$?')
+
+st.write(r"""
+Some studies found the evidence of a carbon premium in the cross-section.
+         However, it reamins unclear which transition risk can better explain the carbon premium.
+         Bolton and Kacperczyk (2021) found that portfolios sorted on the total level and the 
+         year-by-year change in emissions were valued at discount. These facts 
+         are true regardless of the type of scope emission analysed. Bolton and Kacperczyk (2021)
+         further showed that the carbon premium is not linked ot the emission intensity measure.
+         """)
+
 
 # Data for the table
 data = {
     "Study": [
-        "Balvers et al. (2017)", "Bansal et al. (2019)", "Bolton and Kacperczyk (2021a)", 
-        "Bolton and Kacperczyk (2020)", "Engle et al. (2020)", "Hsu et al. (2020)", 
-        "Nagar and Schoenfeld (2021)", "Ardia et al. (2021)", "Cheema-Fox et al. (2021)", 
-        "Ding et al. (2020)", "Görgen et al. (2020)", "Gostlow (2019)", "Hong et al. (2019)", 
-        "In et al. (2017)", "Jiang and Weng (2019)", "Kumar et al. (2019)", "Pastor et al. (2021)"
+        "Bolton and Kacperczyk (2021a)", 
+        "Bolton and Kacperczyk (2020)", "Hsu et al. (2020)", 
+        "Ardia et al. (2021)", "Cheema-Fox et al. (2021)", "Görgen et al. (2020)",
+        "In et al. (2017)", "Pastor et al. (2021)"
     ],
     "Climate risk measure": [
-        "Shocks in temperature", "Temperature anomaly", "Three emission measures", 
-        "Three emission measures", "E-scores", "Emission intensity", 
-        "Text mining index", "Emission intensity", "Two emission measures", 
-        "Soil moisture data", "BG scores", "FTS scores", "PDSI index", 
-        "Emission intensity", "ACI index", "Temperature anomaly", "E-scores"
+        "Three emission measures", 
+        "Three emission measures", "Emission intensity", 
+         "Emission intensity", "Two emission measures", 
+        "BG scores", 
+        "Emission intensity", "E-scores"
     ],
     "Economic rationale": [
-        "Sector and firm dynamics", "Dividend beta", "Transition risk proxies", 
-        "Transition risk proxies", "Hedging assets", "Climate policy risk", 
-        "Economic tracking", "Pastor et al. (2020)", "Investor irrationality", 
-        "Forecast of firm profit", "Transition risk proxies", "Climate risk proxies", 
-        "Forecast of firm profit", "Investor irrationality", "Forecast of firm profit", 
-        "Forecast of firm profit", "Pastor et al. (2020)"
+        "Transition risk proxies", 
+        "Transition risk proxies","Climate policy risk", "Pastor et al. (2020)", "Investor irrationality", 
+        "Transition risk proxies", 
+        "Investor irrationality", "Pastor et al. (2020)"
     ],
-    "Countries": [
-        "USA", "USA", "USA", "77 countries", "USA", "USA", 
-        "USA", "USA", "USA", "Multiple", "Multiple", "USA, EU and Japan", 
-        "31 countries", "USA", "USA and Canada", "USA", "USA"
-    ],
-    "Sectors": [
-        "Multiple", "Multiple", "Multiple", "Multiple", "Multiple", "Multiple", 
-        "Multiple", "Multiple", "Multiple", "Food", "Multiple", "Multiple", 
-        "Food", "Multiple", "Food and forestry", "Multiple", "Multiple"
-    ],
-    "Period": [
-        "1953–2015", "1970–2016", "2005–2017", "2005–2018", "2009–2016", "1991–2016", 
-        "2003–2019", "2010–2018", "2013–2020", "1984–2014", "2010–2017", "2008–2017", 
-        "1985–2014", "2005–2015", "1993–2018", "1926–2016", "2012–2020"
-    ],
-    "Sample": [
-        "n.a.", "n.a.", "3421", "14,400", "n.a.", "503", 
-        "10,000", "500", "1002", "776", "1657", "668", 
-        "776", "739", "145", "n.a.", "n.a."
-    ],
+
     "Is climate risk priced?": [
-        "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", 
-        "Yes", "No", "Yes", "Yes", "Yes", "Yes", 
-        "Yes", "Yes", "Yes", "Yes", "Yes"
+        "Yes", "Yes",  
+        "Yes", "No", "No", "No", 
+        "No",  "No"
     ]
 }
 
@@ -75,13 +63,48 @@ df = pd.DataFrame(data)
 
 # Display the table using Streamlit
 st.subheader("Table 1: Climate risk factors and the cross-section of stock returns")
-st.write("This table summarizes studies on climate risk factors and their effect on stock returns across different sectors, countries, and time periods.")
+st.write("This table summarizes studies on transition risks factor and their conclusions on the pricing of climate risks.")
 st.dataframe(df)
 
-st.subheader('Climate Risks and Unexpected Returns')
+st.write(r"""
+         The findings of Bolton and Kacperczyk (2021) are echoed by 
+         Bolton and Kacperzcyk (2020) at the international level, although not all countries 
+         are pricing cabron risk to the same extent. 
+         On the other hand, Hsy $\textit{et al.} (2020)$ discovered that 
+         the carbon premium is related to the emission intensity measure.
+         Nevertheless, these findings were not corroborated by the remaining studies in the Table.
+            """)
+
+
+st.subheader('Climate Risks as $g$')
 
 st.write(r"""
 The empirical findings in Ardia $\textit{et al.}$ (2021) and 
 Pastor $\textit{et al.}$ (2021) gives an interpretation of the mixed 
-results in the literature. 
+results in the literature. Also Ardia $\textit{et al.}$ (2021)
+         and Pastor $\textit{et al.}$ (2021) found that a portfolio 
+         that is long green stocks and short brown firms exhibits a positive alpha,
+         controlling for other known risk factors in the asset pricing literature.
+         They showed that such an outperformance is related to both the preference 
+         change channels and thus, to both positive cash-flow and negative discount rate 
+         news for green stocks. 
+
+To further show that such an outperformance is due to unexpected revaluations during the 
+estimation period, Pastor $\textit{et al.}$ (2021) constructed a counter-factual green 
+factor assuming zero shocks to climate concerns. The striking result 
+in Pastor $\textit{et al.}$ (2021) was that, in absence of climate news, the green 
+factor performance would be essentially flat. 
          """)
+
+
+st.write(r"""
+         Value factor and green factor""")
+
+st.write(r"""
+Therefore, the empirical evidence in Ardia $\textit{et al.}$ (2021) and Pastor $\textit{et al.}$ (2021)
+alongside the mixed results in chasing the climate risk premium in the literature,
+suggest that climate risks are unrewarded in the cross-section of stock returns.
+         
+We've seen in the previous section that exposure to unrewareded risks can be
+detrimental to the investor's portfolio, as it undermines the portfolio's mean-variance efficiency.
+            """)
