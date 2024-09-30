@@ -7,83 +7,90 @@ import sympy.stats as stats
 st.title('Climate Risks and Stock Returns')
 
 st.write(r"""
-The literature on climate finance is primarily shaped by two key themes:
-1. Climate change risks.
-2. Financial implications for asset pricing.
+         We start by a short introduction to linear risk factors model in empirical asset pricing, and then briefly 
+            discuss the implications of climate risks on asset pricing.
+         """)
 
+st.subheader('Modelling Risk in Finance with Linear Factor Model')
+
+
+st.write(r"""
+         Grounded in a solid academic background, factor models provide a general framework to analyse the systematic 
+         drivers to explain the cross-section of asset returns. Linear factor models assume that the return of an asset 
+         can be modelled as a combination of underlying risk factors:""")
+
+st.latex(r'''
+         \begin{equation}
+         r_{i,t} = \alpha_i + \sum^{K}_{k=1} \beta_{i,k} f_{k,t} + \epsilon_{i,t}
+         \end{equation}
+         ''')
+
+st.write(r"""A common practice in the academic finance literature has been 
+         to create characteristic portfolios by sorting on characteristics 
+         positively associated with expected returns. The methodology involves 
+         going long a portfolio of high characteristic firms and short a portfolio of low characteristic firms.
+         The returns of the resulting portfolios are supposed to proxy for the returns of the underlying risk factors $f_{k,t}$.
+         $\beta_{i,k}$ is the sensitivity of the asset return to the $k$-th factor, and $\epsilon_{i,t}$ is the idiosyncratic
+            component of the asset return.
+            """)
+
+st.write(r"""
+         Fama and French (2015) use the dividend discount model to motivate the use of a combination of firm 
+         characteristics based on valuation, profitability and investment to explain the cross-section of stock returns:
+""")
+
+st.latex(r'''
+            \begin{equation}
+         \frac{M_t}{B_t} = \frac{\sum^{\infty}_{\tau = 1} \mathbb{E}(Y_{t+\tau} - dB_{t+\tau})/(1+r)^{\tau}}{B_t}
+        \end{equation}
+            ''')
+
+st.write(r"""
+where $M_t$ is the market value of equity, $B_t$ is the book value of equity, $Y_{t+\tau}$ is the expected future earnings, 
+$dB_{t+\tau}$ is the expected change in book value of equity, and $r$ is, approximately, the expected return.
+         """)
+
+st.write(r"""
+This model implies three statements about expected returns. First, 
+         if we fix everything except the current value of the stock, $M_t$,
+         and the expected stock return, $r$, then a lower value of $M_t$, or 
+         equivalently a higher book-to-market ratio, implies a higher expected return.
+
+Next, if we fix $M_t$ and the values of everything except the expected future earnings and 
+         the expected stock return, the equation tells us that higher expected earnings imply 
+         a higher expected return.
+
+Finally, for fixed values of $B_t$, $M_t$ and expected earnings, higher expected growth in 
+book equity - investment - implies a lower expected return.
+         """)
+
+st.write(r"""
+This justifies the development of a five-factor model that includes $MktRF$, $SMB$, 
+         $HML$, $RMW$ and $CMA$ characteristic portfolios to explain the cross-section of stock returns, based on a 
+         time series regressions like:
+         """)
+
+st.latex(r'''
+            \begin{equation}
+            r_{i,t} = \alpha_i + \beta_{i,MktRF} MktRF_t + \beta_{i,SMB} SMB_t + \beta_{i,HML} HML_t + \beta_{i,RMW} RMW_t + \beta_{i,CMA} CMA_t + \epsilon_{i,t}
+            \end{equation}
+            ''')
+
+st.write(r"""
+         where $SMB$, $HML$, $RMW$ and $CMA$ are the returns of the size, value, profitability and investment characteristic-sorted 
+         portfolios, respectively.
+         """)
+
+
+st.subheader('Climate Risks and Asset Pricing')
+
+
+
+st.write(r"""
 Climate risks are categorized into physical and transition risks (Carney, 2015). Physical risks arise from climate and weather events that impact company operations or society (Tankov and Tantet, 2019). These can be:
 - Acute (e.g., extreme weather events).
 - Chronic (e.g., long-term shifts in climate patterns).
 
-Transition risks relate to scenarios leading to a low-carbon economy and the impact on fossil fuels and related sectors (Curtin et al., 2019). This course focuses on transition risks and their asset pricing implications.
+Transition risks relate to scenarios leading to a low-carbon economy and the impact on fossil fuels and related sectors (Curtin et al., 2019).
 """)
 
-st.write(r"""
-The financial aspect of climate risks is divided by asset class. Here, we focus on equity markets and the effect of both physical and transition risks on firm value.
-""")
-
-st.subheader('Physical Risks Channel')
-
-st.write(r"""
-Physical risks depend on three factors (Tankov and Tantet, 2019):
-""")
-
-st.latex(r'''
-\text{Physical Risk} = f(\text{Climate Hazard}, \text{Exposure}, \text{Vulnerability})
-''')
-
-st.write(r"""
-- **Climate Hazard**: The intensity and probability of climate events.
-- **Exposure**: The geographical distribution of assets at risk.
-- **Vulnerability**: The susceptibility of assets to damage, influenced by adaptation capacity.
-
-Climate hazards are analyzed through climate and natural disaster datasets. Tankov and Tantet (2019) classify climate datasets into four types:
-1. Observational,
-2. Reanalysis,
-3. Projections,
-4. Climate indices.
-
-Natural disaster datasets, while traditionally used in disaster management, are gaining traction in climate finance. They provide both location data and historical economic damages, making them useful for financial analysis.
-""")
-
-st.write(r"""
-To assess exposure and vulnerability, asset-level data is essential. This includes geographical data, asset characteristics, and innovation measures that reflect a firm's adaptation capabilities.
-""")
-
-st.subheader('Transition Risks Channel')
-
-st.write(r"""
-Transition risks are driven by three factors (Semieniuk et al., 2021):
-""")
-
-st.latex(r'''
-\text{Transition Risk} = f(\text{Policy Risk}, \text{Technology Risk}, \text{Preference Change})
-''')
-
-st.write(r"""
-- **Policy Risk**: Risks and opportunities from climate policies aimed at reducing greenhouse gas (GHG) emissions (Nordhaus, 1977, 1993). Policies include carbon taxes, cap-and-trade schemes, regulations, and green subsidies.
-- **Technology Risk**: The risk of new technologies that support the transition to low-carbon energy sources. Firms may adopt these technologies due to regulatory pressure, competition, or investor demand.
-- **Preference Change**: Shifts in consumer or investor preferences towards environmentally friendly assets (Pastor et al., 2020). Investors may avoid carbon-intensive assets due to higher downside risks or ethical motivations.
-
-Data on firm innovation, emissions, and investor flows towards green funds are critical for modeling these transition risks.
-""")
-
-st.subheader('Asset Pricing Implications')
-
-st.write(r"""
-The climate risk drivers described above can impact the cross-section of stock returns. Modeling how these risks systematically affect the equity market presents challenges for asset pricing. However, recent literature in climate finance has identified two primary ways to link these risks to equity prices at a macro level.
-""")
-
-st.write(r"""
-According to Giglio et al. (2020), financial models of climate risks vary based on researchers' beliefs about climate change uncertainty. There is ongoing debate on whether climate risks are a low-probability, catastrophic outcome (Weitzman, 2009) or a stochastic process tied to current aggregate consumption (Nordhaus, 1977). One key objective of these models is to estimate the social cost of carbon (Bansal et al., 2019), a metric with significant policy implications. 
-
-Initially, estimates of the social cost of carbon were largely derived from macroeconomic theories. However, Bansal et al. (2019) suggested that equity markets might offer an independent assessment of climate risks. Empirical evidence in this area could improve macro-financial models and lead to more accurate estimates of the social cost of carbon.
-""")
-
-st.write(r"""
-Other approaches focus on developing equilibrium models that align environmental, social, and corporate governance (ESG) criteria with asset return dynamics (Avramov et al., 2021; Pastor et al., 2020; Pedersen et al., 2020). ESG investing is closely related to climate considerations. While many models consider the indirect effects of sustainability preferences on asset prices, Pastor et al. (2020) developed a model where climate risks directly influence equilibrium returns, as they are embedded in investors' utility functions.
-""")
-
-st.write(r"""
-In both approaches, theoretical predictions depend on how financial markets price climate risks. Empirical asset pricing tests of security returns play a crucial role in determining whether and how these risks are reflected in the equity market.
-""")
