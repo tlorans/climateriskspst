@@ -5,7 +5,12 @@ import numpy as np
 import sympy as sp
 import sympy.stats as stats
 import plotly.graph_objs as go
-
+import pandas_datareader as pdr
+import statsmodels.api as sm
+from plotnine import *
+from mizani.formatters import date_format
+from mizani.breaks import date_breaks
+import pandas as pd
 
 st.title('Unrewarded Risks')
 
@@ -220,15 +225,165 @@ correlation = cov_beta_gamma / (std_beta * std_gamma)
 
 # Display the correlation formula
 st.write(r"""
-The symbolic correlation between $\beta$ and $\gamma$ is:
+The correlation between $\beta$ and $\gamma$ is:
 """)
 st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
 
-
-
-
 st.subheader("Illustration with Industry")
 
+st.write(r"""
+         Asness $\textit{et al.}$ (2000) have shown that if book-to-market ratios (the characteristic used to build the value factor) 
+         are decomposed into an across-industry component and a within-industry comopnent, then only the within-industry component is related 
+            to expected returns. This literature then suggests that the exposure of HML to industry returns is unpriced, that is, that industry is one 
+         unpriced source of common variation $g$. 
+
+            """)
+
+
+# Display the code snippet
+code_snippet = '''
+import pandas as pd
+import numpy as np
+import pandas_datareader as pdr
+import statsmodels.api as sm
+from plotnine import *
+from mizani.formatters import date_format
+from mizani.breaks import date_breaks
+
+start_date = '1963-07-01'
+end_date = '2019-06-30'
+
+factors_ff3_daily_raw = pdr.DataReader(
+  name="F-F_Research_Data_Factors_daily",
+  data_source="famafrench", 
+  start=start_date, 
+  end=end_date)[0]
+
+factors_ff3_daily = (factors_ff3_daily_raw
+  .divide(100)
+  .reset_index(names="date")
+  .rename(str.lower, axis="columns")
+  .rename(columns={"mkt-rf": "mkt_excess"})
+)
+
+industries_ff_daily_raw = pdr.DataReader(
+  name="10_Industry_Portfolios_daily",
+  data_source="famafrench", 
+  start=start_date, 
+  end=end_date)[0]
+
+industries_ff_daily = (industries_ff_daily_raw
+  .divide(100)
+  .reset_index(names="date")
+  .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
+  .rename(str.lower, axis="columns")
+)
+
+data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
+
+rolling_window = 126  # 126 days
+
+def rolling_r2(hml, industry_portfolios):
+    r2_values = []
+    
+    for i in range(len(hml) - rolling_window + 1):
+        y = hml.iloc[i:i + rolling_window]
+        X = industry_portfolios.iloc[i:i + rolling_window]
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X).fit()
+        r2_values.append(model.rsquared)
+    
+    return np.array(r2_values)
+
+r2_values = rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
+
+data_rolling_r2 = data.iloc[rolling_window - 1:].copy()
+data_rolling_r2['r2'] = r2_values
+
+plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
+        geom_line(color='blue') +
+        labs(title="126-Day Rolling R^2: HML on 12 Industry Portfolios",
+             x="Date", y="R-squared") +
+        scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+        theme(axis_text_x=element_text(rotation=45, hjust=1)))
+
+plot.show()
+'''
+
+# Display the code snippet
+st.code(code_snippet, language='python')
+
+# Define a function for rolling regression and plotting
+def run_rolling_regression_and_plot():
+    start_date = '1963-07-01'
+    end_date = '2019-06-30'
+
+    # Load Fama-French factors data
+    factors_ff3_daily_raw = pdr.DataReader(
+        name="F-F_Research_Data_Factors_daily",
+        data_source="famafrench",
+        start=start_date,
+        end=end_date)[0]
+
+    factors_ff3_daily = (factors_ff3_daily_raw
+                         .divide(100)
+                         .reset_index(names="date")
+                         .rename(str.lower, axis="columns")
+                         .rename(columns={"mkt-rf": "mkt_excess"}))
+
+    # Load 10 Industry Portfolios data
+    industries_ff_daily_raw = pdr.DataReader(
+        name="10_Industry_Portfolios_daily",
+        data_source="famafrench",
+        start=start_date,
+        end=end_date)[0]
+
+    industries_ff_daily = (industries_ff_daily_raw
+                           .divide(100)
+                           .reset_index(names="date")
+                           .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
+                           .rename(str.lower, axis="columns"))
+
+    # Merge HML and Industry portfolios
+    data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
+
+    # Define the window for rolling regressions
+    rolling_window = 126  # 126 days
+
+    # Function to compute R^2 from regression of HML on industry portfolios
+    def rolling_r2(hml, industry_portfolios):
+        r2_values = []
+
+        for i in range(len(hml) - rolling_window + 1):
+            y = hml.iloc[i:i + rolling_window]
+            X = industry_portfolios.iloc[i:i + rolling_window]
+            X = sm.add_constant(X)
+            model = sm.OLS(y, X).fit()
+            r2_values.append(model.rsquared)
+
+        return np.array(r2_values)
+
+    # Perform the rolling regression and get R^2 values
+    r2_values = rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
+    
+    # Add the R-squared values to the data
+    data_rolling_r2 = data.iloc[rolling_window - 1:].copy()
+    data_rolling_r2['r2'] = r2_values
+
+    # Create the plot with plotnine (ggplot style)
+    plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
+            geom_line(color='blue') +
+            labs(title="126-Day Rolling $R^2$: HML on 12 Industry Portfolios",
+                 x="Date", y="R-squared") +
+            scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+            theme(axis_text_x=element_text(rotation=45, hjust=1)))
+
+    # Show the plot in Streamlit
+    st.pyplot(ggplot.draw(plot))
+
+# Add a button to trigger the function
+if st.button('Run Rolling Regression and Plot'):
+    run_rolling_regression_and_plot()
 
 st.subheader("Conclusion")
 
