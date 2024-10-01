@@ -11,7 +11,7 @@ st.write(r"""
          Now that we have a tool to manage exposure to unrewarded risk, while keeping exposure to rewarded risk, we can go further.
          """)
 
-st.subheader('Combined Portfolio')
+st.subheader('Enhancing the Risk Return Profile')
 
 st.write(r"""
          Our initial portfolio $c$ with default values for the loadings on the rewarded and unrewarded risks has the variance:
@@ -177,5 +177,18 @@ st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio_with_g)}")
 
 
 st.subheader('Optimal Hedge Ratio')
+
+st.write(r"""
+Daniel $\textit{et al.}$ (2020) showed that we can do better by combining the hedge portfolio $h$ with the characteristic portfolio $c$ in 
+order to maximize the Sharpe ratio of the portfolio $p$. Given that the hedge portfolio has zero expected excess return, this is equivalent to finding the 
+combination of the characteristic portfolio and the hedge portfolio that minimizes the variance of the resultant portfolio, that is:
+         """)
+
+
+st.latex(r"""
+\begin{equation}
+            \min_{\delta} \text{var}(r_c - \delta r_h) \implies \delta^* = \rho_{c,h}\frac{\sigma_c}{\sigma_h}
+\end{equation}
+            """)
 
 st.subheader('Conclusion')
