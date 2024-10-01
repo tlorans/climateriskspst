@@ -20,10 +20,24 @@ st.write(r"""
          We follow Daniel $\textit{et al.}$ (2020) and show 
 how we can improve the portfolio $c$ from the first section.
 We can form a hedge portfolio $h$ that is long in assets with high exposure to the unrewarded factor $g$ and short in assets with low exposure to $g$. 
-But we need to ensure that the hedge portfolio, that will be used to enhance the initial characteristic portfolio $c$, will not alter the exposure to the rewarded factor $f$.
+To form a hedge portfolio that does not affect the exposure to the rewarded factor of the initial portfolio, 
+we need to form a hedge portfolio neutral to the rewarded factor $f$. That is, we want:
+""")
+
+st.latex(
+    r"""
+\begin{equation}
+w_h^T x = 0
+\end{equation}
+"""
+)
+
+st.write(r"""
+To do so, we can form a portfolio sorted on the characteristic $x$ as before. Then, 
+         within each sleeve (long and short), we can sort the assets on the loading on the unrewarded risk $\gamma$.
+We end up with $2\times3$ portfolios. We then go long portfolios with high $\gamma$ and short portfolios with low $\gamma$,
+         equally-weighted.
          
-To do this, we can long assets with high exposure to the unrewarded factor $g$ and short assets with low exposure to $g$, controlled for the exposure to the rewarded factor $f$.
-Let's consider 6 assets with the following loadings on the rewarded and unrewarded factors:
 """)
 
 
@@ -33,62 +47,56 @@ N = 6  # Number of assets
 # Predefined values for beta and gamma
 default_beta = [1, 1, 1, -1, -1, -1]
 
-st.sidebar.header("Input Loadings for Each Asset")
-
-
-# Collect beta inputs in the sidebar
-beta_input = []
-for i in range(N):
-    beta_val = st.sidebar.number_input(f'Beta for Asset {i+1}', min_value=-1, max_value=1, value=default_beta[i], step=2, key=f'beta_{i}')
-    beta_input.append(beta_val)
-
-
-# Collect beta inputs in the sidebar
-gamma_input = []
-for i in range(N):
-    gamma_val = st.sidebar.number_input(f'Gamma for Asset {i+1}', min_value=-1, max_value=1, value=default_gamma[i], step=2, key=f'gamma_{i}')
-    gamma_input.append(gamma_val)
-
 
 
 # Create a LaTeX table for the beta and gamma inputs
-table_latex = r"\begin{array}{|c|c|c|} \hline Asset & \beta & \gamma \\ \hline "
+table_latex = r"\begin{array}{|c|c|c|} \hline Asset & x & \gamma \\ \hline "
 for i in range(N):
-    table_latex += f"{i+1} & {beta_input[i]} & {gamma_input[i]} \\\\ \\hline "
+    table_latex += f"{i+1} & {default_beta[i]} & {default_gamma[i]} \\\\ \\hline "
 table_latex += r"\end{array}"
 st.latex(table_latex)
 
-
-
 # Convert beta and gamma inputs to Sympy matrices
-gamma = sp.Matrix(gamma_input)
+gamma = sp.Matrix(default_gamma)
 # Convert beta inputs to Sympy matrices
-beta = sp.Matrix(beta_input)
+beta = sp.Matrix(default_beta)
 # Convert beta and gamma inputs to NumPy arrays
-beta_np = np.array(beta_input)
-gamma_np = np.array(gamma_input)
+beta_np = np.array(default_beta)
+gamma_np = np.array(default_gamma)
+
 # Get the indices of the sorted beta values
-sorted_beta_indices = np.argsort(beta_np)
+sorted_indices = np.argsort(beta_np)
 
-# Long the highest beta assets and short the lowest beta assets
-long_beta_indices = sorted_beta_indices[-3:]
-short_beta_indices = sorted_beta_indices[:3]
+# Get the top 3 (high beta) and bottom 3 (low beta) indices
+high_beta_indices = sorted_indices[-3:]  # Indices for high beta
+low_beta_indices = sorted_indices[:3]    # Indices for low beta
 
-# Sort by gamma within the long beta sleeve and short beta sleeve separately
-long_gamma_sorted_indices = long_beta_indices[np.argsort(gamma_np[long_beta_indices])]
-short_gamma_sorted_indices = short_beta_indices[np.argsort(gamma_np[short_beta_indices])]
+low_beta_high_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][-1:]
 
-# Select high gamma for long and low gamma for short within each sleeve
-high_gamma_long = long_gamma_sorted_indices[-2:]  # Highest gamma in long sleeve
-low_gamma_short = short_gamma_sorted_indices[:2]  # Lowest gamma in short sleeve
+low_beta_low_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][:1]
 
-# Assign rational equal weights to the high gamma and low gamma assets
-w = sp.Matrix([0] * N)
-for idx in high_gamma_long:
-    w[idx] = sp.Rational(1, 2)  # Equal weight for the long stocks with high gamma
+high_beta_high_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][-1:]
 
-for idx in low_gamma_short:
-    w[idx] = sp.Rational(-1, 2)  # Equal weight for the short stocks with low gamma
+high_beta_low_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][:1]
+
+# Combine the long and short positions
+long = np.concatenate([low_beta_high_gamma_sorted, high_beta_high_gamma_sorted])
+short = np.concatenate([low_beta_low_gamma_sorted, high_beta_low_gamma_sorted])
+
+# Use SymPy's Rational to keep weights as fractions
+w_long = sp.Matrix([0] * N)
+w_short = sp.Matrix([0] * N)
+
+# Assign long positions (1/3) to the selected assets
+for idx in long:
+    w_long[idx] = sp.Rational(1, 2)
+
+# Assign short positions (-1/3) to the selected assets
+for idx in short:
+    w_short[idx] = sp.Rational(-1, 2)
+
+# Combine long and short positions to form the final weight vector
+w = w_long + w_short
 
 
 st.write(r"""
@@ -121,22 +129,13 @@ sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
 portfolio_return_with_g = w.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
 st.write(r"""
-         We can now compute the return of the portfolio $c$:
+         We can now compute the return of the hedge portfolio as:
                 """)
 
 st.latex(f"""r_h = {sp.latex(portfolio_return_with_g)}""")
 
 # Step 2: Take the expectation using sympy.stats
 expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
-
-
-st.write(r"""
-This portfolio goes long assets with high exposure to the 
-unrewarded factor $g$ and short assets with low exposure to $g$.
-The return of the portfolio $h$ is given by:
-         """)
-
-
 
 
 st.write(r"""
@@ -151,5 +150,11 @@ expected return of the portfolio $h$ is :
 expected_portfolio_return_with_g = stats.E(portfolio_return_with_g) 
 
 st.latex(f"E[r_h] = {sp.latex(expected_portfolio_return_with_g)}")
+
+
+st.write(r"""
+The double sorting on the rewarded and unrewarded factors allows us to construct a portfolio that is neutral to the rewarded factor, and
+         therefore could be use without affecting the exposure to the rewarded factor of the initial portfolio.
+         """)
 
 st.subheader('Hedge Portfolio')
