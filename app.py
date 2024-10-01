@@ -3,7 +3,7 @@ import streamlit as st
 if "page" not in st.session_state:
     st.session_state.page = None
 
-PAGES = ["Rewarded and Unreward Risks","Hedging Unrewarded Risks"]
+PAGES = ["Rewarded and Unrewarded Risks","What About Climate Risks?","Hedging Unrewarded Risks"]
 
 def set_page(page):
     st.session_state.page = page
@@ -14,6 +14,8 @@ def home_page():
     st.write("Please choose a section to navigate:")
     if st.button("Rewarded and Unrewarded Risks"):
         set_page("Rewarded and Unrewarded Risks")
+    if st.button("What About Climate Risks?"):
+        set_page("What About Climate Risks?")
     if st.button("Hedging Unrewarded Risks"):
         set_page("Hedging Unrewarded Risks")
 
@@ -25,15 +27,17 @@ page = st.session_state.page
 go_home_page = st.Page(go_home, title="Home", icon="🏠", default=(page is None))
 
 # Define pages
-first_part = [st.Page("rewarded_unrewarded/what_are_climate_risks.py", title = "Climate Risks and Stock Returns", default=(page=="Rewarded and Unrewarded Risks")),
-                st.Page("rewarded_unrewarded/rewarded_unrewarded.py",title ="Rewarded and Unrewarded Risks"),
-                    st.Page("rewarded_unrewarded/project_1.py", title = "Project 1"),
-                st.Page("rewarded_unrewarded/climate_risks.py", title = "Climate Risks"),
-              st.Page("rewarded_unrewarded/project_2.py", title = "Project 2"),
+rewarded_unrewarded = [st.Page("rewarded_unrewarded/rewarded.py", title = "Rewarded Risks", default=(page=="Rewarded and Unrewarded Risks")),
+                st.Page("rewarded_unrewarded/unrewarded.py",title ="Unrewarded Risks"),
 ]
 
-second_part = [st.Page("hedging_unrewarded_risks/targeted.py", title = "Hedging Portfolio", default=(page=="Hedging Unrewarded Risks")),
-               st.Page("hedging_unrewarded_risks/project.py", title = "Project 3"),
+climate_risks = [st.Page("climate_risks/characteristics.py", title = "Climate Characteristics", default=(page=="What About Climate Risks?")),
+                 st.Page("climate_risks/climate_lambda.py", title = "Where is the Risk Premium?"),
+                st.Page("climate_risks/climate_risks_g.py", title = "Climate Risks as a Common Source of Variation in Returns"),
+]
+
+hedging = [st.Page("hedging_unrewarded_risks/hedging_portfolio.py", title = "Hedging Portfolio", default=(page=="Hedging Unrewarded Risks")),
+               st.Page("hedging_unrewarded_risks/combination.py", title = "Factor Efficient Portfolio"),
 ]
 
 
@@ -43,9 +47,11 @@ st.title("Climate Risks")
 page_dict = {}
 
 if st.session_state.page == "Rewarded and Unrewarded Risks":
-    page_dict["Rewarded and Unrewarded Risks"] = first_part
+    page_dict["Rewarded and Unrewarded Risks"] = rewarded_unrewarded
+elif st.session_state.page == "What About Climate Risks?":
+    page_dict["What About Climate Risks?"] = climate_risks
 elif st.session_state.page == "Hedging Unrewarded Risks":
-    page_dict["Hedging Unrewarded Risks"] = second_part
+    page_dict["Hedging Unrewarded Risks"] = hedging
 
 
 if len(page_dict) > 0:

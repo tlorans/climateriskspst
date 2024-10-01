@@ -7,7 +7,7 @@ import sympy.stats as stats
 import plotly.graph_objs as go
 
 
-st.title('Rewarded and Unrewarded Risks')
+st.title('Rewarded Risks')
 
 
 st.write(r"""
@@ -26,7 +26,7 @@ they are source of common variation in returns, they are not associated with
 higher expected returns.     
          """)
 
-st.subheader('Rewarded Risk')
+st.subheader('Characteristic-Sorted Portfolio')
 
 
 st.write(r"""
@@ -229,168 +229,114 @@ st.write(r"""
 
 st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio)}")
 
-
-st.subheader('Unrewarded Risk')
+st.subheader('Characteristics and the Cross Section of Stock Returns')
 
 st.write(r"""
-We now consider the unrewarded risk. We add a second factor $g$ to the model:
+The asset pricing literature has found that stock returns across different firms can be explained by their characteristics. 
+These characteristics may act as proxies for underlying risk factors, helping to identify stocks that are more likely to perform poorly during bad times, thus carrying higher expected returns.
+
+Fama and French (2015) use the dividend discount model to link firm characteristics—valuation, profitability, and investment—with stock returns. The following equation represents the model:
 """)
 
-st.latex(r"""
-        \begin{equation}
-r_i = \beta_i (f + \lambda) + \gamma_i g + \epsilon_i
-\end{equation}
-         """)
+st.latex(r'''
+            \begin{equation}
+         M_t = \frac{\mathbb{E}(Y_{t+1}) - \mathbb{E}(dB_{t+1})}{1+r}
+        \end{equation}
+            ''')
 
 st.write(r"""
-with $\gamma_i$ the factor loading on the unrewarded factor $g$,
-We have $\mathbb{E}[\epsilon_i] = \mathbb{E}[f] = \mathbb{E}[g] = 0$.
-Note that because it is unrewarded, there is no risk premium $\lambda_g$ on $g$.
+Where:
+- $M_t$: Market value of equity,
+- $Y_{t+1}$: Expected future earnings,
+- $dB_{t+1}$: Expected change in book value of equity,
+- $r$: Expected return.
 
-Taking expectations of our first equation, we now have:
-         """)
-
-st.latex(r"""
-         \begin{equation}
-    \begin{aligned}
-    \mu = \mathbb{E}[r] = \mathbb{E}[\beta (f + \lambda) + \gamma g + \epsilon] \\
-    = \beta \mathbb{E}[f + \lambda] + \gamma \mathbb{E}[g] + \mathbb{E}[\epsilon] \\
-    = \beta \lambda
-    \end{aligned}
-\end{equation}
-         """)
-
-st.write(r"""
-Because $g$ is an unrewarded factor (ie. $\lambda_g = 0$),
-the expected returns are still driven by the exposure to the rewarded factor $f$ only, 
-and the risk premium $\lambda$ on $f$.
-                """)
-
-st.write(r"""
-         We go back to our 6 assets with equal market capitalization example.
-         In addition to exposure to the rewarded factor $f$,
-            the assets have loadings $\gamma$ on the unrewarded factors $g$:
+By solving for $r$, we obtain the expected return:
 """)
 
-default_gamma = [1, 1, -1, 1, -1, -1]
 
-# Collect beta inputs in the sidebar
-gamma_input = []
-for i in range(N):
-    gamma_val = st.sidebar.number_input(f'Gamma for Asset {i+1}', min_value=-1, max_value=1, value=default_gamma[i], step=2, key=f'gamma_{i}')
-    gamma_input.append(gamma_val)
+# Define the equation: r = (Y_{t+1} - dB_{t+1}) / M_t - 1
+M_t, Y_t1, dB_t1, r = sp.symbols('M_t Y_t1 dB_t1 r')
+ddm_eq = sp.Eq(r, (Y_t1 - dB_t1) / M_t - 1)
 
-
-
-# Create a LaTeX table for the beta and gamma inputs
-table_latex = r"\begin{array}{|c|c|c|} \hline Asset & \beta & \gamma \\ \hline "
-for i in range(N):
-    table_latex += f"{i+1} & {beta_input[i]} & {gamma_input[i]} \\\\ \\hline "
-table_latex += r"\end{array}"
-st.latex(table_latex)
+st.latex(r'''
+            \begin{equation}
+            r = \frac{Y_{t+1} - dB_{t+1}}{M_t} - 1
+            \end{equation}
+         ''')
 
 
+default_M = 20
+default_Y_t1 = 30
+default_dB_t1 = 5
 
-# Convert beta and gamma inputs to Sympy matrices
-gamma = sp.Matrix(gamma_input)
+# User inputs for the equation
+M_t_val = st.sidebar.number_input('Case 1: Market value of equity ($M_t$)',min_value=15, max_value=25, value=default_M, step=1)
+Y_t1_val = st.sidebar.number_input('Case 2: Expected future earnings ($Y_{t+1}$)',min_value = 25, max_value = 35, value=default_Y_t1, step = 1)
+dB_t1_val = st.sidebar.number_input('Case 3: Expected change in book value of equity ($dB_{t+1}$)', value=default_dB_t1)
 
+# Substitute user input values into the equation
+ddm_numeric_case_1 = ddm_eq.subs({M_t: M_t_val, Y_t1: default_Y_t1, dB_t1: default_dB_t1})
 
+# Solve for r (expected return)
+expected_return_case_1 = sp.solve(ddm_numeric_case_1, r)[0]
 
-# Define priced and unpriced factors as normal random variables with variance properties
-g = stats.Normal('g', 0, sp.symbols('sigma_g'))  # Unpriced factor g with E[g] = 0 and var(g) = sigma_g^2
-
-# Define symbols for variances of the factors and idiosyncratic error
-sigma_g = sp.symbols('sigma_g')
-
-# Step 1: Define the portfolio return formula symbolically
-portfolio_return_with_g = w.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
 st.write(r"""
-         We can now compute the return of the portfolio $c$:
-                """)
-
-st.latex(f"""r_c = {sp.latex(portfolio_return_with_g)}""")
-
-# Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
-
-# Contribution from the unpriced factor g:
-# LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
-variance_g = (w.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
-
-# Total variance of the portfolio:
-total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
-
-# Calculate the Sharpe ratio
-sharpe_ratio_with_g = expected_portfolio_return_with_g / sp.sqrt(total_portfolio_variance_with_g)
-
-gamma_p = gamma.dot(w)
-
-st.write(r"""
-         
-The portfolio returns captures the expected returns 
-because it loads on the rewarded factor $f$, but it also loads 
-on the unrewarded factor $g$.
-Indeed, in our example there exists a cross-sectional correlation
-between the characteristics and the loadings on the unrewarded factor.
-Most assets with positive loadings on the rewarded factor have positive loadings on the unrewarded factor.
-The expected return of the portfolio is:
+This model suggests the following relationship between expected returns and firm characteristics:
+1. **Valuation**: If we hold everything else constant and only vary the market value ($M_t$), a lower $M_t$ (or a higher book-to-market ratio) implies a higher expected return.
 """)
 
-st.latex(f"E[r_c] = {sp.latex(expected_portfolio_return_with_g)}")
 
+# Construct the LaTeX expression using the actual values
+latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(default_dB_t1) + "}{" + str(M_t_val) + "} - 1 =" + str(round(expected_return_case_1,2)) +"\end{equation}" 
 
-st.write(r"""
-         The variance of the portfolio is:
-                """)
-
-st.latex(f"\\sigma^2_c = {sp.latex(total_portfolio_variance_with_g)}")
+# Display the equation in LaTeX format in Streamlit
+st.latex(latex_eq)
 
 st.write(r"""
-         which give us the Sharpe ratio of the portfolio:
-                """)
-
-st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio_with_g)}")
-
-st.write(r"""
-         The portfolio $c$ is not efficient because it loads on the unrewarded factor $g$.
-Loading on the unrewarded factor $g$ is a source of risk (additional variance in the denominator of the Sharpe ratio)
-that is not rewarded by the market (no risk premium $\lambda_g$ on $g$, and therefore no supplementary expected return in the numerator of the Sharpe ratio).
-"""
-         )
-
-# Step 1: Compute the means of beta and gamma
-beta_mean = sp.Rational(sum(beta_input), N)
-gamma_mean = sp.Rational(sum(gamma_input), N)
-
-# Step 2: Compute the covariance between beta and gamma
-cov_beta_gamma = sp.Rational(0, 1)
-for i in range(N):
-    cov_beta_gamma += (beta[i] - beta_mean) * (gamma[i] - gamma_mean)
-cov_beta_gamma /= N
-
-# Step 3: Compute the standard deviations of beta and gamma
-std_beta = sp.sqrt(sum((beta[i] - beta_mean)**2 for i in range(N)) / N)
-std_gamma = sp.sqrt(sum((gamma[i] - gamma_mean)**2 for i in range(N)) / N)
-
-# Step 4: Compute the correlation
-correlation = cov_beta_gamma / (std_beta * std_gamma)
-
-# Display the correlation formula
-st.write(r"""
-The symbolic correlation between $\beta$ and $\gamma$ is:
+For example, Zhang (2005) explains the value premium by arguing that value firms are more affected by bad economic times, as their assets are harder to adjust compared to growth firms. As a result, value firms tend to offer higher expected returns due to their greater exposure to risks in bad times.
 """)
-st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
-
 
 st.write(r"""
-We have seen that unrewarded risks matter.
-In fact, asset pricing theory suggest that one of the main challenge 
-in finance is the efficient diversification of unrewarded risks, 
-where "diversification" means "reduction" or "cancellation" (as in "diversify away")
-and "unrewarded" means "not compensated by a risk premium".
-Indeed, unrewarded risks are by definition not attractive for investors 
-who are inherently risk-averse and therefore only willing to take 
-risks if there is an associated reward to be expected in exchange for such 
-risk-taking, as shown by Markowitz (1952). (Amenc $\textit {et al.}$, 2014)
-         """)
+2. **Profitability**: If we fix the market value ($M_t$) and only vary the expected future earnings ($Y_{t+1}$), higher expected earnings imply a higher expected return.
+""")
+
+
+# Substitute user input values into the equation
+ddm_numeric_case_2 = ddm_eq.subs({M_t: default_M, Y_t1: Y_t1_val, dB_t1: default_dB_t1})
+
+# Solve for r (expected return)
+expected_return_case_2 = sp.solve(ddm_numeric_case_2, r)[0]
+
+
+# Construct the LaTeX expression using the actual values
+latex_eq = r"\begin{equation} r = \frac{" + str(Y_t1_val) + " - " + str(default_dB_t1) + "}{" + str(default_M) + "} - 1 =" + str(round(expected_return_case_2,2)) +"\end{equation}"
+
+# Display the equation in LaTeX format in Streamlit
+st.latex(latex_eq)
+
+st.write(r"""
+While profitability might intuitively suggest lower risk, firms with higher profitability often have more of their cash flow far into the future, making these cash flows more uncertain. Additionally, profitable firms may attract competition, which can threaten future profit margins and increase risk.
+""")
+
+st.write(r"""
+3. **Investment**: If we hold the market value and expected earnings constant, higher expected growth in book equity (investment) implies a lower expected return.
+""")
+
+# Substitute user input values into the equation
+ddm_numeric_case_3 = ddm_eq.subs({M_t: default_M, Y_t1: default_Y_t1, dB_t1: dB_t1_val})
+
+# Solve for r (expected return)
+expected_return_case_3 = sp.solve(ddm_numeric_case_3, r)[0]
+
+# Construct the LaTeX expression using the actual values
+latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(dB_t1_val) + "}{" + str(default_M) + "} - 1 =" + str(round(expected_return_case_3,2)) +"\end{equation}"
+
+# Display the equation in LaTeX format in Streamlit
+st.latex(latex_eq)
+
+st.write(r"""
+This relationship suggests that firms investing heavily to sustain profits may have lower free cash flow available for investors, leading to lower expected returns compared to firms with lower investment needs.
+""")
+
