@@ -9,9 +9,6 @@ import pandas as pd
 
 st.title('Which Characteristics to Sort on?')
 
-st.subheader('Environmental Scores')
-
-
 st.write(r"""
 The literature on climate finance discusses two broad categories of climate-related risks:
 1. **Physical Climate Risk**: Risks arising from the direct impact of climate change on assets, such as sea level rise or extreme weather events damaging production facilities.
@@ -23,31 +20,6 @@ Assets may have different exposures to these risks, meaning that climate risk re
 Similar to traditional firm characteristics, we can expect that firms more exposed to climate risks may also exhibit higher expected returns, as investors require compensation for these additional risks.
 """)
 
-
-st.write(r"""
-Görgen $\textit{et al.}$ construct a score able to proxy for the 
-several transition risk drivers. In particular, they developed 
-a "Brown-Green-Score" (BG) which is defined as:
-         """)
-
-st.latex(r'''
-         \begin{equation}
-         BGS_{i,t} = 0.7 \text{Value Chain}_{i,t}
-         + 0.15 \text{Adaptability}_{i,t}
-         + 0.15 \text{Public Perception}_{i,t}
-            \end{equation}
-            ''')
-
-st.write(r"""
-The variables $\text{Value Chain}_{i,t}$,
-$\text{Adaptability}_{i,t}$ and $\text{Public Perception}_{i,t}$ are
-         proxies for the terms policy risk, technology risk and 
-         preference risk, respectively.
-         To build the measure, they relied on 10 different ESG variables, retrieved 
-         from four different data providers.
-         They argued that merging the ESG variables between these datasets should minimise the 
-         potential self-reporting bias.
-         """)
 
 st.subheader('Carbon Emissions')
 
@@ -91,4 +63,31 @@ The economic rationale behind the emission intensity measure is explained using 
          Hsu $\textit{et al.}$ (2020) assumed this measure shoudl proxy for the climate policy risk 
          exposure of pollutant firms, so it is allowed to play a similar role as the total amount of firm 
          emissions as in Bolton and Kacperczyk (2021). 
+         """)
+
+st.subheader('Environmental Scores')
+
+st.write(r"""
+Görgen $\textit{et al.}$ construct a score able to proxy for the 
+several transition risk drivers. In particular, they developed 
+a "Brown-Green-Score" (BG) which is defined as:
+         """)
+
+st.latex(r'''
+         \begin{equation}
+         BGS_{i,t} = 0.7 \text{Value Chain}_{i,t}
+         + 0.15 \text{Adaptability}_{i,t}
+         + 0.15 \text{Public Perception}_{i,t}
+            \end{equation}
+            ''')
+
+st.write(r"""
+The variables $\text{Value Chain}_{i,t}$,
+$\text{Adaptability}_{i,t}$ and $\text{Public Perception}_{i,t}$ are
+         proxies for the terms policy risk, technology risk and 
+         preference risk, respectively.
+         To build the measure, they relied on 10 different ESG variables, retrieved 
+         from four different data providers.
+         They argued that merging the ESG variables between these datasets should minimise the 
+         potential self-reporting bias.
          """)
