@@ -137,11 +137,12 @@ st.latex(f"""r_h = {sp.latex(portfolio_return_with_g)}""")
 # Step 2: Take the expectation using sympy.stats
 expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
 
-
-st.write(r"""
+loading_on_f = w.dot(beta)
+loading_on_g = w.dot(gamma)
+st.write(f"""
 
 The loading of the portfolio $h$ on the rewarded factor $f$ is zero,
-and the loading on the unrewarded factor $g$ is 2. Therefore, 
+and the loading on the unrewarded factor $g$ is {loading_on_g}. Therefore, 
 expected return of the portfolio $h$ is :
          """)
 
@@ -157,4 +158,38 @@ The double sorting on the rewarded and unrewarded factors allows us to construct
          therefore could be use without affecting the exposure to the rewarded factor of the initial portfolio.
          """)
 
-st.subheader('Hedge Portfolio')
+st.subheader('Hedge Portfolio Variance')
+
+st.write(r"""
+So, we now have our hedge portfolio $h$ that is neutral to the rewarded factor $f$ and long in assets with high exposure to the unrewarded factor $g$ and short in assets with low exposure to $g$.
+The resulting hedge portfolio $h$ has a variance given by:
+         """)
+
+# Contribution from the unpriced factor g:
+# LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
+variance_g = (w.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
+# Contribution from the priced factor f:
+# LaTeX: Var_f = (w^\top \beta)^2 \sigma_f^2
+variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
+# Contribution from the idiosyncratic errors:
+# LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
+variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
+# Total variance of the portfolio:
+total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
+
+st.latex(f"\\sigma^2_h = {sp.latex(total_portfolio_variance_with_g)}")
+
+
+st.write(r"""
+Thus, because it loads on the unrewarded factors, the variance of the portfolio is partially driven by 
+         the variance of the unrewarded factor $g$ (ie. the unrewarded risk).
+
+         """)
+
+st.subheader('Conclusion')
+
+st.write(r"""
+To manage exposure to unrewarded risk, we have seen that we can form a hedge portfolio that is not exposed 
+         to the rewarded factor - such that it will not affect expected returns of the initial portfolio - and 
+         that loads on the unrewarded factor - such that it will affect the initial portfolio variance. 
+            """)
