@@ -11,7 +11,16 @@ st.title('Rewarded Risks')
 
 
 st.write(r"""
-A common practice in the academic finance literature 
+Climate risks is an emergent question in Finance. 
+The central question can be framed as: is it a new source of rewarded risks or is it an unrewarded risk?
+In this section, we will focus on rewarded risks. We use a simple framework to illustrate the concept of rewarded risks. 
+We first explain why characteristics-sorted portfolio expose investors to rewarded risks and then mention examples of well recognized characteristics related to expected returns.    
+         """)
+
+st.subheader('Characteristic-Sorted Portfolio')
+
+st.write(r"""
+         A common practice in the academic finance literature 
 has been to create characteristic portfolios by sorting on 
 characteristics positively associated with expected returns (see previous section).
 The resultant portfolios, which go long a portfolio of high characteristic
@@ -23,11 +32,7 @@ Rewarded risks are risks that are compensated by a risk premium, that is
 they are associated with higher expected returns. 
 Unrewarded risks are risks that are not compensated by a risk premium. While 
 they are source of common variation in returns, they are not associated with
-higher expected returns.     
-         """)
-
-st.subheader('Characteristic-Sorted Portfolio')
-
+higher expected returns.    """)
 
 st.write(r"""
 Following Daniel $\textit {et al.}$ (2020), 
@@ -105,30 +110,20 @@ N = 6  # Number of assets
 # Predefined values for beta and gamma
 default_beta = [1, 1, 1, -1, -1, -1]
 
-st.sidebar.header("Input Loadings for Each Asset")
-
-
-# Collect beta inputs in the sidebar
-beta_input = []
-for i in range(N):
-    beta_val = st.sidebar.number_input(f'Beta for Asset {i+1}', min_value=-1, max_value=1, value=default_beta[i], step=2, key=f'beta_{i}')
-    beta_input.append(beta_val)
-
-
 # Create a LaTeX table for the beta inputs
 beta_latex = r"\begin{array}{|c|c|} \hline Asset & \beta \\ \hline "
 for i in range(N):
-    beta_latex += f"{i+1} & {beta_input[i]} \\\\ \\hline "
+    beta_latex += f"{i+1} & {default_beta[i]} \\\\ \\hline "
 beta_latex += r"\end{array}"
 st.latex(beta_latex)
 
 
 
 # Convert beta inputs to Sympy matrices
-beta = sp.Matrix(beta_input)
+beta = sp.Matrix(default_beta)
 
 # Portfolio weights based on sorted betas (long the highest, short the lowest)
-beta_np = np.array(beta_input)
+beta_np = np.array(default_beta)
 
 # Get the indices of the sorted beta values
 sorted_indices = np.argsort(beta_np)
@@ -340,3 +335,8 @@ st.write(r"""
 This relationship suggests that firms investing heavily to sustain profits may have lower free cash flow available for investors, leading to lower expected returns compared to firms with lower investment needs.
 """)
 
+st.subheader('Conclusion')
+
+st.write(r"""
+If climate risks is a new source of rewarded risks, investors need to take it into account when constructing their portfolios, in order to diversify their exposure to rewarded risks.
+""")

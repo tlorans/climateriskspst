@@ -10,6 +10,8 @@ import plotly.graph_objs as go
 st.title('Unrewarded Risks')
 
 
+st.subheader('Rewarded and Unrewarded Risks Cross-Correlation')
+
 st.write(r"""
 We now consider the unrewarded risk. We add a second factor $g$ to the model:
 """)
@@ -51,6 +53,20 @@ st.write(r"""
 """)
 
 default_gamma = [1, 1, -1, 1, -1, -1]
+N = 6  # Number of assets
+
+# Predefined values for beta and gamma
+default_beta = [1, 1, 1, -1, -1, -1]
+
+st.sidebar.header("Input Loadings for Each Asset")
+
+
+# Collect beta inputs in the sidebar
+beta_input = []
+for i in range(N):
+    beta_val = st.sidebar.number_input(f'Beta for Asset {i+1}', min_value=-1, max_value=1, value=default_beta[i], step=2, key=f'beta_{i}')
+    beta_input.append(beta_val)
+
 
 # Collect beta inputs in the sidebar
 gamma_input = []
@@ -71,15 +87,44 @@ st.latex(table_latex)
 
 # Convert beta and gamma inputs to Sympy matrices
 gamma = sp.Matrix(gamma_input)
+# Convert beta inputs to Sympy matrices
+beta = sp.Matrix(beta_input)
+
+# Portfolio weights based on sorted betas (long the highest, short the lowest)
+beta_np = np.array(beta_input)
+
+# Get the indices of the sorted beta values
+sorted_indices = np.argsort(beta_np)
+
+# Use SymPy's Rational to keep weights as fractions
+w_long = sp.Matrix([0, 0, 0, 0, 0, 0])
+w_short = sp.Matrix([0, 0, 0, 0, 0, 0])
+
+# Assign long positions (1/3) to the top 3 assets
+for idx in sorted_indices[-3:]:
+    w_long[idx] =sp.Rational(1, 3)
+
+# Assign short positions (-1/3) to the bottom 3 assets
+for idx in sorted_indices[:3]:
+    w_short[idx] = sp.Rational(-1, 3)
+
+# Combine long and short positions to form the final weight vector
+w = w_long + w_short
 
 
-
+# Define priced factor as normal random variable with variance properties
+f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0 and var(f) = sigma_f^2
+# Characteristic premium
+lambda_ = sp.symbols('lambda')
+# Define idiosyncratic errors epsilon_i as random variables with zero mean and variance sigma_epsilon^2
+epsilon = sp.Matrix([stats.Normal(f'epsilon', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
 # Define priced and unpriced factors as normal random variables with variance properties
 g = stats.Normal('g', 0, sp.symbols('sigma_g'))  # Unpriced factor g with E[g] = 0 and var(g) = sigma_g^2
 
 # Define symbols for variances of the factors and idiosyncratic error
 sigma_g = sp.symbols('sigma_g')
-
+# Define symbols for variances of the factors and idiosyncratic error
+sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
 # Step 1: Define the portfolio return formula symbolically
 portfolio_return_with_g = w.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
@@ -95,7 +140,12 @@ expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
 # Contribution from the unpriced factor g:
 # LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
 variance_g = (w.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
-
+# Contribution from the priced factor f:
+# LaTeX: Var_f = (w^\top \beta)^2 \sigma_f^2
+variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
+# Contribution from the idiosyncratic errors:
+# LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
+variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
 # Total variance of the portfolio:
 total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
 
@@ -160,6 +210,13 @@ The symbolic correlation between $\beta$ and $\gamma$ is:
 """)
 st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
 
+
+
+
+st.subheader("Illustration with Industry")
+
+
+st.subheader("Conclusion")
 
 st.write(r"""
 We have seen that unrewarded risks matter.
