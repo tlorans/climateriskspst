@@ -112,6 +112,20 @@ for idx in sorted_indices[:3]:
 w = w_long + w_short
 
 
+st.write(r"""
+         The weights of the portfolio are:
+         """)
+
+# Prepare weights in LaTeX format as a row vector
+weights_latex = r"\begin{bmatrix} "
+for i in range(6):
+    weights_latex += f"{sp.latex(w[i])} & "
+weights_latex = weights_latex[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
+
+
+st.latex(r"""
+w_c^T = """ + weights_latex)
+
 # Define priced factor as normal random variable with variance properties
 f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0 and var(f) = sigma_f^2
 # Characteristic premium
