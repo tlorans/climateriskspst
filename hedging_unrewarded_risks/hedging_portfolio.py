@@ -5,6 +5,17 @@ import numpy as np
 import sympy as sp
 import sympy.stats as stats
 import plotly.graph_objs as go
+import pandas_datareader as pdr
+import statsmodels.api as sm
+from plotnine import *
+from mizani.formatters import date_format
+from mizani.breaks import date_breaks
+import pandas as pd
+from statsmodels.regression.rolling import RollingOLS
+
+
+import yfinance as yf
+
 
 st.title('Hedging from Unrewarded Risks')
 
@@ -152,6 +163,139 @@ expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
 
 st.latex(f"E[r_h] = {sp.latex(expected_portfolio_return_with_g)}")
 
+
+
+# Function to retrieve S&P 500 tickers from Wikipedia
+@st.cache_data
+def get_sp500_tickers():
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    sp500_table = pd.read_html(url)[0]  # Get the first table on the page
+    tickers = sp500_table['Symbol'].tolist()  # Convert the 'Symbol' column to a list
+    return tickers
+
+# Function to download stock prices using yfinance and cache it
+@st.cache_data
+def download_stock_data(tickers, start_date, end_date):
+    # Download stock prices
+    prices_daily = yf.download(
+        tickers=tickers, 
+        start=start_date, 
+        end=end_date, 
+        progress=False
+    )
+    
+    # Process the downloaded prices
+    prices_daily = (prices_daily
+        .stack()
+        .reset_index(level=1, drop=False)
+        .reset_index()
+        .rename(columns={
+            "Date": "date",
+            "Ticker": "symbol",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Adj Close": "adjusted",
+            "Volume": "volume"}
+        )
+    )
+    
+    return prices_daily
+
+@st.cache_data
+def load_ff3_data():
+    """Load the Fama-French factors data."""
+    start_date = '2000-01-01'
+    end_date = '2019-06-30'
+    factors_ff3_daily_raw = pdr.DataReader(
+        name="F-F_Research_Data_Factors_daily",
+        data_source="famafrench",
+        start=start_date,
+        end=end_date)[0]
+    factors_ff3_daily = (factors_ff3_daily_raw
+                         .divide(100)
+                         .reset_index(names="date")
+                         .rename(str.lower, axis="columns")
+                         .rename(columns={"mkt-rf": "mkt_excess"}))
+    return factors_ff3_daily
+
+# Retrieve the S&P 500 tickers
+sp500_tickers = get_sp500_tickers()
+
+# Set the date range
+start_date = '2000-01-01'
+end_date = '2019-06-30'
+
+# Download stock price data for the selected tickers
+prices_daily = download_stock_data(sp500_tickers, start_date, end_date)
+
+# Compute daily returns
+returns_daily = (prices_daily
+  .assign(ret=lambda x: x.groupby("symbol")["adjusted"].pct_change())
+  .get(["symbol", "date", "ret"])
+  .dropna(subset=["ret"])
+)
+
+factors_ff3_daily = load_ff3_data()
+bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+
+# Merge HML and bmg
+data = pd.merge(factors_ff3_daily[['date', 'hml']], bmg, on='date')
+data = pd.merge(data, returns_daily, on='date')
+
+st.write(data.columns)
+
+# Caching the rolling beta estimation
+@st.cache_data
+def roll_beta_estimation(data, window_size, min_obs, factor):
+    """Calculate rolling beta estimation."""
+    data = data.sort_values("date")
+
+    # Ensure the group has at least the minimum number of observations
+    if len(data) < window_size:
+        return pd.Series([np.nan] * len(data), index=data.index)  # Return NaNs if not enough data
+
+
+    result = (RollingOLS.from_formula(
+      formula=f"ret ~ {factor}",
+      data=data,
+      window=window_size,
+      min_nobs=min_obs,
+      missing="drop")
+      .fit()
+      .params.get(f"{factor}")
+    )
+    
+    result.index = data.index
+    return result
+
+
+# Cache the full chain for beta_hml computation
+@st.cache_data
+def compute_beta(data, window_size, min_obs, factor):
+    return (data
+      .groupby(["symbol"])
+      .apply(
+             lambda x: x.assign(
+                 beta=roll_beta_estimation(x, window_size, min_obs, factor))
+      )
+      .reset_index(drop=True)
+      .dropna()
+    )
+
+
+window_size = 126  # 6-month rolling window
+min_obs = 10  # Minimum number of observations required for each window
+
+# Compute rolling beta for HML factor with caching
+beta_hml = compute_beta(data, window_size, min_obs, "hml")
+
+# Compute rolling beta for BMG factor with caching
+beta_bmg = compute_beta(beta_hml, window_size, min_obs, "BMG")
+
+st.write(beta_hml.head())
+st.write(beta_bmg.head())
 
 st.write(r"""
 The double sorting on the rewarded and unrewarded factors allows us to construct a portfolio that is neutral to the rewarded factor, and

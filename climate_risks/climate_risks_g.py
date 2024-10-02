@@ -127,47 +127,47 @@ if st.button('Run Rolling Regression and Plot'):
     st.pyplot(ggplot.draw(plot))
 
 
-# Add a button to compute rolling beta and plot it
-if st.button('Run Rolling Beta Regression and Plot'):
-    # Select the "Money Industry" portfolio (replace 'money_industry' with actual column name)
-    bmg = data['BMG']  # Make sure to replace 'money' with the actual column name in your dataset
+# # Add a button to compute rolling beta and plot it
+# if st.button('Run Rolling Beta Regression and Plot'):
+#     # Select the "Money Industry" portfolio (replace 'money_industry' with actual column name)
+#     bmg = data['BMG']  # Make sure to replace 'money' with the actual column name in your dataset
 
-    # Compute rolling beta
-    beta_values = compute_rolling_beta(data['hml'], bmg)
+#     # Compute rolling beta
+#     beta_values = compute_rolling_beta(data['hml'], bmg)
 
-    # Prepare data for plotting
-    data_rolling_beta = data.iloc[126 - 1:].copy()
-    data_rolling_beta['beta'] = beta_values
+#     # Prepare data for plotting
+#     data_rolling_beta = data.iloc[126 - 1:].copy()
+#     data_rolling_beta['beta'] = beta_values
 
-    # Create the plot for beta
-    plot_beta = (ggplot(data_rolling_beta, aes(x='date', y='beta')) +
-                 geom_line(color='red') +
-                 labs(title="126-Day Rolling Beta: HML on BMG Portfolio",
-                      x="Date", y="Beta") +
-                 scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
-                 theme(axis_text_x=element_text(rotation=45, hjust=1)))
+#     # Create the plot for beta
+#     plot_beta = (ggplot(data_rolling_beta, aes(x='date', y='beta')) +
+#                  geom_line(color='red') +
+#                  labs(title="126-Day Rolling Beta: HML on BMG Portfolio",
+#                       x="Date", y="Beta") +
+#                  scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+#                  theme(axis_text_x=element_text(rotation=45, hjust=1)))
 
-    st.pyplot(ggplot.draw(plot_beta))
+#     st.pyplot(ggplot.draw(plot_beta))
 
 
-# Add a button to compute and plot annualized volatility of the Money portfolio
-if st.button('Run Annualized Volatility Calculation and Plot'):
-    # Select the "Money Industry" portfolio (replace 'money' with actual column name)
-    bmg_returns = data['BMG']  # Replace 'money' with the actual column name
+# # Add a button to compute and plot annualized volatility of the Money portfolio
+# if st.button('Run Annualized Volatility Calculation and Plot'):
+#     # Select the "Money Industry" portfolio (replace 'money' with actual column name)
+#     bmg_returns = data['BMG']  # Replace 'money' with the actual column name
 
-    # Compute rolling annualized volatility (252-day window)
-    annualized_volatility = compute_rolling_volatility(bmg_returns)
+#     # Compute rolling annualized volatility (252-day window)
+#     annualized_volatility = compute_rolling_volatility(bmg_returns)
 
-    # Prepare data for plotting
-    data_volatility = data.copy()
-    data_volatility['annualized_volatility'] = annualized_volatility
+#     # Prepare data for plotting
+#     data_volatility = data.copy()
+#     data_volatility['annualized_volatility'] = annualized_volatility
 
-    # Create the plot for annualized volatility
-    plot_volatility = (ggplot(data_volatility, aes(x='date', y='annualized_volatility')) +
-                       geom_line(color='green') +
-                       labs(title="126-Day Rolling Annualized Volatility: BMG Portfolio",
-                            x="Date", y="Annualized Volatility") +
-                       scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
-                       theme(axis_text_x=element_text(rotation=45, hjust=1)))
+#     # Create the plot for annualized volatility
+#     plot_volatility = (ggplot(data_volatility, aes(x='date', y='annualized_volatility')) +
+#                        geom_line(color='green') +
+#                        labs(title="126-Day Rolling Annualized Volatility: BMG Portfolio",
+#                             x="Date", y="Annualized Volatility") +
+#                        scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+#                        theme(axis_text_x=element_text(rotation=45, hjust=1)))
 
-    st.pyplot(ggplot.draw(plot_volatility))
+#     st.pyplot(ggplot.draw(plot_volatility))
