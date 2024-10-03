@@ -226,6 +226,43 @@ that is not rewarded by the market (no risk premium $\lambda_g$ on $g$, and ther
          )
 
 
+# Define variance of the portfolio due to g
+variance_g = (w.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
+
+# Total portfolio variance, including contributions from f, g, and epsilon
+variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
+variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
+
+# Total variance of the portfolio:
+total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
+
+# Compute R^2, which is the proportion of portfolio variance explained by the unrewarded factor g
+r_squared = variance_g / total_portfolio_variance_with_g
+
+# Display R^2
+st.write(r"""
+         The proportion of portfolio variance explained by the unrewarded risk factor $g$ (R²) is:
+                """)
+
+st.latex(f"R^2 = {sp.latex(r_squared.simplify())}")
+
+# Sidebar: Choose the volatility of the unrewarded risk
+sigma_g_val = st.sidebar.slider("Select the volatility of the unrewarded risk factor (σg)", 0.1, 5.0, 1.0)
+sigma_f_val = 1.0  # Default to 1
+
+
+r_squared_eval = r_squared.subs({sigma_g: sigma_g_val, sigma_f: sigma_f_val, sigma_epsilon: 1})
+st.latex(f"R^2 = {sp.latex(r_squared_eval.simplify())}")
+st.latex(f"\\sigma_g = {sigma_g_val}")
+
+
+# Further explanation
+st.write(r"""
+This R² shows how much of the portfolio's total variance can be attributed to the variance in the unrewarded risk factor \(g\). 
+The influence of \(g\) depends on its volatility, ($\sigma_g^2$), and the cross-correlation between the rewarded and unrewarded risks, as reflected in the weights \(w\) and factor loadings ($\gamma$).
+         """)
+
+
 st.subheader("Illustration with Industry")
 
 st.write(r"""
