@@ -73,3 +73,5 @@ st.write(r"""
          the carbon premium is related to the emission intensity measure.
          Nevertheless, these findings were not corroborated by the remaining studies in the Table.
             """)
+
+st.subheader("Expected Returns")
