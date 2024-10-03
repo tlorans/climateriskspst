@@ -57,46 +57,67 @@ st.write(r"""
             the assets have loadings $\gamma$ on the unrewarded factors $g$:
 """)
 
-default_gamma = [1, 1, -1, 1, -1, -1]
 N = 6  # Number of assets
 
-# Predefined values for beta and gamma
-default_beta = [1, 1, 1, -1, -1, -1]
+# Predefined fixed values for beta
+fixed_beta = [1, 1, 1, -1, -1, -1]
 
-st.sidebar.header("Input Loadings for Each Asset")
+st.sidebar.header("Input Desired Correlation Between Beta and Gamma")
 
+# Ask user for the desired correlation coefficient
+correlation = st.sidebar.selectbox(
+    "Select the correlation between Beta and Gamma", ("1/3", "1"))
 
-# Collect beta inputs in the sidebar
-beta_input = []
-for i in range(N):
-    beta_val = st.sidebar.number_input(f'Beta for Asset {i+1}', min_value=-1, max_value=1, value=default_beta[i], step=2, key=f'beta_{i}')
-    beta_input.append(beta_val)
-
-
-# Collect beta inputs in the sidebar
-gamma_input = []
-for i in range(N):
-    gamma_val = st.sidebar.number_input(f'Gamma for Asset {i+1}', min_value=-1, max_value=1, value=default_gamma[i], step=2, key=f'gamma_{i}')
-    gamma_input.append(gamma_val)
+# Predefined sets of gamma based on the correlation choices
+gamma_sets = {
+    "1/3": [1, 1, -1, 1, -1, -1],   # Low positive correlation set
+    "1": [1, 1, 1, -1, -1, -1]      # Perfect correlation set
+}
 
 
+# Select the gamma set based on the chosen correlation coefficient
+selected_gamma = gamma_sets[correlation]
 
-# Create a LaTeX table for the beta and gamma inputs
+# Display the table of beta and gamma
 table_latex = r"\begin{array}{|c|c|c|} \hline Asset & \beta & \gamma \\ \hline "
 for i in range(N):
-    table_latex += f"{i+1} & {beta_input[i]} & {gamma_input[i]} \\\\ \\hline "
+    table_latex += f"{i+1} & {fixed_beta[i]} & {sp.latex(selected_gamma[i])} \\\\ \\hline "
 table_latex += r"\end{array}"
 st.latex(table_latex)
 
 
-
 # Convert beta and gamma inputs to Sympy matrices
-gamma = sp.Matrix(gamma_input)
+gamma = sp.Matrix(selected_gamma)
 # Convert beta inputs to Sympy matrices
-beta = sp.Matrix(beta_input)
+beta = sp.Matrix(fixed_beta)
+
+# Step 1: Compute the means of beta and gamma
+beta_mean = sp.Rational(sum(fixed_beta), N)
+gamma_mean = sp.Rational(sum(selected_gamma), N)
+
+# Step 2: Compute the covariance between beta and gamma
+cov_beta_gamma = sp.Rational(0, 1)
+for i in range(N):
+    cov_beta_gamma += (beta[i] - beta_mean) * (gamma[i] - gamma_mean)
+cov_beta_gamma /= N
+
+# Step 3: Compute the standard deviations of beta and gamma
+std_beta = sp.sqrt(sum((beta[i] - beta_mean)**2 for i in range(N)) / N)
+std_gamma = sp.sqrt(sum((gamma[i] - gamma_mean)**2 for i in range(N)) / N)
+
+# Step 4: Compute the correlation
+correlation = cov_beta_gamma / (std_beta * std_gamma)
+
+# Display the correlation formula
+st.write(r"""
+The correlation between $\beta$ and $\gamma$ is:
+""")
+st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
+
+
 
 # Portfolio weights based on sorted betas (long the highest, short the lowest)
-beta_np = np.array(beta_input)
+beta_np = np.array(fixed_beta)
 
 # Get the indices of the sorted beta values
 sorted_indices = np.argsort(beta_np)
@@ -107,7 +128,7 @@ w_short = sp.Matrix([0, 0, 0, 0, 0, 0])
 
 # Assign long positions (1/3) to the top 3 assets
 for idx in sorted_indices[-3:]:
-    w_long[idx] =sp.Rational(1, 3)
+    w_long[idx] = sp.Rational(1, 3)
 
 # Assign short positions (-1/3) to the bottom 3 assets
 for idx in sorted_indices[:3]:
@@ -116,17 +137,15 @@ for idx in sorted_indices[:3]:
 # Combine long and short positions to form the final weight vector
 w = w_long + w_short
 
-
+# Display the weights
 st.write(r"""
          The weights of the portfolio are:
          """)
 
-# Prepare weights in LaTeX format as a row vector
 weights_latex = r"\begin{bmatrix} "
-for i in range(6):
+for i in range(N):
     weights_latex += f"{sp.latex(w[i])} & "
-weights_latex = weights_latex[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
-
+weights_latex = weights_latex[:-2] + r" \end{bmatrix}"
 
 st.latex(r"""
 w_c^T = """ + weights_latex)
@@ -206,28 +225,6 @@ that is not rewarded by the market (no risk premium $\lambda_g$ on $g$, and ther
 """
          )
 
-# Step 1: Compute the means of beta and gamma
-beta_mean = sp.Rational(sum(beta_input), N)
-gamma_mean = sp.Rational(sum(gamma_input), N)
-
-# Step 2: Compute the covariance between beta and gamma
-cov_beta_gamma = sp.Rational(0, 1)
-for i in range(N):
-    cov_beta_gamma += (beta[i] - beta_mean) * (gamma[i] - gamma_mean)
-cov_beta_gamma /= N
-
-# Step 3: Compute the standard deviations of beta and gamma
-std_beta = sp.sqrt(sum((beta[i] - beta_mean)**2 for i in range(N)) / N)
-std_gamma = sp.sqrt(sum((gamma[i] - gamma_mean)**2 for i in range(N)) / N)
-
-# Step 4: Compute the correlation
-correlation = cov_beta_gamma / (std_beta * std_gamma)
-
-# Display the correlation formula
-st.write(r"""
-The correlation between $\beta$ and $\gamma$ is:
-""")
-st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
 
 st.subheader("Illustration with Industry")
 
