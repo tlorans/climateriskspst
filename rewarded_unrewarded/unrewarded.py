@@ -258,8 +258,8 @@ st.latex(f"\\sigma_g = {sigma_g_val}")
 
 # Further explanation
 st.write(r"""
-This R² shows how much of the portfolio's total variance can be attributed to the variance in the unrewarded risk factor \(g\). 
-The influence of \(g\) depends on its volatility, ($\sigma_g^2$), and the cross-correlation between the rewarded and unrewarded risks, as reflected in the weights \(w\) and factor loadings ($\gamma$).
+This R² shows how much of the portfolio's total variance can be attributed to the variance in the unrewarded risk factor $g$. 
+The influence of $g$ depends on its volatility, ($\sigma_g^2$), and the cross-correlation between the rewarded and unrewarded risks.
          """)
 
 
