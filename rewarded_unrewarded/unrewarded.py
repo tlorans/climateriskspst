@@ -252,7 +252,7 @@ sigma_f_val = 1.0  # Default to 1
 
 
 r_squared_eval = r_squared.subs({sigma_g: sigma_g_val, sigma_f: sigma_f_val, sigma_epsilon: 1})
-st.latex(f"R^2 = {sp.latex(r_squared_eval.simplify())}")
+st.latex(f"R^2 = {sp.latex(round(r_squared_eval.simplify(), 2))}")
 st.latex(f"\\sigma_g = {sigma_g_val}")
 
 
