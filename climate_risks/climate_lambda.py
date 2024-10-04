@@ -5,6 +5,11 @@ import numpy as np
 import sympy as sp
 import sympy.stats as stats
 import plotly.graph_objs as go
+import pandas_datareader as pdr
+import statsmodels.api as sm
+from plotnine import *
+from mizani.formatters import date_format
+from mizani.breaks import date_breaks
 import pandas as pd
 
 st.title('Is There a Climate Risks $\lambda$?')
@@ -75,3 +80,17 @@ st.write(r"""
             """)
 
 st.subheader("Expected Returns")
+
+bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+
+if st.button("Cumulative Returns"):
+    bmg_cum = (1 + bmg).cumprod() - 1
+    plot = (ggplot(bmg_cum.reset_index(), aes(x='date', y='BMG')) +
+        geom_line() + 
+        scale_x_date(breaks=date_breaks('1 years'), labels=date_format('%Y')) + 
+        labs(title="Cumulative Returns of BMG Portfolio", x="Date", y="Cumulative Return") +
+        theme(axis_text_x=element_text(rotation=45, hjust=1))
+        )
+    
+
+    st.pyplot(ggplot.draw(plot))
