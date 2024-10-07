@@ -17,19 +17,21 @@ st.title('Rewarded Risks')
 
 
 st.write(r"""
-Climate risks is an emergent question in Finance. 
-The central question can be framed as: is it a new source of rewarded risks or is it an unrewarded risk?
-In this section, we will focus on rewarded risks. We use a simple framework to illustrate the concept of rewarded risks. 
-We first explain why characteristics-sorted portfolio expose investors to rewarded risks and then mention examples of well recognized characteristics related to expected returns.    
-         """)
+Before jumping on the Climate Risks question in the next section, we need to set up the stage 
+by understanding the concept of _rewarded_ risks in Finance.
+                  """)
 
 st.subheader('Characteristics and the Cross Section of Stock Returns')
 
 st.write(r"""
-The asset pricing literature has found that stock returns across different firms can be explained by their characteristics. 
-These characteristics may act as proxies for underlying risk factors, helping to identify stocks that are more likely to perform poorly during bad times, thus carrying higher expected returns.
-
-Fama and French (2015) use the dividend discount model to link firm characteristics—valuation, profitability, and investment—with stock returns. The following equation represents the model:
+The asset pricing literature has found that stock returns across different firms are related to some characteristics (ie. variables). 
+These characteristics may act as proxies for exposure to an underlying risk factors. It means that 
+it helps to identify stocks that are more likely to perform poorly during bad times (ie. that are riskier). 
+Because they are seen as riskier, investors require higher expected returns to hold these stocks.
+         
+To get a sense of the idea, let's see a simple dividend discount model (as in Fama and French 2015).
+We can use this model to link firm characteristics—value, profitability, and investment—with stock returns. 
+The following equation represents a simplified one-period dividend discount model (DDM):
 """)
 
 st.latex(r'''
@@ -40,10 +42,10 @@ st.latex(r'''
 
 st.write(r"""
 Where:
-- $M_t$: Market value of equity,
-- $Y_{t+1}$: Expected future earnings,
-- $dB_{t+1}$: Expected change in book value of equity,
-- $r$: Expected return.
+- $M_t$: Market value of equity (value),
+- $Y_{t+1}$: Expected future earnings (profitability),
+- $dB_{t+1}$: Expected change in book value of equity (investment),
+- $r$: Expected return (approximately).
 
 By solving for $r$, we obtain the expected return:
 """)
@@ -77,8 +79,10 @@ expected_return_case_1 = sp.solve(ddm_numeric_case_1, r)[0]
 
 
 st.write(r"""
-This model suggests the following relationship between expected returns and firm characteristics:
-1. **Valuation**: If we hold everything else constant and only vary the market value ($M_t$), a lower $M_t$ (or a higher book-to-market ratio) implies a higher expected return.
+Playing around with the equation, we can see how different factors affect the expected return:
+1. **Valuation**: If we hold everything else constant and only vary the market value ($M_t$), 
+         a lower $M_t$ (or a higher book-to-market ratio) implies a higher expected return.
+         Play with the market value slider to see how it affects the expected return.
 """)
 
 
@@ -89,11 +93,20 @@ latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(defa
 st.latex(latex_eq)
 
 st.write(r"""
-For example, Zhang (2005) explains the value premium by arguing that value firms are more affected by bad economic times, as their assets are harder to adjust compared to growth firms. As a result, value firms tend to offer higher expected returns due to their greater exposure to risks in bad times.
+         It doesn't mean that value firms are better than growth firms. It means 
+         that value firms are riskier and thus offer higher expected returns.
+For example, Zhang (2005) explains the value premium by arguing that value 
+         firms are more affected by bad economic times, 
+         as their assets are harder to adjust compared to growth firms.
+          As a result, value firms tend to offer higher expected returns 
+         due to their greater exposure to risks in bad times.
 """)
 
 st.write(r"""
-2. **Profitability**: If we fix the market value ($M_t$) and only vary the expected future earnings ($Y_{t+1}$), higher expected earnings imply a higher expected return.
+2. **Profitability**: If we fix the market value ($M_t$) and 
+         only vary the expected future earnings ($Y_{t+1}$), 
+         higher expected earnings imply a higher expected return.
+         Again, play around with the slider to see how it affects the expected return.
 """)
 
 
@@ -111,11 +124,16 @@ latex_eq = r"\begin{equation} r = \frac{" + str(Y_t1_val) + " - " + str(default_
 st.latex(latex_eq)
 
 st.write(r"""
-While profitability might intuitively suggest lower risk, firms with higher profitability often have more of their cash flow far into the future, making these cash flows more uncertain. Additionally, profitable firms may attract competition, which can threaten future profit margins and increase risk.
+While profitability might intuitively suggest lower risk, 
+         firms with higher profitability often have more of their 
+         cash flow far into the future, making these cash flows more uncertain. 
+         Additionally, profitable firms may attract competition, which can threaten future profit margins and increase risk.
 """)
 
 st.write(r"""
-3. **Investment**: If we hold the market value and expected earnings constant, higher expected growth in book equity (investment) implies a lower expected return.
+3. **Investment**: If we hold the market value and expected earnings constant, 
+         higher expected growth in book equity (investment) implies a lower expected return.
+         Play with the investment slider to see how it affects the expected return.
 """)
 
 # Substitute user input values into the equation
@@ -131,26 +149,23 @@ latex_eq = r"\begin{equation} r = \frac{" + str(default_Y_t1) + " - " + str(dB_t
 st.latex(latex_eq)
 
 st.write(r"""
-This relationship suggests that firms investing heavily to sustain profits may have lower free cash flow available for investors, leading to lower expected returns compared to firms with lower investment needs.
+This relationship suggests that firms investing 
+         heavily to sustain profits may have lower 
+         free cash flow available for investors, 
+         leading to lower expected returns compared to firms with lower investment needs.
 """)
 
 
 st.subheader('Characteristic-Sorted Portfolio')
 
 st.write(r"""
-         A common practice in the academic finance literature 
+A common practice in the academic finance literature 
 has been to create characteristic portfolios by sorting on 
-characteristics positively associated with expected returns (see previous section).
+characteristics positively associated with expected returns.
 The resultant portfolios, which go long a portfolio of high characteristic
 firms and short a portfolio of low characteristic firms serve as a proxy for 
-the risk factor returns (see Fama and French 1993, 2015 as prominent examples).
-
-The procedure helps to distinguish between rewarded and unrewarded risks factors.
-Rewarded risks are risks that are compensated by a risk premium, that is 
-they are associated with higher expected returns. 
-Unrewarded risks are risks that are not compensated by a risk premium. While 
-they are source of common variation in returns, they are not associated with
-higher expected returns.    """)
+the risk factor returns (see Fama and French 1992 and 2015).
+""")
 
 st.write(r"""
 Following Daniel $\textit {et al.}$ (2020), 
@@ -298,7 +313,7 @@ st.write(r"""
          We can now compute the return of the portfolio $c$:
                 """)
 
-st.latex(f"""= {sp.latex(portfolio_return)}""")
+st.latex(f"""r_c= {sp.latex(portfolio_return)}""")
 
 # Step 2: Take the expectation using sympy.stats
 expected_portfolio_return = stats.E(portfolio_return)
@@ -342,6 +357,8 @@ st.write(r"""
 
 st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio)}")
 
+
+st.subheader("Project 1: Forming a Characteristic-Sorted Portfolio")
 
 # @st.cache_data
 # def load_ff5_data():
@@ -403,4 +420,5 @@ st.subheader('Conclusion')
 
 st.write(r"""
 If climate risks is a new source of rewarded risks, investors need to take it into account when constructing their portfolios, in order to diversify their exposure to rewarded risks.
-""")
+
+         """)
