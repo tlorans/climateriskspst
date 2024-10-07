@@ -25,7 +25,6 @@ Reasoning in terms of portfolio,
 
 st.write(r"""
 Some studies found the evidence of a carbon premium in the cross-section.
-         However, it reamins unclear which transition risk can better explain the carbon premium.
          Bolton and Kacperczyk (2021) found that portfolios sorted on the total level and the 
          year-by-year change in emissions were valued at discount. These facts 
          are true regardless of the type of scope emission analysed. Bolton and Kacperczyk (2021)
@@ -74,10 +73,13 @@ st.write(r"""
          The findings of Bolton and Kacperczyk (2021) are echoed by 
          Bolton and Kacperzcyk (2020) at the international level, although not all countries 
          are pricing cabron risk to the same extent. 
-         On the other hand, Hsy $\textit{et al.} (2020)$ discovered that 
+         On the other hand, Hsu $\textit{et al.} (2020)$ discovered that 
          the carbon premium is related to the emission intensity measure.
-         Nevertheless, these findings were not corroborated by the remaining studies in the Table.
             """)
+
+st.write(r"""
+                  Nevertheless, these findings were not corroborated by the remaining studies in the Table.
+""")
 
 st.subheader("_Mean_ Factor (Rewarded Risk)...")
 

@@ -25,7 +25,7 @@ st.subheader('Carbon Emissions')
 
 
 st.write(r"""
-Other studies tend to focus on only one of the three firm-level emissions variables,
+Most studies tend to focus on only one of the three firm-level emissions variables,
          and researchers often argue that these variables should proxy the three transition risks drivers.
 Hsu $\textit{et al.}$ (2020) constructed a measure of emission intensity 
 at the firm level by aggregating plant-level data from the Toxic Release Inventory (TRI) database in the US.
@@ -41,15 +41,6 @@ st.write(r"""
          """)
 
 st.write(r"""
-         Pastor $\textit{et al.}$ (2021) proxies this overall climate risk exposure by means 
-         of the E-scores provided by the MSCI and Sustainalytics databases, arguing that they should capture the 
-         different dynamics. Engle $\textit{et al.}$ (2020) 
-         constructed E-score measures at the firm level by taking the difference between positive and negative 
-         E-scores subcategories. 
-         """)
-
-
-st.write(r"""
 One must understand how the emission variables are related to the cross-section fo stocks retuns. Bolton and 
          Kacperczyk (2020) argued the total amount of emissions should proxy 
          for the long-term company's exposure to transition risks, as it is likely that regulations 
@@ -60,7 +51,7 @@ One must understand how the emission variables are related to the cross-section 
 
 st.write(r"""
 The economic rationale behind the emission intensity measure is explained using two different channels.
-         Hsu $\textit{et al.}$ (2020) assumed this measure shoudl proxy for the climate policy risk 
+         Hsu $\textit{et al.}$ (2020) assumed this measure should proxy for the climate policy risk 
          exposure of pollutant firms, so it is allowed to play a similar role as the total amount of firm 
          emissions as in Bolton and Kacperczyk (2021). 
          """)
@@ -90,4 +81,12 @@ $\text{Adaptability}_{i,t}$ and $\text{Public Perception}_{i,t}$ are
          from four different data providers.
          They argued that merging the ESG variables between these datasets should minimise the 
          potential self-reporting bias.
+         """)
+
+st.write(r"""
+         Pastor $\textit{et al.}$ (2021) proxies this overall climate risk exposure by means 
+         of the E-scores provided by the MSCI and Sustainalytics databases, arguing that they should capture the 
+         different dynamics. Engle $\textit{et al.}$ (2020) 
+         constructed E-score measures at the firm level by taking the difference between positive and negative 
+         E-scores subcategories. 
          """)
