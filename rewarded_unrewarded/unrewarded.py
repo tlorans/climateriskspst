@@ -263,7 +263,7 @@ The influence of $g$ depends on its volatility, ($\sigma_g^2$), and the cross-co
          """)
 
 
-st.subheader("Illustration with Industry")
+st.subheader("Project 2: Illustration with Industry")
 
 st.write(r"""
          Asness $\textit{et al.}$ (2000) have shown that if book-to-market ratios (the characteristic used to build the value factor) 
