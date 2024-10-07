@@ -61,7 +61,7 @@ N = 12  # Number of assets
 
 # Predefined fixed values for beta
 fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
-st.write(len(fixed_beta))
+
 st.sidebar.header("Input Desired Correlation Between Beta and Gamma")
 
 # Ask user for the desired correlation coefficient

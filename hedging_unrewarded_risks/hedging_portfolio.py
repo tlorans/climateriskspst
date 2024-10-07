@@ -22,7 +22,7 @@ st.title('Hedging from Unrewarded Risks')
 st.write(r"""
 We have seen that, as of today, no risk premium seems to be associated with climate risks. It is therefore to be treated as unrewarded risk. 
 We have seen that if exposure to the rewarded risk is correlated with exposure to unrewarded risk, a portfolio rightly exposed to rewarded risk is mean-variance inefficient because
-         it loads in the unrewarded risk. We can improve upon this. We want a method that (1) let untouched the rewarded risk exposure and (2) eliminate the unrewarded risk exposure.
+         it loads in the unrewarded risk. We can improve upon this. We want a method that (1) let untouched the expected return and (2) reduce the variance of our portfolio.
          """)
 
 st.subheader('Characteristic-Balanced Hedge Portfolio')
@@ -32,43 +32,40 @@ st.write(r"""
 how we can improve the portfolio $c$ from the first section.
 We can form a hedge portfolio $h$ that is long in assets with high exposure to the unrewarded factor $g$ and short in assets with low exposure to $g$. 
 To form a hedge portfolio that does not affect the exposure to the rewarded factor of the initial portfolio, 
-we need to form a hedge portfolio neutral to the rewarded factor $f$. That is, we want:
+we need to form a hedge portfolio neutral to the rewarded factor $f$.
 """)
 
-st.latex(
-    r"""
-\begin{equation}
-w_h^T x = 0
-\end{equation}
-"""
-)
+
 
 st.write(r"""
 To do so, we can form a portfolio sorted on the characteristic $x$ as before. Then, 
          within each sleeve (long and short), we can sort the assets on the loading on the unrewarded risk $\gamma$.
-We end up with $2\times3$ portfolios. We then go long portfolios with high $\gamma$ and short portfolios with low $\gamma$,
+We end up with $2\times2$ portfolios. We then go long portfolios with high $\gamma$ and short portfolios with low $\gamma$,
          equally-weighted.
-         
+
+Of course, in our simple framework, depending on the correlation between $\beta$ and $\gamma$, we may end up 
+with unrealistic sleeves (ie. assets with different $\gamma$ in the same sleeve). But this will illustrate the idea.      
 """)
 
 
-N = 10  # Number of assets
+N = 12  # Number of assets
 
 # Predefined fixed values for beta
-fixed_beta = [1, 1, 1, 1, 1, -1, -1, -1,-1,-1]
+fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
 
 st.sidebar.header("Input Desired Correlation Between Beta and Gamma")
 
 # Ask user for the desired correlation coefficient
 correlation = st.sidebar.selectbox(
     "Select the correlation between Beta and Gamma", 
-    ("1/5", "3/5")
+    ("0", "1/3", "2/3")
 )
 
 # Predefined sets of gamma based on the correlation choices
 gamma_sets = {
-    "1/5": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1],
-    "3/5": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1],
+    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
+    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
+    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
 }
 
 
@@ -77,7 +74,7 @@ selected_gamma = gamma_sets[correlation]
 
 
 # Create a LaTeX table for the beta and gamma inputs
-table_latex = r"\begin{array}{|c|c|c|} \hline Asset & x & \gamma \\ \hline "
+table_latex = r"\begin{array}{|c|c|c|} \hline Asset & \beta & \gamma \\ \hline "
 for i in range(N):
     table_latex += f"{i+1} & {fixed_beta[i]} & {sp.latex(selected_gamma[i])} \\\\ \\hline "
 table_latex += r"\end{array}"
@@ -96,16 +93,16 @@ gamma_np = np.array(selected_gamma)
 sorted_indices = np.argsort(beta_np)
 
 # Get the top 3 (high beta) and bottom 3 (low beta) indices
-high_beta_indices = sorted_indices[-5:]  # Indices for high beta
-low_beta_indices = sorted_indices[:5]    # Indices for low beta
+high_beta_indices = sorted_indices[-6:]  # Indices for high beta
+low_beta_indices = sorted_indices[:6]    # Indices for low beta
 
-low_beta_high_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][-2:]
+low_beta_high_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][-3:]
 
-low_beta_low_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][:2]
+low_beta_low_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][:3]
 
-high_beta_high_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][-2:]
+high_beta_high_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][-3:]
 
-high_beta_low_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][:2]
+high_beta_low_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][:3]
 
 # Combine the long and short positions
 long = np.concatenate([low_beta_high_gamma_sorted, high_beta_high_gamma_sorted])
@@ -117,11 +114,11 @@ w_short = sp.Matrix([0] * N)
 
 # Assign long positions (1/3) to the selected assets
 for idx in long:
-    w_long[idx] = sp.Rational(1, 4)
+    w_long[idx] = sp.Rational(1, 6)
 
 # Assign short positions (-1/3) to the selected assets
 for idx in short:
-    w_short[idx] = sp.Rational(-1, 4)
+    w_short[idx] = sp.Rational(-1, 6)
 
 # Combine long and short positions to form the final weight vector
 w = w_long + w_short
@@ -167,11 +164,23 @@ expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
 
 loading_on_f = w.dot(beta)
 loading_on_g = w.dot(gamma)
-st.write(f"""
 
-The loading of the portfolio $h$ on the rewarded factor $f$ is zero,
-and the loading on the unrewarded factor $g$ is {loading_on_g}. Therefore, 
-expected return of the portfolio $h$ is :
+
+st.write(fr"""
+The loading of the portfolio $h$ on the rewarded factor $f$ is {loading_on_f}.
+
+The loading on the unrewarded factor $g$ is {loading_on_g}. 
+
+You may notice by playing around
+that the loading of the hedge portfolio $h$ on the underwarded 
+factor $g$ is affected by the correlation between $\beta$ and $\gamma$. This is because 
+we are trying to control for the loading on the rewarded factor $f$, $\beta$, when 
+constructing the hedge portfolio $h$. Therefore, we target the dimension 
+of the unrewarded factor $g$ that is orthogonal to the rewarded factor $f$.
+The more correlated $\beta$ and $\gamma$ are, the less material we have to work with to
+construct the hedge portfolio $h$.
+
+We can check that everything worked as expected by looking at the expected return of the portfolio $h$:
          """)
 
 
@@ -180,10 +189,7 @@ expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
 
 st.latex(f"E[r_h] = {sp.latex(expected_portfolio_return_with_g)}")
 
-
-
-
-st.write(r"""
+st.write(r"""which is nill as expected. The hedge portfolio $h$ is designed to not alter the expected return of the portfolio $c$.
 The double sorting on the rewarded and unrewarded factors allows us to construct a portfolio that is neutral to the rewarded factor, and
          therefore could be use without affecting the exposure to the rewarded factor of the initial portfolio.
          """)
@@ -191,7 +197,8 @@ The double sorting on the rewarded and unrewarded factors allows us to construct
 st.subheader('Hedge Portfolio Variance')
 
 st.write(r"""
-So, we now have our hedge portfolio $h$ that is neutral to the rewarded factor $f$ and long in assets with high exposure to the unrewarded factor $g$ and short in assets with low exposure to $g$.
+So, we now have our hedge portfolio $h$ that is neutral to the rewarded factor $f$ and 
+some exposure to $g$.
 The resulting hedge portfolio $h$ has a variance given by:
          """)
 
@@ -214,6 +221,8 @@ st.write(r"""
 Thus, because it loads on the unrewarded factors, the variance of the portfolio is partially driven by 
          the variance of the unrewarded factor $g$ (ie. the unrewarded risk).
 
+Again, the higher the correlation you may have chosen, the lower the variance of the hedge portfolio $h$ due to 
+the unrewarded factor $\sigma_g$. 
          """)
 
 

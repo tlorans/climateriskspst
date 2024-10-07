@@ -46,51 +46,77 @@ st.latex(r"""
             """)
 
 
-default_gamma = [1, 1, -1, 1, -1, -1]
-N = 6  # Number of assets
+N = 12  # Number of assets
 
-# Predefined values for beta and gamma
-default_beta = [1, 1, 1, -1, -1, -1]
+# Predefined fixed values for beta
+fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
+
+st.sidebar.header("Input Desired Correlation Between Beta and Gamma")
+
+# Ask user for the desired correlation coefficient
+correlation = st.sidebar.selectbox(
+    "Select the correlation between Beta and Gamma", 
+    ("0", "1/3", "2/3")
+)
+
+# Predefined sets of gamma based on the correlation choices
+gamma_sets = {
+    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
+    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
+    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
+}
+
+# Select the gamma set based on the chosen correlation coefficient
+selected_gamma = gamma_sets[correlation]
+
+
+# Create a LaTeX table for the beta and gamma inputs
+table_latex = r"\begin{array}{|c|c|c|} \hline Asset & \beta & \gamma \\ \hline "
+for i in range(N):
+    table_latex += f"{i+1} & {fixed_beta[i]} & {sp.latex(selected_gamma[i])} \\\\ \\hline "
+table_latex += r"\end{array}"
+st.latex(table_latex)
 
 # Convert beta and gamma inputs to Sympy matrices
-gamma = sp.Matrix(default_gamma)
+gamma = sp.Matrix(selected_gamma)
 # Convert beta inputs to Sympy matrices
-beta = sp.Matrix(default_beta)
+beta = sp.Matrix(fixed_beta)
 
-# Portfolio weights based on sorted betas (long the highest, short the lowest)
-beta_np = np.array(default_beta)
-gamma_np = np.array(default_gamma)
+# Convert beta and gamma inputs to NumPy arrays
+beta_np = np.array(fixed_beta)
+gamma_np = np.array(selected_gamma)
+
 
 # Get the indices of the sorted beta values
 sorted_indices = np.argsort(beta_np)
 
 # Use SymPy's Rational to keep weights as fractions
-w_long = sp.Matrix([0, 0, 0, 0, 0, 0])
-w_short = sp.Matrix([0, 0, 0, 0, 0, 0])
+w_long = sp.Matrix([0]*N)
+w_short = sp.Matrix([0]*N)
 
 # Assign long positions (1/3) to the top 3 assets
-for idx in sorted_indices[-3:]:
-    w_long[idx] =sp.Rational(1, 3)
+for idx in sorted_indices[-6:]:
+    w_long[idx] =sp.Rational(1, 6)
 
 # Assign short positions (-1/3) to the bottom 3 assets
-for idx in sorted_indices[:3]:
-    w_short[idx] = sp.Rational(-1, 3)
+for idx in sorted_indices[:6]:
+    w_short[idx] = sp.Rational(-1, 6)
 
 # Combine long and short positions to form the final weight vector
 w_c = w_long + w_short
 
 
 # Get the top 3 (high beta) and bottom 3 (low beta) indices
-high_beta_indices = sorted_indices[-3:]  # Indices for high beta
-low_beta_indices = sorted_indices[:3]    # Indices for low beta
+high_beta_indices = sorted_indices[-6:]  # Indices for high beta
+low_beta_indices = sorted_indices[:6]    # Indices for low beta
 
-low_beta_high_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][-1:]
+low_beta_high_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][-3:]
 
-low_beta_low_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][:1]
+low_beta_low_gamma_sorted = low_beta_indices[np.argsort(gamma_np[low_beta_indices])][:3]
 
-high_beta_high_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][-1:]
+high_beta_high_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][-3:]
 
-high_beta_low_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][:1]
+high_beta_low_gamma_sorted = high_beta_indices[np.argsort(gamma_np[high_beta_indices])][:3]
 
 # Combine the long and short positions
 long = np.concatenate([low_beta_high_gamma_sorted, high_beta_high_gamma_sorted])
@@ -102,11 +128,11 @@ w_short = sp.Matrix([0] * N)
 
 # Assign long positions (1/3) to the selected assets
 for idx in long:
-    w_long[idx] = sp.Rational(1, 2)
+    w_long[idx] = sp.Rational(1, 6)
 
 # Assign short positions (-1/3) to the selected assets
 for idx in short:
-    w_short[idx] = sp.Rational(-1, 2)
+    w_short[idx] = sp.Rational(-1, 6)
 
 # Combine long and short positions to form the final weight vector
 w_h = w_long + w_short
@@ -119,7 +145,7 @@ st.write(r"""
 
 # Prepare weights in LaTeX format as a row vector
 weights_latex = r"\begin{bmatrix} "
-for i in range(6):
+for i in range(N):
     weights_latex += f"{w[i]} & "
 weights_latex = weights_latex[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
 
