@@ -343,61 +343,61 @@ st.write(r"""
 st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio)}")
 
 
-@st.cache_data
-def load_ff5_data():
-    """Load the Fama-French factors data."""
-    start_date = '2000-01-01'
-    end_date = '2019-06-30'
-    factors_ff5_daily_raw = pdr.DataReader(
-        name="F-F_Research_Data_5_Factors_2x3_daily",
-        data_source="famafrench",
-        start=start_date,
-        end=end_date)[0]
-    factors_ff5_daily_raw = (factors_ff5_daily_raw
-                         .divide(100)
-                         .reset_index(names="date")
-                         .rename(str.lower, axis="columns")
-                         .rename(columns={"mkt-rf": "mkt_excess"})
-                         .drop(columns=['rf', 'mkt_excess'])
-                         )
-    return factors_ff5_daily_raw
+# @st.cache_data
+# def load_ff5_data():
+#     """Load the Fama-French factors data."""
+#     start_date = '2000-01-01'
+#     end_date = '2019-06-30'
+#     factors_ff5_daily_raw = pdr.DataReader(
+#         name="F-F_Research_Data_5_Factors_2x3_daily",
+#         data_source="famafrench",
+#         start=start_date,
+#         end=end_date)[0]
+#     factors_ff5_daily_raw = (factors_ff5_daily_raw
+#                          .divide(100)
+#                          .reset_index(names="date")
+#                          .rename(str.lower, axis="columns")
+#                          .rename(columns={"mkt-rf": "mkt_excess"})
+#                          .drop(columns=['rf', 'mkt_excess'])
+#                          )
+#     return factors_ff5_daily_raw
 
-@st.cache_data
-def compute_cumulative_returns(df):
-    """Compute cumulative returns for all return columns in the DataFrame."""
-    cumulative_df = df.copy()
+# @st.cache_data
+# def compute_cumulative_returns(df):
+#     """Compute cumulative returns for all return columns in the DataFrame."""
+#     cumulative_df = df.copy()
 
-    # Get all columns except the date column
-    return_columns = [col for col in df.columns if col != 'date']
+#     # Get all columns except the date column
+#     return_columns = [col for col in df.columns if col != 'date']
 
-    # Compute cumulative returns for each column
-    for col in return_columns:
-        cumulative_df[col + '_cumulative'] = (1 + cumulative_df[col]).cumprod() - 1
+#     # Compute cumulative returns for each column
+#     for col in return_columns:
+#         cumulative_df[col + '_cumulative'] = (1 + cumulative_df[col]).cumprod() - 1
 
-    return cumulative_df, return_columns
+#     return cumulative_df, return_columns
 
-# Main logic
-factors_ff3_daily = load_ff5_data()
+# # Main logic
+# factors_ff3_daily = load_ff5_data()
 
-# Compute cumulative returns for all factors
-cumulative_factors_df, return_columns = compute_cumulative_returns(factors_ff3_daily)
+# # Compute cumulative returns for all factors
+# cumulative_factors_df, return_columns = compute_cumulative_returns(factors_ff3_daily)
 
-# Melt the DataFrame to make it suitable for ggplot
-cumulative_factors_melted = pd.melt(cumulative_factors_df, id_vars=['date'], 
-                                    value_vars=[col + '_cumulative' for col in return_columns],
-                                    var_name='factor', value_name='cumulative_return')
+# # Melt the DataFrame to make it suitable for ggplot
+# cumulative_factors_melted = pd.melt(cumulative_factors_df, id_vars=['date'], 
+#                                     value_vars=[col + '_cumulative' for col in return_columns],
+#                                     var_name='factor', value_name='cumulative_return')
 
-# Plot cumulative returns
-if st.button('Plot Cumulative Returns of All FF Factors'):
-    plot_cumulative = (ggplot(cumulative_factors_melted, aes(x='date', y='cumulative_return', color='factor')) +
-                       geom_line() +
-                       labs(title="Cumulative Returns of Fama-French Factors",
-                            x="Date", y="Cumulative Return") +
-                       scale_x_datetime(breaks=date_breaks('2 years'), labels=date_format('%Y')) +
-                       theme(axis_text_x=element_text(rotation=45, hjust=1)) +
-                       scale_color_discrete(name="Factors"))
+# # Plot cumulative returns
+# if st.button('Plot Cumulative Returns of All FF Factors'):
+#     plot_cumulative = (ggplot(cumulative_factors_melted, aes(x='date', y='cumulative_return', color='factor')) +
+#                        geom_line() +
+#                        labs(title="Cumulative Returns of Fama-French Factors",
+#                             x="Date", y="Cumulative Return") +
+#                        scale_x_datetime(breaks=date_breaks('2 years'), labels=date_format('%Y')) +
+#                        theme(axis_text_x=element_text(rotation=45, hjust=1)) +
+#                        scale_color_discrete(name="Factors"))
 
-    st.pyplot(ggplot.draw(plot_cumulative))
+#     st.pyplot(ggplot.draw(plot_cumulative))
 
 st.subheader('Conclusion')
 
