@@ -57,23 +57,25 @@ st.write(r"""
             the assets have loadings $\gamma$ on the unrewarded factors $g$:
 """)
 
-N = 6  # Number of assets
+N = 12  # Number of assets
 
 # Predefined fixed values for beta
-fixed_beta = [1, 1, 1, -1, -1, -1]
-
+fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
+st.write(len(fixed_beta))
 st.sidebar.header("Input Desired Correlation Between Beta and Gamma")
 
 # Ask user for the desired correlation coefficient
 correlation = st.sidebar.selectbox(
-    "Select the correlation between Beta and Gamma", ("1/3", "1"))
+    "Select the correlation between Beta and Gamma", 
+    ("0", "1/3", "2/3")
+)
 
 # Predefined sets of gamma based on the correlation choices
 gamma_sets = {
-    "1/3": [1, 1, -1, 1, -1, -1],   # Low positive correlation set
-    "1": [1, 1, 1, -1, -1, -1]      # Perfect correlation set
+    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
+    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
+    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
 }
-
 
 # Select the gamma set based on the chosen correlation coefficient
 selected_gamma = gamma_sets[correlation]
@@ -123,16 +125,16 @@ beta_np = np.array(fixed_beta)
 sorted_indices = np.argsort(beta_np)
 
 # Use SymPy's Rational to keep weights as fractions
-w_long = sp.Matrix([0, 0, 0, 0, 0, 0])
-w_short = sp.Matrix([0, 0, 0, 0, 0, 0])
+w_long = sp.Matrix([0] * N)
+w_short = sp.Matrix([0] * N)
 
 # Assign long positions (1/3) to the top 3 assets
-for idx in sorted_indices[-3:]:
-    w_long[idx] = sp.Rational(1, 3)
+for idx in sorted_indices[-6:]:
+    w_long[idx] = sp.Rational(1, 6)
 
 # Assign short positions (-1/3) to the bottom 3 assets
-for idx in sorted_indices[:3]:
-    w_short[idx] = sp.Rational(-1, 3)
+for idx in sorted_indices[:6]:
+    w_short[idx] = sp.Rational(-1, 6)
 
 # Combine long and short positions to form the final weight vector
 w = w_long + w_short

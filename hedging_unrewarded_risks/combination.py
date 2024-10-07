@@ -8,7 +8,9 @@ import sympy.stats as stats
 st.title('Factor Efficient Portfolio')
 
 st.write(r"""
-         Now that we have a tool to manage exposure to unrewarded risk, while keeping exposure to rewarded risk, we can go further.
+         In the previous section, we have built an investment tool - a hedging portfolio - that helps to reduce the exposure to unrewarded risks,
+         while keeping the expected return of the portfolio unchanged. 
+         In this section, we will show how to combine the hedging portfolio with the initial portfolio to recover mean-variance efficiency.
          """)
 
 st.subheader('Enhancing the Risk Return Profile')
