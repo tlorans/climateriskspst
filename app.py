@@ -33,7 +33,7 @@ rewarded_unrewarded = [st.Page("rewarded_unrewarded/rewarded.py", title = "Rewar
 
 climate_risks = [st.Page("climate_risks/characteristics.py", title = "Climate Characteristics", default=(page=="What About Climate Risks?")),
                  st.Page("climate_risks/climate_lambda.py", title = "Where is the Risk Premium?"),
-                # st.Page("climate_risks/climate_risks_g.py", title = "Climate Risks as a Common Source of Variation in Returns"),
+                st.Page("climate_risks/unexpected_returns.py", title = "Unexpected Returns and Climate Concerns"),
 ]
 
 hedging = [st.Page("hedging_unrewarded_risks/hedging_portfolio.py", title = "Hedging Portfolio", default=(page=="Hedging Unrewarded Risks")),
