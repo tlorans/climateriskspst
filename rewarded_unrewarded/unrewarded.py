@@ -273,236 +273,236 @@ st.write(r"""
 
             """)
 
-st.write(r"""
-         First plot show the $R^2$ from 126-days rolling regressions of daily HML returns on the twelve daily Fama and French (1997) value-weighted industry excess returns.
-         The plot shows not only short periods where the realized $R^2$ dips below 50%, but also several periods during which it exceeds 90%. While the $R^2$ fluctuates considerably,
-         the average is well above 70%.
-         """)
+# st.write(r"""
+#          First plot show the $R^2$ from 126-days rolling regressions of daily HML returns on the twelve daily Fama and French (1997) value-weighted industry excess returns.
+#          The plot shows not only short periods where the realized $R^2$ dips below 50%, but also several periods during which it exceeds 90%. While the $R^2$ fluctuates considerably,
+#          the average is well above 70%.
+#          """)
 
 
-# Display the code snippet
-code_snippet = '''
-import pandas as pd
-import numpy as np
-import pandas_datareader as pdr
-import statsmodels.api as sm
-from plotnine import *
-from mizani.formatters import date_format
-from mizani.breaks import date_breaks
+# # Display the code snippet
+# code_snippet = '''
+# import pandas as pd
+# import numpy as np
+# import pandas_datareader as pdr
+# import statsmodels.api as sm
+# from plotnine import *
+# from mizani.formatters import date_format
+# from mizani.breaks import date_breaks
 
-start_date = '2000-01-01'
-end_date = '2019-06-30'
+# start_date = '2000-01-01'
+# end_date = '2019-06-30'
 
-factors_ff3_daily_raw = pdr.DataReader(
-  name="F-F_Research_Data_Factors_daily",
-  data_source="famafrench", 
-  start=start_date, 
-  end=end_date)[0]
+# factors_ff3_daily_raw = pdr.DataReader(
+#   name="F-F_Research_Data_Factors_daily",
+#   data_source="famafrench", 
+#   start=start_date, 
+#   end=end_date)[0]
 
-factors_ff3_daily = (factors_ff3_daily_raw
-  .divide(100)
-  .reset_index(names="date")
-  .rename(str.lower, axis="columns")
-  .rename(columns={"mkt-rf": "mkt_excess"})
-)
+# factors_ff3_daily = (factors_ff3_daily_raw
+#   .divide(100)
+#   .reset_index(names="date")
+#   .rename(str.lower, axis="columns")
+#   .rename(columns={"mkt-rf": "mkt_excess"})
+# )
 
-industries_ff_daily_raw = pdr.DataReader(
-  name="10_Industry_Portfolios_daily",
-  data_source="famafrench", 
-  start=start_date, 
-  end=end_date)[0]
+# industries_ff_daily_raw = pdr.DataReader(
+#   name="10_Industry_Portfolios_daily",
+#   data_source="famafrench", 
+#   start=start_date, 
+#   end=end_date)[0]
 
-industries_ff_daily = (industries_ff_daily_raw
-  .divide(100)
-  .reset_index(names="date")
-  .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
-  .rename(str.lower, axis="columns")
-)
+# industries_ff_daily = (industries_ff_daily_raw
+#   .divide(100)
+#   .reset_index(names="date")
+#   .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
+#   .rename(str.lower, axis="columns")
+# )
 
-data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
+# data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
 
-rolling_window = 126  # 126 days
+# rolling_window = 126  # 126 days
 
-def rolling_r2(hml, industry_portfolios):
-    r2_values = []
+# def rolling_r2(hml, industry_portfolios):
+#     r2_values = []
     
-    for i in range(len(hml) - rolling_window + 1):
-        y = hml.iloc[i:i + rolling_window]
-        X = industry_portfolios.iloc[i:i + rolling_window]
-        X = sm.add_constant(X)
-        model = sm.OLS(y, X).fit()
-        r2_values.append(model.rsquared)
+#     for i in range(len(hml) - rolling_window + 1):
+#         y = hml.iloc[i:i + rolling_window]
+#         X = industry_portfolios.iloc[i:i + rolling_window]
+#         X = sm.add_constant(X)
+#         model = sm.OLS(y, X).fit()
+#         r2_values.append(model.rsquared)
     
-    return np.array(r2_values)
+#     return np.array(r2_values)
 
-r2_values = rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
+# r2_values = rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
 
-data_rolling_r2 = data.iloc[rolling_window - 1:].copy()
-data_rolling_r2['r2'] = r2_values
+# data_rolling_r2 = data.iloc[rolling_window - 1:].copy()
+# data_rolling_r2['r2'] = r2_values
 
-plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
-        geom_line(color='blue') +
-        labs(title="126-Day Rolling R^2: HML on 12 Industry Portfolios",
-             x="Date", y="R-squared") +
-        scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
-        theme(axis_text_x=element_text(rotation=45, hjust=1)))
+# plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
+#         geom_line(color='blue') +
+#         labs(title="126-Day Rolling R^2: HML on 12 Industry Portfolios",
+#              x="Date", y="R-squared") +
+#         scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+#         theme(axis_text_x=element_text(rotation=45, hjust=1)))
 
-plot.show()
-'''
+# plot.show()
+# '''
 
-# Display the code snippet
-st.code(code_snippet, language='python')
+# # Display the code snippet
+# st.code(code_snippet, language='python')
 
-@st.cache_data
-def load_ff3_data():
-    """Load the Fama-French factors data."""
-    start_date = '2000-01-01'
-    end_date = '2019-06-30'
-    factors_ff3_daily_raw = pdr.DataReader(
-        name="F-F_Research_Data_Factors_daily",
-        data_source="famafrench",
-        start=start_date,
-        end=end_date)[0]
-    factors_ff3_daily = (factors_ff3_daily_raw
-                         .divide(100)
-                         .reset_index(names="date")
-                         .rename(str.lower, axis="columns")
-                         .rename(columns={"mkt-rf": "mkt_excess"}))
-    return factors_ff3_daily
+# @st.cache_data
+# def load_ff3_data():
+#     """Load the Fama-French factors data."""
+#     start_date = '2000-01-01'
+#     end_date = '2019-06-30'
+#     factors_ff3_daily_raw = pdr.DataReader(
+#         name="F-F_Research_Data_Factors_daily",
+#         data_source="famafrench",
+#         start=start_date,
+#         end=end_date)[0]
+#     factors_ff3_daily = (factors_ff3_daily_raw
+#                          .divide(100)
+#                          .reset_index(names="date")
+#                          .rename(str.lower, axis="columns")
+#                          .rename(columns={"mkt-rf": "mkt_excess"}))
+#     return factors_ff3_daily
 
-@st.cache_data
-def load_industry_data():
-    """Load the Fama-French industry portfolios data."""
-    start_date = '2000-01-01'
-    end_date = '2019-06-30'
-    industries_ff_daily_raw = pdr.DataReader(
-        name="12_Industry_Portfolios_daily",
-        data_source="famafrench",
-        start=start_date,
-        end=end_date)[0]
-    industries_ff_daily = (industries_ff_daily_raw
-                           .divide(100)
-                           .reset_index(names="date")
-                           .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
-                           .rename(str.lower, axis="columns"))
-    return industries_ff_daily
+# @st.cache_data
+# def load_industry_data():
+#     """Load the Fama-French industry portfolios data."""
+#     start_date = '2000-01-01'
+#     end_date = '2019-06-30'
+#     industries_ff_daily_raw = pdr.DataReader(
+#         name="12_Industry_Portfolios_daily",
+#         data_source="famafrench",
+#         start=start_date,
+#         end=end_date)[0]
+#     industries_ff_daily = (industries_ff_daily_raw
+#                            .divide(100)
+#                            .reset_index(names="date")
+#                            .assign(date=lambda x: pd.to_datetime(x["date"].astype(str)))
+#                            .rename(str.lower, axis="columns"))
+#     return industries_ff_daily
 
-@st.cache_data
-def compute_rolling_r2(hml, industry_portfolios, rolling_window=126):
-    """Compute rolling R-squared values from regression of HML on industry portfolios."""
-    r2_values = []
-    for i in range(len(hml) - rolling_window + 1):
-        y = hml.iloc[i:i + rolling_window]
-        X = industry_portfolios.iloc[i:i + rolling_window]
-        X = sm.add_constant(X)
-        model = sm.OLS(y, X).fit()
-        r2_values.append(model.rsquared)
-    return np.array(r2_values)
+# @st.cache_data
+# def compute_rolling_r2(hml, industry_portfolios, rolling_window=126):
+#     """Compute rolling R-squared values from regression of HML on industry portfolios."""
+#     r2_values = []
+#     for i in range(len(hml) - rolling_window + 1):
+#         y = hml.iloc[i:i + rolling_window]
+#         X = industry_portfolios.iloc[i:i + rolling_window]
+#         X = sm.add_constant(X)
+#         model = sm.OLS(y, X).fit()
+#         r2_values.append(model.rsquared)
+#     return np.array(r2_values)
 
-@st.cache_data
-def compute_rolling_beta(hml, money_industry, rolling_window=126):
-    """Compute rolling beta of HML on Money Industry portfolio."""
-    beta_values = []
-    for i in range(len(hml) - rolling_window + 1):
-        y = hml.iloc[i:i + rolling_window]
-        X = sm.add_constant(money_industry.iloc[i:i + rolling_window])
-        model = sm.OLS(y, X).fit()
-        beta_values.append(model.params[1])  # The slope (beta) coefficient
-    return np.array(beta_values)
+# @st.cache_data
+# def compute_rolling_beta(hml, money_industry, rolling_window=126):
+#     """Compute rolling beta of HML on Money Industry portfolio."""
+#     beta_values = []
+#     for i in range(len(hml) - rolling_window + 1):
+#         y = hml.iloc[i:i + rolling_window]
+#         X = sm.add_constant(money_industry.iloc[i:i + rolling_window])
+#         model = sm.OLS(y, X).fit()
+#         beta_values.append(model.params[1])  # The slope (beta) coefficient
+#     return np.array(beta_values)
 
-@st.cache_data
-def compute_rolling_volatility(returns, rolling_window=126):
-    """Compute rolling annualized volatility of a portfolio."""
-    # Compute rolling standard deviation of daily returns
-    rolling_volatility = returns.rolling(window=rolling_window).std()
+# @st.cache_data
+# def compute_rolling_volatility(returns, rolling_window=126):
+#     """Compute rolling annualized volatility of a portfolio."""
+#     # Compute rolling standard deviation of daily returns
+#     rolling_volatility = returns.rolling(window=rolling_window).std()
     
-    # Annualize the volatility: Multiply by the square root of 252 (trading days per year)
-    annualized_volatility = rolling_volatility * np.sqrt(252)
+#     # Annualize the volatility: Multiply by the square root of 252 (trading days per year)
+#     annualized_volatility = rolling_volatility * np.sqrt(252)
     
-    return annualized_volatility
+#     return annualized_volatility
 
-# Main logic
-factors_ff3_daily = load_ff3_data()
-industries_ff_daily = load_industry_data()
+# # Main logic
+# factors_ff3_daily = load_ff3_data()
+# industries_ff_daily = load_industry_data()
 
-# Merge HML and industry portfolios
-data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
+# # Merge HML and industry portfolios
+# data = pd.merge(factors_ff3_daily[['date', 'hml']], industries_ff_daily, on='date')
 
-# Run rolling regression and compute R-squared values
-if st.button('Run Rolling Regression and Plot'):
-    r2_values = compute_rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
+# # Run rolling regression and compute R-squared values
+# if st.button('Run Rolling Regression and Plot'):
+#     r2_values = compute_rolling_r2(data['hml'], data.drop(columns=['date', 'hml']))
     
-    # Add the R-squared values to the data
-    data_rolling_r2 = data.iloc[126 - 1:].copy()
-    data_rolling_r2['r2'] = r2_values
+#     # Add the R-squared values to the data
+#     data_rolling_r2 = data.iloc[126 - 1:].copy()
+#     data_rolling_r2['r2'] = r2_values
 
-    # Create the plot
-    plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
-            geom_line(color='blue') +
-            labs(title="126-Day Rolling $R^2$: HML on 12 Industry Portfolios",
-                 x="Date", y="R-squared") +
-            scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
-            theme(axis_text_x=element_text(rotation=45, hjust=1)))
+#     # Create the plot
+#     plot = (ggplot(data_rolling_r2, aes(x='date', y='r2')) +
+#             geom_line(color='blue') +
+#             labs(title="126-Day Rolling $R^2$: HML on 12 Industry Portfolios",
+#                  x="Date", y="R-squared") +
+#             scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+#             theme(axis_text_x=element_text(rotation=45, hjust=1)))
 
-    st.pyplot(ggplot.draw(plot))
-
-
-st.write(r"""
-The Money industry is a striking example of the large industry effect on HML. The figure below shows that the regression coefficient associated with Money increased
-         dramatically between 2007 and 2009. 
-         """)
-
-# Add a button to compute rolling beta and plot it
-if st.button('Run Rolling Beta Regression and Plot'):
-    # Select the "Money Industry" portfolio (replace 'money_industry' with actual column name)
-    money_industry = data['money']  # Make sure to replace 'money' with the actual column name in your dataset
-
-    # Compute rolling beta
-    beta_values = compute_rolling_beta(data['hml'], money_industry)
-
-    # Prepare data for plotting
-    data_rolling_beta = data.iloc[126 - 1:].copy()
-    data_rolling_beta['beta'] = beta_values
-
-    # Create the plot for beta
-    plot_beta = (ggplot(data_rolling_beta, aes(x='date', y='beta')) +
-                 geom_line(color='red') +
-                 labs(title="126-Day Rolling Beta: HML on Money Industry Portfolio",
-                      x="Date", y="Beta") +
-                 scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
-                 theme(axis_text_x=element_text(rotation=45, hjust=1)))
-
-    st.pyplot(ggplot.draw(plot_beta))
+#     st.pyplot(ggplot.draw(plot))
 
 
-st.write(r"""
-         As shown as the Figure below, the volatility of returns also increased dramatically during the financial crisis.""")
+# st.write(r"""
+# The Money industry is a striking example of the large industry effect on HML. The figure below shows that the regression coefficient associated with Money increased
+#          dramatically between 2007 and 2009. 
+#          """)
 
-# Add a button to compute and plot annualized volatility of the Money portfolio
-if st.button('Run Annualized Volatility Calculation and Plot'):
-    # Select the "Money Industry" portfolio (replace 'money' with actual column name)
-    money_industry_returns = data['money']  # Replace 'money' with the actual column name
+# # Add a button to compute rolling beta and plot it
+# if st.button('Run Rolling Beta Regression and Plot'):
+#     # Select the "Money Industry" portfolio (replace 'money_industry' with actual column name)
+#     money_industry = data['money']  # Make sure to replace 'money' with the actual column name in your dataset
 
-    # Compute rolling annualized volatility (252-day window)
-    annualized_volatility = compute_rolling_volatility(money_industry_returns)
+#     # Compute rolling beta
+#     beta_values = compute_rolling_beta(data['hml'], money_industry)
 
-    # Prepare data for plotting
-    data_volatility = data.copy()
-    data_volatility['annualized_volatility'] = annualized_volatility
+#     # Prepare data for plotting
+#     data_rolling_beta = data.iloc[126 - 1:].copy()
+#     data_rolling_beta['beta'] = beta_values
 
-    # Create the plot for annualized volatility
-    plot_volatility = (ggplot(data_volatility, aes(x='date', y='annualized_volatility')) +
-                       geom_line(color='green') +
-                       labs(title="126-Day Rolling Annualized Volatility: Money Industry Portfolio",
-                            x="Date", y="Annualized Volatility") +
-                       scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
-                       theme(axis_text_x=element_text(rotation=45, hjust=1)))
+#     # Create the plot for beta
+#     plot_beta = (ggplot(data_rolling_beta, aes(x='date', y='beta')) +
+#                  geom_line(color='red') +
+#                  labs(title="126-Day Rolling Beta: HML on Money Industry Portfolio",
+#                       x="Date", y="Beta") +
+#                  scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+#                  theme(axis_text_x=element_text(rotation=45, hjust=1)))
 
-    st.pyplot(ggplot.draw(plot_volatility))
+#     st.pyplot(ggplot.draw(plot_beta))
 
-st.write(r"""
-As a result of increasing loading into the Money portfolio and higher volatility of the Money portfolio, Money explained a substantial amount of the variation of HML returns during those years.
-         """)
+
+# st.write(r"""
+#          As shown as the Figure below, the volatility of returns also increased dramatically during the financial crisis.""")
+
+# # Add a button to compute and plot annualized volatility of the Money portfolio
+# if st.button('Run Annualized Volatility Calculation and Plot'):
+#     # Select the "Money Industry" portfolio (replace 'money' with actual column name)
+#     money_industry_returns = data['money']  # Replace 'money' with the actual column name
+
+#     # Compute rolling annualized volatility (252-day window)
+#     annualized_volatility = compute_rolling_volatility(money_industry_returns)
+
+#     # Prepare data for plotting
+#     data_volatility = data.copy()
+#     data_volatility['annualized_volatility'] = annualized_volatility
+
+#     # Create the plot for annualized volatility
+#     plot_volatility = (ggplot(data_volatility, aes(x='date', y='annualized_volatility')) +
+#                        geom_line(color='green') +
+#                        labs(title="126-Day Rolling Annualized Volatility: Money Industry Portfolio",
+#                             x="Date", y="Annualized Volatility") +
+#                        scale_x_datetime(breaks=date_breaks('5 years'), labels=date_format('%Y')) +
+#                        theme(axis_text_x=element_text(rotation=45, hjust=1)))
+
+#     st.pyplot(ggplot.draw(plot_volatility))
+
+# st.write(r"""
+# As a result of increasing loading into the Money portfolio and higher volatility of the Money portfolio, Money explained a substantial amount of the variation of HML returns during those years.
+#          """)
 
 st.subheader("Conclusion")
 
