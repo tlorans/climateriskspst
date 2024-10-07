@@ -161,6 +161,17 @@ In that case, source of common variation in returns (as $g$). Associated varianc
 
 st.subheader("Value and BMG Portfolio")
 
+st.write(r"""
+         Is climate risk an unrewarded factor that may 
+         decrease the mean-variance efficiency of investors' portfolios?
+            """)
+
+st.write(r"""Use the same recipe than in our unrewarded risk section:
+        - Volatility of the BMG portfolio?
+        - Correlation between Value and BMG portfolio?
+        - Resulting variance of Value explained by BMG?
+        """)
+
 
 @st.cache_data
 def load_ff3_data():
