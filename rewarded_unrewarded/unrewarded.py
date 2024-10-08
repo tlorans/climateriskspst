@@ -192,8 +192,8 @@ total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
 # Calculate the Sharpe ratio
 sharpe_ratio_with_g = expected_portfolio_return_with_g / sp.sqrt(total_portfolio_variance_with_g)
 
-gamma_p = gamma.dot(w)
-
+gamma_portfpoliio = gamma.dot(w)
+st.latex(f"\\gamma_c = {sp.latex(gamma_portfpoliio)}")
 st.write(r"""
          
 The portfolio returns captures the expected returns 

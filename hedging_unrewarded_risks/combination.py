@@ -240,14 +240,21 @@ st.latex(r"""
 \min_{\delta} \text{var}(r_c - \delta r_h) \implies \delta^* = \rho_{c,h}\frac{\sigma_c}{\sigma_h}
 \end{equation}
 """)
-st.write(fr"""The calculated value of the optimal hedge ratio is: $\delta^* = {sp.latex(optimal_hedge_ratio.simplify())}$.""")
+# st.write(fr"""The calculated value of the optimal hedge ratio is: $\delta^* = {sp.latex(optimal_hedge_ratio.simplify())}$.""")
 
-# Variance of the combined portfolio
-variance_p_optim = variance_c - optimal_hedge_ratio * variance_h
+# # Variance of the combined portfolio
+# variance_p_optim = variance_c - optimal_hedge_ratio * variance_h
 
-st.write(r"""
-         The variance of the combined portfolio $p$ is:
-         """)
-st.latex(f"\\sigma^2_p = {sp.latex(variance_p_optim)}")
+# st.write(r"""
+#          The variance of the combined portfolio $p$ is:
+#          """)
+# st.latex(f"\\sigma^2_p = {sp.latex(variance_p_optim)}")
 
-st.subheader('Conclusion')
+# w_p_opt = w_c - sp.Rational(optimal_hedge_ratio) * w_h
+
+
+# st.latex(w_c.dot(gamma))
+# st.latex(w_h.dot(gamma))
+# st.write(fr"""$\gamma_p^* = {sp.latex(w_p_opt.dot(gamma))}$""")
+
+# st.subheader('Conclusion')
