@@ -5,7 +5,7 @@ import numpy as np
 import sympy as sp
 import sympy.stats as stats
 
-st.title('Factor Efficient Portfolio')
+st.title('Optimal Hedge Portfolio')
 
 st.write(r"""
          In the previous section, we have built an investment tool - a hedging portfolio - that helps to reduce the exposure to unrewarded risks,
@@ -61,14 +61,6 @@ std_gamma = sp.sqrt(sum((gamma[i] - gamma_mean)**2 for i in range(N)) / N)
 # Step 4: Compute the correlation
 correlation = cov_beta_gamma / (std_beta * std_gamma)
 
-# Display the correlation formula
-st.write(r"""
-The correlation between $\beta$ and $\gamma$ is:
-""")
-st.latex(r"\rho(\beta, \gamma) = " + sp.latex(correlation.simplify()))
-
-
-
 # Portfolio weights based on sorted betas (long the highest, short the lowest)
 beta_np = np.array(fixed_beta)
 gamma_np = np.array(selected_gamma)
@@ -123,12 +115,13 @@ variance_epsilon = w_c.dot(w_c) * sigma_epsilon**2  # Contribution from idiosync
 # Total variance of the portfolio:
 variance_c = variance_f_c + variance_g_c + variance_epsilon
 
-st.write(r"""
-         Our initial portfolio $c$ has the variance:
-            """)
 
-st.latex(f"\\sigma^2_c = {sp.latex(variance_c)}")
+gamma_c = w_c.dot(gamma)
 
+st.write(r""" Our initial portfolio loading on the unpriced factor $g$ is given by:
+""")
+
+st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
 
 
 # Get the top 3 (high beta) and bottom 3 (low beta) indices
@@ -174,12 +167,10 @@ variance_epsilon = w_h.dot(w_h) * sigma_epsilon**2  # Contribution from idiosync
 # Total variance of the portfolio:
 variance_h = variance_f_h + variance_g_h + variance_epsilon
 
+st.write(r""" The hedging portfolio loading on the unpriced factor $g$ is given by:
+""")
 
-st.write(r"""
-         and the variance of the hedging portfolio $h$ is:
-            """)
-
-st.latex(f"\\sigma^2_h = {sp.latex(variance_h)}")
+st.latex(f"\gamma_h = {sp.latex(w_h.dot(gamma))}")
 
 st.write(r"""
          Therefore, we can form a portfolio $p$ as a combination of the initial portfolio $c$ and the hedging portfolio $h$:
@@ -192,11 +183,6 @@ hedge_weight = st.sidebar.slider(
     max_value=2.0,
     step=0.25
 )
-
-# Combine the initial portfolio with the hedging portfolio
-w_p = w_c - sp.Rational(hedge_weight) * w_h
-
-st.latex(f"w_p = w_c - {sp.Rational(hedge_weight)} w_h")
 
 
 # Contribution from the unpriced factor g:

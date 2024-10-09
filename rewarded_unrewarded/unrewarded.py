@@ -265,6 +265,20 @@ The influence of $g$ depends on its volatility, ($\sigma_g^2$), and the cross-co
          """)
 
 
+st.write(r"""
+
+Issue: 
+- Exposure to $g$ increase the variance of the portfolio, but does not increase the expected return of the portfolio.
+
+Source of the issue:
+- The higher the cross-correlation between loadings on the rewarded factor and loadings on the unrewarded factor, the higher the loading of the portfolio to the unrewarded factor $\gamma_c$.
+
+Magnitude of the issue: 
+- the higher $\gamma_c$, the higher the variance explained by the unrewarded factor ($R^2$).
+- the higher the volatility of the unrewarded factor, $\sigma^2_g$, the higher the variance explained by the unrewarded factor ($R^2$).
+""")
+
+
 st.subheader("Project 2: Illustration with Industry")
 
 st.write(r"""
