@@ -258,6 +258,55 @@ gamma_c = w_c.dot(gamma)
 st.latex(fr"\beta_c = {sp.latex(beta_c)}")
 st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
 
+st.write(r"""
+         Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
+         Given that the hedge portfolio has zero expected return, this is equivalent 
+         to finding the combination of $c$ and $h$ that minimizes the variance of the resulting portfolio:
+            """)
+
+st.latex(r"""\min_{\delta} \text{var}(r_c - \delta r_h)""")
+
+st.write(r"""
+         with:
+         """)
+
+st.latex(r"""
+         \begin{equation}
+            \text{var}(r_c - \delta r_h) = \text{var}(r_c) + \delta^2 \text{var}(r_h) - 2 \delta \text{Cov}(r_c, r_h)
+        \end{equation}
+    """)
+
+st.write(r"""
+         Taking the derivative with respect to $\delta$ and setting it to zero, we find the optimal hedge ratio $\delta^*$:
+            """)
+
+st.latex(r"""
+            \begin{equation}
+         \begin{aligned}
+         \frac{\partial}{\partial \delta} \text{var}(r_c - \delta r_h) = 2 \delta \text{var}(r_h) - 2 \text{Cov}(r_c, r_h) = 0 \\
+            \delta^* = \frac{\text{Cov}(r_c, r_h)}{\text{var}(r_h)}
+         \end{aligned}   
+         \end{equation}
+        """)
+
+st.write(r"""
+         since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:
+            """)
+
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         \delta^* = \frac{\rho_{c,h} \sigma_c \sigma_h}{\sigma_h^2} \\
+          = \rho_{c,h} \frac{\sigma_c}{\sigma_h}
+            \end{aligned}
+\end{equation}
+         """)
+
+st.write(r"""
+         Therefore, the optimal hedge portfolio is the one that is maximally correlated 
+         with the initial portfolio $c$.
+            """)
+
 # # Function to retrieve S&P 500 tickers from Wikipedia
 # @st.cache_data
 # def get_sp500_tickers():
