@@ -316,12 +316,53 @@ st.latex(r"""
          \begin{aligned}
          \frac{\partial}{\partial \delta} \sigma^2(r_c - \delta r_h) = 2 \delta \sigma^2_h - 2 \text{Cov}(r_c, r_h) = 0 \\
             \delta^* = \frac{\text{Cov}(r_c, r_h)}{\sigma^2_h} \\
-         = \frac{\text{Cov}(w_c^\top \beta(f + \lambda), w_h^\top \gamma g) + \text{Cov}(w_c^\top \gamma g, w_h^\top \gamma g) + \text{Cov}(w_c^\top \epsilon, w_h^\top \epsilon)}{\sigma^2_h}
          \end{aligned}   
          \end{equation}
         """)
 
+st.write(r"""
+We know that $w^\top_h \beta = 0$ and $\text{Cov}(f, g) = 0$. Therefore, we can simplify a bit the covariance 
+            between $r_c$ and $r_h$:
+         """)
 
+st.latex(r"""
+\begin{equation}
+            \begin{aligned}
+            \text{Cov}(r_c, r_h) = \text{Cov}(w_c^\top \gamma g, w_h^\top \gamma g) + \text{Cov}(w_c^\top \epsilon, w_h^\top \epsilon) \\
+         = (w_c^\top \gamma) (w_h^\top \gamma) \text{Cov}(g,g) + w_c^\top w_h \text{Cov}(\epsilon, \epsilon) \\
+            = (w_c^\top \gamma) (w_h^\top \gamma) \sigma_g^2 \\
+            = \gamma_c \gamma_h \sigma_g^2
+\end{aligned}
+         \end{equation}
+            """)
+
+st.write(r"""
+         Similarly, we can simplify the variance of the hedge portfolio:
+            """)
+
+st.latex(r"""
+\begin{equation}
+            \begin{aligned}
+            \sigma^2_h = w_h^\top \Sigma w_h = w_h^\top \left( \beta \beta^\top \sigma_f^2 + \gamma \gamma^\top \sigma_g^2 + \sigma_\epsilon^2 I \right) w_h \\
+            = w_h^\top \gamma \gamma^\top \sigma_g^2 \\
+            = \gamma_h^2 \sigma_g^2 
+\end{aligned}
+            \end{equation}
+""")
+
+
+st.write(r"""
+            Therefore, the optimal hedge ratio is:
+            """)
+
+st.latex(r"""
+\begin{equation}
+            \begin{aligned}
+            \delta^* = \frac{\gamma_c \gamma_h \sigma_g^2}{\gamma_h^2 \sigma_g^2} \\
+         = \frac{\gamma_c} {\gamma_h} \\ 
+\end{aligned}
+            \end{equation}
+            """)
 # var_optim = var_c + delta ** 2 * var_h - 2 * delta * cov
 
 # st.latex(fr"""\text{{var}}(r_c - \delta^* r_h) = {sp.latex(var_optim.simplify())}""")
