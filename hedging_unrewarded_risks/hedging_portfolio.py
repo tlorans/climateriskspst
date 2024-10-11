@@ -258,6 +258,29 @@ gamma_c = w_c.dot(gamma)
 st.latex(fr"\beta_c = {sp.latex(beta_c)}")
 st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
 
+st.write(r"""And their respective returns are:
+""")
+
+r_c = w_c.dot(beta * (f + lambda_) + gamma * g + epsilon)
+r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
+
+st.latex(f"r_c = {sp.latex(r_c)}")
+st.latex(f"r_h = {sp.latex(r_h)}")
+
+expected_r_c = stats.E(r_c)
+expected_r_h = stats.E(r_h)
+
+st.latex(f"E[r_c] = {sp.latex(expected_r_c)}")
+st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
+
+cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2)
+
+st.latex(f"\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}")
+
+rho_c_h = cov / var_h
+
+st.latex(f"\rho_{{c,h}} = {sp.latex(rho_c_h.simplify())}")
+
 st.write(r"""
          Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
          Given that the hedge portfolio has zero expected return, this is equivalent 
@@ -289,23 +312,23 @@ st.latex(r"""
          \end{equation}
         """)
 
-st.write(r"""
-         since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:
-            """)
+# st.write(r"""
+#          since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:
+#             """)
 
-st.latex(r"""
-\begin{equation}
-         \begin{aligned}
-         \delta^* = \frac{\rho_{c,h} \sigma_c \sigma_h}{\sigma_h^2} \\
-          = \rho_{c,h} \frac{\sigma_c}{\sigma_h}
-            \end{aligned}
-\end{equation}
-         """)
+# st.latex(r"""
+# \begin{equation}
+#          \begin{aligned}
+#          \delta^* = \frac{\rho_{c,h} \sigma_c \sigma_h}{\sigma_h^2} \\
+#           = \rho_{c,h} \frac{\sigma_c}{\sigma_h}
+#             \end{aligned}
+# \end{equation}
+#          """)
 
-st.write(r"""
-         Therefore, the optimal hedge portfolio is the one that is maximally correlated 
-         with the initial portfolio $c$.
-            """)
+# st.write(r"""
+#          Therefore, the optimal hedge portfolio is the one that is maximally correlated 
+#          with the initial portfolio $c$.
+#             """)
 
 # # Function to retrieve S&P 500 tickers from Wikipedia
 # @st.cache_data
