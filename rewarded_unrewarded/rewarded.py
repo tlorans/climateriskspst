@@ -238,40 +238,40 @@ We now consider only 6 assets with equal market capitalization.
 The assets have characteristics and loadings on the rewarded factor as:
 """)
 
-N = 6  # Number of assets
+N = 12  # Number of assets
 
-# Predefined values for beta and gamma
-default_beta = [1, 1, 1, -1, -1, -1]
+# Predefined fixed values for beta
+fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
 
 # Create a LaTeX table for the beta inputs
 beta_latex = r"\begin{array}{|c|c|} \hline Asset & \beta \\ \hline "
 for i in range(N):
-    beta_latex += f"{i+1} & {default_beta[i]} \\\\ \\hline "
+    beta_latex += f"{i+1} & {fixed_beta[i]} \\\\ \\hline "
 beta_latex += r"\end{array}"
 st.latex(beta_latex)
 
 
 
 # Convert beta inputs to Sympy matrices
-beta = sp.Matrix(default_beta)
+beta = sp.Matrix(fixed_beta)
 
 # Portfolio weights based on sorted betas (long the highest, short the lowest)
-beta_np = np.array(default_beta)
+beta_np = np.array(fixed_beta)
 
 # Get the indices of the sorted beta values
 sorted_indices = np.argsort(beta_np)
 
 # Use SymPy's Rational to keep weights as fractions
-w_long = sp.Matrix([0, 0, 0, 0, 0, 0])
-w_short = sp.Matrix([0, 0, 0, 0, 0, 0])
+w_long = sp.Matrix([0]*N)
+w_short = sp.Matrix([0]*N)
 
 # Assign long positions (1/3) to the top 3 assets
-for idx in sorted_indices[-3:]:
-    w_long[idx] =sp.Rational(1, 3)
+for idx in sorted_indices[-int(N/2):]:
+    w_long[idx] =sp.Rational(1, int(N/2))
 
 # Assign short positions (-1/3) to the bottom 3 assets
-for idx in sorted_indices[:3]:
-    w_short[idx] = sp.Rational(-1, 3)
+for idx in sorted_indices[:int(N/2)]:
+    w_short[idx] = sp.Rational(-1, int(N/2))
 
 # Combine long and short positions to form the final weight vector
 w = w_long + w_short
@@ -284,7 +284,7 @@ The weights are given by:
          """)
 # Prepare weights in LaTeX format as a row vector
 weights_latex = r"\begin{bmatrix} "
-for i in range(6):
+for i in range(N):
     weights_latex += f"{sp.latex(w[i])} & "
 weights_latex = weights_latex[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
 
@@ -298,13 +298,12 @@ w_c^T = """ + weights_latex)
 f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0 and var(f) = sigma_f^2
 
 # Define idiosyncratic errors epsilon_i as random variables with zero mean and variance sigma_epsilon^2
-epsilon = sp.Matrix([stats.Normal(f'epsilon', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
+epsilon = sp.Matrix([stats.Normal(f'epsilon{i+1}', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
 # Define symbols for variances of the factors and idiosyncratic error
 sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
 
 # Characteristic premium
 lambda_ = sp.symbols('lambda')
-
 
 # Step 1: Define the portfolio return formula symbolically
 portfolio_return = w.dot(beta * (f + lambda_) + epsilon)
@@ -313,6 +312,15 @@ st.write(r"""
          We can now compute the return of the portfolio $c$:
                 """)
 
+
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         r_c = w^\top \mu \\
+         = w^\top (\beta (f + \lambda) + \epsilon)
+         \end{aligned}
+\end{equation}
+         """)
 st.latex(f"""r_c= {sp.latex(portfolio_return)}""")
 
 # Step 2: Take the expectation using sympy.stats
@@ -322,23 +330,33 @@ expected_portfolio_return = stats.E(portfolio_return)
 # LaTeX: Var_f = (w^\top \beta)^2 \sigma_f^2
 variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
 
-
 # Contribution from the idiosyncratic errors:
 # LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
 variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
 
 # Total variance of the portfolio:
-total_portfolio_variance = variance_f + variance_epsilon
+# total_portfolio_variance = variance_f + variance_epsilon
+# Define the covariance matrix for the systematic factor
+# This is beta * beta.T * sigma_f**2 (N x N matrix)
+covariance_matrix_f = beta * beta.T * sigma_f**2
+
+# Define the covariance matrix for idiosyncratic errors (N x N identity matrix scaled by sigma_epsilon**2)
+covariance_matrix_epsilon = sigma_epsilon**2 * sp.eye(N)
+
+# Combine the covariance matrices
+covariance_matrix = covariance_matrix_f + covariance_matrix_epsilon
+
+# Calculate the total portfolio variance as w.T * covariance_matrix * w
+total_portfolio_variance = (w.T * covariance_matrix * w)[0]
 
 # Calculate the Sharpe ratio
 sharpe_ratio = expected_portfolio_return / sp.sqrt(total_portfolio_variance)
 
 beta_p = beta.dot(w)
 
-st.write(r"""
-         
+st.write(fr"""
 The portfolio returns capture the expected returns 
-because it loads on the rewarded factor $f$.
+because it loads on the rewarded factor $f$ with $\beta_c = {sp.latex(w.dot(beta))}$.
 The expected return of the portfolio is:
 """)
 
@@ -349,6 +367,11 @@ st.write(r"""
          The variance of the portfolio is:
                 """)
 
+st.latex(r"""
+\begin{equation}
+         \sigma_c^2 = w^\top \Sigma w = w^\top \left( \beta \beta^\top \sigma_f^2 + \sigma_\epsilon^2 I \right) w
+\end{equation}
+         """)
 st.latex(f"\\sigma^2_c = {sp.latex(total_portfolio_variance)}")
 
 st.write(r"""

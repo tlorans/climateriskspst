@@ -286,6 +286,7 @@ delta = cov / var_h
 
 st.latex(fr"""\delta = {sp.latex(delta.simplify())}""")
 
+st.latex(fr"""{sp.latex(w_h.dot(w_h) * sigma_epsilon**2)}""")
 
 st.write(r"""
          Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
