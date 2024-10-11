@@ -157,7 +157,7 @@ f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0
 # Characteristic premium
 lambda_ = sp.symbols('lambda')
 # Define idiosyncratic errors epsilon_i as random variables with zero mean and variance sigma_epsilon^2
-epsilon = sp.Matrix([stats.Normal(f'epsilon', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
+epsilon = sp.Matrix([stats.Normal(f'epsilon{i+1}', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
 # Define priced and unpriced factors as normal random variables with variance properties
 g = stats.Normal('g', 0, sp.symbols('sigma_g'))  # Unpriced factor g with E[g] = 0 and var(g) = sigma_g^2
 

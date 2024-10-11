@@ -36,8 +36,8 @@ climate_risks = [st.Page("climate_risks/characteristics.py", title = "Climate Ch
                 # st.Page("climate_risks/unexpected_returns.py", title = "Unexpected Returns and Climate Concerns"),
 ]
 
-hedging = [st.Page("hedging_unrewarded_risks/hedging_portfolio.py", title = "Hedging Portfolio", default=(page=="Hedging Unrewarded Risks")),
-               st.Page("hedging_unrewarded_risks/combination.py", title = "Factor Efficient Portfolio"),
+hedging = [st.Page("hedging_unrewarded_risks/implications.py", title = "Implications for Portfolio Construction", default=(page=="Hedging Unrewarded Risks")),
+           st.Page("hedging_unrewarded_risks/hedging_portfolio.py", title = "Hedging Portfolio"),
 ]
 
 

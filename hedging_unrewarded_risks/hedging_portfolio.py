@@ -142,14 +142,15 @@ f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0
 # Characteristic premium
 lambda_ = sp.symbols('lambda')
 # Define idiosyncratic errors epsilon_i as random variables with zero mean and variance sigma_epsilon^2
-epsilon = sp.Matrix([stats.Normal(f'epsilon', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
+epsilon = sp.Matrix([stats.Normal(f'epsilon{i+1}', 0, sp.symbols('sigma_epsilon')) for i in range(N)])
 # Define priced and unpriced factors as normal random variables with variance properties
 g = stats.Normal('g', 0, sp.symbols('sigma_g'))  # Unpriced factor g with E[g] = 0 and var(g) = sigma_g^2
 
 # Define symbols for variances of the factors and idiosyncratic error
 sigma_g = sp.symbols('sigma_g')
 # Define symbols for variances of the factors and idiosyncratic error
-sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
+sigma_f = sp.symbols('sigma_epsilon')
+sigma_epsilon = sp.symbols('sigma_epsilon')
 # Step 1: Define the portfolio return formula symbolically
 r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
@@ -264,6 +265,10 @@ st.write(r"""And their respective returns are:
 r_c = w_c.dot(beta * (f + lambda_) + gamma * g + epsilon)
 r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
+var_c = (w_c.dot(gamma))**2 * sigma_g**2 + (w_c.dot(beta))**2 * sigma_f**2 + w_c.dot(w_c) * sigma_epsilon**2
+
+st.latex(f"\\sigma^2_c = {sp.latex(var_c.simplify())}")
+
 st.latex(f"r_c = {sp.latex(r_c)}")
 st.latex(f"r_h = {sp.latex(r_h)}")
 
@@ -273,13 +278,14 @@ expected_r_h = stats.E(r_h)
 st.latex(f"E[r_c] = {sp.latex(expected_r_c)}")
 st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
 
-cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2)
+cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2) + (w_c.dot(w_h) * sigma_epsilon**2)
 
-st.latex(f"\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}")
+st.latex(fr"""\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}""")
 
-rho_c_h = cov / var_h
+delta = cov / var_h
 
-st.latex(f"\rho_{{c,h}} = {sp.latex(rho_c_h.simplify())}")
+st.latex(fr"""\delta = {sp.latex(delta.simplify())}""")
+
 
 st.write(r"""
          Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
@@ -311,6 +317,11 @@ st.latex(r"""
          \end{aligned}   
          \end{equation}
         """)
+
+
+var_optim = var_c + delta ** 2 * var_h - 2 * delta * cov
+
+st.latex(fr"""\text{{var}}(r_c - \delta^* r_h) = {sp.latex(var_optim.simplify())}""")
 
 # st.write(r"""
 #          since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:
