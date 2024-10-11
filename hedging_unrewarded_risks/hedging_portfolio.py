@@ -158,39 +158,31 @@ st.write(r"""
          We can now compute the return of the hedge portfolio as:
                 """)
 
+st.latex(r"""
+         \begin{equation}
+         \begin{aligned}
+r_h = w_h^\top (\beta (f + \lambda) + \gamma g + \epsilon) \\
+         = w_h^\top (\gamma g + \epsilon)
+            \end{aligned}
+         \end{equation}
+            """)
+
 st.latex(f"""r_h = {sp.latex(r_h)}""")
 
-# Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = stats.E(r_h)
-
-beta_h = w_h.dot(beta)
-gamma_h = w_h.dot(gamma)
-
-
 st.write(r"""
-And we have the following loadings:
-         """)
-
-st.latex(fr"""\beta_h = {sp.latex(beta_h)}""")
-
-st.latex(fr"""\gamma_h = {sp.latex(gamma_h)}""")
-
-st.write(fr"""
-You may notice by playing around
-that the loading of the hedge portfolio $h$ on the underwarded 
-factor $g$ is affected by the correlation between $\beta$ and $\gamma$. This is because 
-we are trying to control for the loading on the rewarded factor $f$, $\beta$, when 
-constructing the hedge portfolio $h$. Therefore, we target the dimension 
-of the unrewarded factor $g$ that is orthogonal to the rewarded factor $f$.
-The more correlated $\beta$ and $\gamma$ are, the less material we have to work with to
-construct the hedge portfolio $h$.
-
-We can check that everything worked as expected by looking at the expected return of the portfolio $h$:
-         """)
-
+         because $w_h^\top \beta = 0$. Therefore the expected return is:
+            """)    
+# Step 2: Take the expectation using sympy.stats
+expected_portfolio_return_with_g = w_h.dot(beta) * lambda_
 
 # Step 2: Take the expectation using sympy.stats
-expected_r_h = stats.E(r_h) 
+expected_r_h = w_h.dot(beta) * lambda_
+
+st.latex(r"""
+\begin{equation}
+            \mathbb{E}[r_h] = w_h^\top \mu = w_h^\top \beta \lambda
+\end{equation}
+         """)
 
 st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
 
@@ -200,32 +192,41 @@ The double sorting on the rewarded and unrewarded factors allows us to construct
          """)
 
 st.write(r"""
-So, we now have our hedge portfolio $h$ that is neutral to the rewarded factor $f$ and 
-some exposure to $g$.
-The resulting hedge portfolio $h$ has a variance given by:
+The hedge portfolio $h$ has a variance given by:
          """)
 
-# Contribution from the unpriced factor g:
-# LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
-var_g_h = (w_h.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
-# Contribution from the priced factor f:
-# LaTeX: Var_f = (w^\top \beta)^2 \sigma_f^2
-var_f_h = (w_h.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
-# Contribution from the idiosyncratic errors:
-# LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
-var_eps_h = w_h.dot(w_h) * sigma_epsilon**2  # Contribution from idiosyncratic errors
-# Total variance of the portfolio:
-var_h = var_f_h + var_g_h + var_eps_h
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         \sigma_h^2 = w_h^\top \Sigma w_h = w_h^\top \left( \beta \beta^\top \sigma_f^2 + \gamma \gamma^\top \sigma_g^2 + \sigma_\epsilon^2 I \right) w_h \\
+            \end{aligned}
+         \end{equation}
+         """)
 
-st.latex(f"\\sigma^2_h = {sp.latex(var_h)}")
 
+
+covariance_matrix_f = beta * beta.T * sigma_f**2
+
+covariance_matrix_g = gamma * gamma.T * sigma_g**2
+
+# Define the covariance matrix for idiosyncratic errors (N x N identity matrix scaled by sigma_epsilon**2)
+covariance_matrix_epsilon = sigma_epsilon**2 * sp.eye(N)
+
+# Combine the covariance matrices
+covariance_matrix = covariance_matrix_f + covariance_matrix_g +  covariance_matrix_epsilon
+
+# Calculate the total portfolio variance as w.T * covariance_matrix * w
+total_portfolio_variance_h = (w_h.T * covariance_matrix * w_h)[0]
+
+st.latex(f"\\sigma^2_h = {sp.latex(total_portfolio_variance_h)}")
+
+st.write(r"""
+         because $w_h^\top \beta = 0$. 
+         """)
 
 st.write(r"""
 Thus, because it loads on the unrewarded factors, the variance of the portfolio is partially driven by 
          the variance of the unrewarded factor $g$ (ie. the unrewarded risk).
-
-Again, the higher the correlation you may have chosen, the lower the variance of the hedge portfolio $h$ due to 
-the unrewarded factor $\sigma_g$. 
          """)
 
 st.subheader('Optimal Hedge Ratio')
@@ -235,58 +236,58 @@ We now have an investment tool - a hedging portfolio - that helps to reduce the 
 while keeping the expected return of the portfolio unchanged. 
          """)
 
-st.write(r""" The loadings of our initial portfolio $c$ on the rewarded and unrewarded factors are given by:
-""")
+# st.write(r""" The loadings of our initial portfolio $c$ on the rewarded and unrewarded factors are given by:
+# """)
 
-# Use SymPy's Rational to keep weights as fractions
-w_long = sp.Matrix([0] * N)
-w_short = sp.Matrix([0] * N)
+# # Use SymPy's Rational to keep weights as fractions
+# w_long = sp.Matrix([0] * N)
+# w_short = sp.Matrix([0] * N)
 
-# Assign long positions (1/3) to the top 3 assets
-for idx in sorted_indices[-6:]:
-    w_long[idx] = sp.Rational(1, 6)
+# # Assign long positions (1/3) to the top 3 assets
+# for idx in sorted_indices[-6:]:
+#     w_long[idx] = sp.Rational(1, 6)
 
-# Assign short positions (-1/3) to the bottom 3 assets
-for idx in sorted_indices[:6]:
-    w_short[idx] = sp.Rational(-1, 6)
+# # Assign short positions (-1/3) to the bottom 3 assets
+# for idx in sorted_indices[:6]:
+#     w_short[idx] = sp.Rational(-1, 6)
 
-# Combine long and short positions to form the final weight vector
-w_c = w_long + w_short
+# # Combine long and short positions to form the final weight vector
+# w_c = w_long + w_short
 
-beta_c = w_c.dot(beta)
-gamma_c = w_c.dot(gamma)
+# beta_c = w_c.dot(beta)
+# gamma_c = w_c.dot(gamma)
 
-st.latex(fr"\beta_c = {sp.latex(beta_c)}")
-st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
+# st.latex(fr"\beta_c = {sp.latex(beta_c)}")
+# st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
 
-st.write(r"""And their respective returns are:
-""")
+# st.write(r"""And their respective returns are:
+# """)
 
-r_c = w_c.dot(beta * (f + lambda_) + gamma * g + epsilon)
-r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
+# r_c = w_c.dot(beta * (f + lambda_) + gamma * g + epsilon)
+# r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
-var_c = (w_c.dot(gamma))**2 * sigma_g**2 + (w_c.dot(beta))**2 * sigma_f**2 + w_c.dot(w_c) * sigma_epsilon**2
+# var_c = (w_c.dot(gamma))**2 * sigma_g**2 + (w_c.dot(beta))**2 * sigma_f**2 + w_c.dot(w_c) * sigma_epsilon**2
 
-st.latex(f"\\sigma^2_c = {sp.latex(var_c.simplify())}")
+# st.latex(f"\\sigma^2_c = {sp.latex(var_c.simplify())}")
 
-st.latex(f"r_c = {sp.latex(r_c)}")
-st.latex(f"r_h = {sp.latex(r_h)}")
+# st.latex(f"r_c = {sp.latex(r_c)}")
+# st.latex(f"r_h = {sp.latex(r_h)}")
 
-expected_r_c = stats.E(r_c)
-expected_r_h = stats.E(r_h)
+# expected_r_c = stats.E(r_c)
+# expected_r_h = stats.E(r_h)
 
-st.latex(f"E[r_c] = {sp.latex(expected_r_c)}")
-st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
+# st.latex(f"E[r_c] = {sp.latex(expected_r_c)}")
+# st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
 
-cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2) + (w_c.dot(w_h) * sigma_epsilon**2)
+# cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2) + (w_c.dot(w_h) * sigma_epsilon**2)
 
-st.latex(fr"""\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}""")
+# st.latex(fr"""\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}""")
 
-delta = cov / var_h
+# delta = cov / var_h
 
-st.latex(fr"""\delta = {sp.latex(delta.simplify())}""")
+# st.latex(fr"""\delta = {sp.latex(delta.simplify())}""")
 
-st.latex(fr"""{sp.latex(w_h.dot(w_h) * sigma_epsilon**2)}""")
+# st.latex(fr"""{sp.latex(w_h.dot(w_h) * sigma_epsilon**2)}""")
 
 st.write(r"""
          Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
@@ -294,7 +295,7 @@ st.write(r"""
          to finding the combination of $c$ and $h$ that minimizes the variance of the resulting portfolio:
             """)
 
-st.latex(r"""\min_{\delta} \text{var}(r_c - \delta r_h)""")
+st.latex(r"""\min_{\delta} \sigma^2(r_c - \delta r_h)""")
 
 st.write(r"""
          with:
@@ -302,7 +303,7 @@ st.write(r"""
 
 st.latex(r"""
          \begin{equation}
-            \text{var}(r_c - \delta r_h) = \text{var}(r_c) + \delta^2 \text{var}(r_h) - 2 \delta \text{Cov}(r_c, r_h)
+            \sigma^2(r_c - \delta r_h) = \sigma^2_c + \delta^2 \sigma^2_h - 2 \delta \text{Cov}(r_c, r_h)
         \end{equation}
     """)
 
@@ -313,16 +314,17 @@ st.write(r"""
 st.latex(r"""
             \begin{equation}
          \begin{aligned}
-         \frac{\partial}{\partial \delta} \text{var}(r_c - \delta r_h) = 2 \delta \text{var}(r_h) - 2 \text{Cov}(r_c, r_h) = 0 \\
-            \delta^* = \frac{\text{Cov}(r_c, r_h)}{\text{var}(r_h)}
+         \frac{\partial}{\partial \delta} \sigma^2(r_c - \delta r_h) = 2 \delta \sigma^2_h - 2 \text{Cov}(r_c, r_h) = 0 \\
+            \delta^* = \frac{\text{Cov}(r_c, r_h)}{\sigma^2_h} \\
+         = \frac{\text{Cov}(w_c^\top \beta(f + \lambda), w_h^\top \gamma g) + \text{Cov}(w_c^\top \gamma g, w_h^\top \gamma g) + \text{Cov}(w_c^\top \epsilon, w_h^\top \epsilon)}{\sigma^2_h}
          \end{aligned}   
          \end{equation}
         """)
 
 
-var_optim = var_c + delta ** 2 * var_h - 2 * delta * cov
+# var_optim = var_c + delta ** 2 * var_h - 2 * delta * cov
 
-st.latex(fr"""\text{{var}}(r_c - \delta^* r_h) = {sp.latex(var_optim.simplify())}""")
+# st.latex(fr"""\text{{var}}(r_c - \delta^* r_h) = {sp.latex(var_optim.simplify())}""")
 
 # st.write(r"""
 #          since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:

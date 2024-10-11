@@ -316,7 +316,7 @@ st.write(r"""
 st.latex(r"""
 \begin{equation}
          \begin{aligned}
-         r_c = w^\top \mu \\
+         r_c = w^\top r \\
          = w^\top (\beta (f + \lambda) + \epsilon)
          \end{aligned}
 \end{equation}
@@ -359,6 +359,13 @@ The portfolio returns capture the expected returns
 because it loads on the rewarded factor $f$ with $\beta_c = {sp.latex(w.dot(beta))}$.
 The expected return of the portfolio is:
 """)
+
+
+st.latex(r"""
+\begin{equation}
+            \mathbb{E}[r_c] = w^\top \mu = w^\top \beta \lambda
+\end{equation}
+         """)
 
 st.latex(f"E[r_c] = {sp.latex(expected_portfolio_return)}")
 

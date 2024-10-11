@@ -175,7 +175,7 @@ st.write(r"""
 st.latex(r"""
 \begin{equation}
          \begin{aligned}
-         r_c = w^\top \mu \\
+         r_c = w^\top r \\
          = w^\top (\beta (f + \lambda) + \gamma g +  \epsilon)
          \end{aligned}
 \end{equation}
@@ -183,7 +183,8 @@ st.latex(r"""
 st.latex(f"""r_c = {sp.latex(portfolio_return_with_g)}""")
 
 # Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
+# expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
+expected_portfolio_return_with_g = w.dot(beta) * lambda_
 
 # Contribution from the unpriced factor g:
 # LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
@@ -225,6 +226,13 @@ between the characteristics and the loadings on the unrewarded factor.
 Most assets with positive loadings on the rewarded factor have positive loadings on the unrewarded factor.
 The expected return of the portfolio is:
 """)
+
+
+st.latex(r"""
+\begin{equation}
+            \mathbb{E}[r_c] = w^\top \mu = w^\top \beta \lambda
+\end{equation}
+         """)
 
 st.latex(f"E[r_c] = {sp.latex(expected_portfolio_return_with_g)}")
 
