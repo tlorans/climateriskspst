@@ -172,6 +172,14 @@ st.write(r"""
          We can now compute the return of the portfolio $c$:
                 """)
 
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         r_c = w^\top \mu \\
+         = w^\top (\beta (f + \lambda) + \gamma g +  \epsilon)
+         \end{aligned}
+\end{equation}
+         """)
 st.latex(f"""r_c = {sp.latex(portfolio_return_with_g)}""")
 
 # Step 2: Take the expectation using sympy.stats
@@ -187,10 +195,23 @@ variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
 # LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
 variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
 # Total variance of the portfolio:
-total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
+# total_portfolio_variance = variance_f + variance_g + variance_epsilon
+
+covariance_matrix_f = beta * beta.T * sigma_f**2
+
+covariance_matrix_g = gamma * gamma.T * sigma_g**2
+
+# Define the covariance matrix for idiosyncratic errors (N x N identity matrix scaled by sigma_epsilon**2)
+covariance_matrix_epsilon = sigma_epsilon**2 * sp.eye(N)
+
+# Combine the covariance matrices
+covariance_matrix = covariance_matrix_f + covariance_matrix_g +  covariance_matrix_epsilon
+
+# Calculate the total portfolio variance as w.T * covariance_matrix * w
+total_portfolio_variance = (w.T * covariance_matrix * w)[0]
 
 # Calculate the Sharpe ratio
-sharpe_ratio_with_g = expected_portfolio_return_with_g / sp.sqrt(total_portfolio_variance_with_g)
+sharpe_ratio_with_g = expected_portfolio_return_with_g / sp.sqrt(total_portfolio_variance)
 
 gamma_portfpoliio = gamma.dot(w)
 st.latex(f"\\gamma_c = {sp.latex(gamma_portfpoliio)}")
@@ -212,7 +233,14 @@ st.write(r"""
          The variance of the portfolio is:
                 """)
 
-st.latex(f"\\sigma^2_c = {sp.latex(total_portfolio_variance_with_g)}")
+
+st.latex(r"""
+\begin{equation}
+         \sigma_c^2 = w^\top \Sigma w = w^\top \left( \beta \beta^\top \sigma_f^2 + \gamma \gamma^\top \sigma_g^2 + \sigma_\epsilon^2 I \right) w
+\end{equation}
+         """)
+
+st.latex(f"\\sigma^2_c = {sp.latex(total_portfolio_variance)}")
 
 st.write(r"""
          which give us the Sharpe ratio of the portfolio:
@@ -239,23 +267,31 @@ variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncrati
 total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
 
 # Compute R^2, which is the proportion of portfolio variance explained by the unrewarded factor g
-r_squared = variance_g / total_portfolio_variance_with_g
-
+# r_squared = variance_g / total_portfolio_variance_with_g
+r_squared = (w.T * covariance_matrix_g * w)[0] / (w.T * covariance_matrix * w)[0]
 # Display R^2
 st.write(r"""
          The proportion of portfolio variance explained by the unrewarded risk factor $g$ (R²) is:
                 """)
 
+st.latex(r"""
+\begin{equation}
+         R^2 = \frac{w^\top (\gamma \gamma^\top \sigma_g^2) w}{w^\top \left( \beta \beta^\top \sigma_f^2 + \gamma \gamma^\top \sigma_g^2 + \sigma_\epsilon^2 I \right) w}
+\end{equation}
+         """)
+
 st.latex(f"R^2 = {sp.latex(r_squared.simplify())}")
+
+
 
 # Sidebar: Choose the volatility of the unrewarded risk
 sigma_g_val = st.sidebar.slider("Select the volatility of the unrewarded risk factor (σg)", 0.1, 5.0, 1.0)
 sigma_f_val = 1.0  # Default to 1
 
+st.latex(f"\\sigma_g = {sigma_g_val}")
 
 r_squared_eval = r_squared.subs({sigma_g: sigma_g_val, sigma_f: sigma_f_val, sigma_epsilon: 1})
 st.latex(f"R^2 = {sp.latex(round(r_squared_eval.simplify(), 2))}")
-st.latex(f"\\sigma_g = {sigma_g_val}")
 
 
 # Further explanation
