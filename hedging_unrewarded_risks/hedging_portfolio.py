@@ -121,7 +121,7 @@ for idx in short:
     w_short[idx] = sp.Rational(-1, 6)
 
 # Combine long and short positions to form the final weight vector
-w = w_long + w_short
+w_h = w_long + w_short
 
 
 st.write(r"""
@@ -129,13 +129,13 @@ st.write(r"""
          """)
 
 # Prepare weights in LaTeX format as a row vector
-weights_latex = r"\begin{bmatrix} "
+weights_latex_h = r"\begin{bmatrix} "
 for i in range(N):
-    weights_latex += f"{w[i]} & "
-weights_latex = weights_latex[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
+    weights_latex_h += f"{w_h[i]} & "
+weights_latex_h = weights_latex_h[:-2] + r" \end{bmatrix}"  # Remove the last "&" and close the matrix
 
 st.latex(r"""
-w_h^T = """ + weights_latex)
+w_h^T = """ + weights_latex_h)
 
 # Define priced factor as normal random variable with variance properties
 f = stats.Normal('f', 0, sp.symbols('sigma_f'))  # Priced factor f with E[f] = 0 and var(f) = sigma_f^2
@@ -151,26 +151,30 @@ sigma_g = sp.symbols('sigma_g')
 # Define symbols for variances of the factors and idiosyncratic error
 sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
 # Step 1: Define the portfolio return formula symbolically
-portfolio_return_with_g = w.dot(beta * (f + lambda_) + gamma * g + epsilon)
+r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
 st.write(r"""
          We can now compute the return of the hedge portfolio as:
                 """)
 
-st.latex(f"""r_h = {sp.latex(portfolio_return_with_g)}""")
+st.latex(f"""r_h = {sp.latex(r_h)}""")
 
 # Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = stats.E(portfolio_return_with_g)
+expected_portfolio_return_with_g = stats.E(r_h)
 
-loading_on_f = w.dot(beta)
-loading_on_g = w.dot(gamma)
+beta_h = w_h.dot(beta)
+gamma_h = w_h.dot(gamma)
 
+
+st.write(r"""
+And we have the following loadings:
+         """)
+
+st.latex(fr"""\beta_h = {sp.latex(beta_h)}""")
+
+st.latex(fr"""\gamma_h = {sp.latex(gamma_h)}""")
 
 st.write(fr"""
-The loading of the portfolio $h$ on the rewarded factor $f$ is {loading_on_f}.
-
-The loading on the unrewarded factor $g$ is {loading_on_g}. 
-
 You may notice by playing around
 that the loading of the hedge portfolio $h$ on the underwarded 
 factor $g$ is affected by the correlation between $\beta$ and $\gamma$. This is because 
@@ -185,16 +189,14 @@ We can check that everything worked as expected by looking at the expected retur
 
 
 # Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = stats.E(portfolio_return_with_g) 
+expected_r_h = stats.E(r_h) 
 
-st.latex(f"E[r_h] = {sp.latex(expected_portfolio_return_with_g)}")
+st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
 
 st.write(r"""which is nill as expected. The hedge portfolio $h$ is designed to not alter the expected return of the portfolio $c$.
 The double sorting on the rewarded and unrewarded factors allows us to construct a portfolio that is neutral to the rewarded factor, and
          therefore could be use without affecting the exposure to the rewarded factor of the initial portfolio.
          """)
-
-st.subheader('Hedge Portfolio Variance')
 
 st.write(r"""
 So, we now have our hedge portfolio $h$ that is neutral to the rewarded factor $f$ and 
@@ -204,17 +206,17 @@ The resulting hedge portfolio $h$ has a variance given by:
 
 # Contribution from the unpriced factor g:
 # LaTeX: Var_g = (w^\top \gamma)^2 \sigma_g^2
-variance_g = (w.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
+var_g_h = (w_h.dot(gamma))**2 * sigma_g**2  # Contribution from unpriced factor g
 # Contribution from the priced factor f:
 # LaTeX: Var_f = (w^\top \beta)^2 \sigma_f^2
-variance_f = (w.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
+var_f_h = (w_h.dot(beta))**2 * sigma_f**2  # Contribution from priced factor f
 # Contribution from the idiosyncratic errors:
 # LaTeX: Var_\epsilon = w^\top w \times \sigma_\epsilon^2
-variance_epsilon = w.dot(w) * sigma_epsilon**2  # Contribution from idiosyncratic errors
+var_eps_h = w_h.dot(w_h) * sigma_epsilon**2  # Contribution from idiosyncratic errors
 # Total variance of the portfolio:
-total_portfolio_variance_with_g = variance_f + variance_g + variance_epsilon
+var_h = var_f_h + var_g_h + var_eps_h
 
-st.latex(f"\\sigma^2_h = {sp.latex(total_portfolio_variance_with_g)}")
+st.latex(f"\\sigma^2_h = {sp.latex(var_h)}")
 
 
 st.write(r"""
@@ -225,6 +227,36 @@ Again, the higher the correlation you may have chosen, the lower the variance of
 the unrewarded factor $\sigma_g$. 
          """)
 
+st.subheader('Optimal Hedge Ratio')
+
+st.write(r"""
+We now have an investment tool - a hedging portfolio - that helps to reduce the exposure to unrewarded risks,
+while keeping the expected return of the portfolio unchanged. 
+         """)
+
+st.write(r""" The loadings of our initial portfolio $c$ on the rewarded and unrewarded factors are given by:
+""")
+
+# Use SymPy's Rational to keep weights as fractions
+w_long = sp.Matrix([0] * N)
+w_short = sp.Matrix([0] * N)
+
+# Assign long positions (1/3) to the top 3 assets
+for idx in sorted_indices[-6:]:
+    w_long[idx] = sp.Rational(1, 6)
+
+# Assign short positions (-1/3) to the bottom 3 assets
+for idx in sorted_indices[:6]:
+    w_short[idx] = sp.Rational(-1, 6)
+
+# Combine long and short positions to form the final weight vector
+w_c = w_long + w_short
+
+beta_c = w_c.dot(beta)
+gamma_c = w_c.dot(gamma)
+
+st.latex(fr"\beta_c = {sp.latex(beta_c)}")
+st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
 
 # # Function to retrieve S&P 500 tickers from Wikipedia
 # @st.cache_data
