@@ -86,7 +86,7 @@ st.subheader("Time-Series Regression")
 
 case = st.sidebar.selectbox(
     "Select case:",
-    ("Both factors have risk premia", "Only first factor has a risk premium"),
+    ("g rewarded", "g unrewarded"),
         index=0  # Default index to "Only first factor has a risk premium"
 )
 
@@ -121,7 +121,7 @@ st.write(r"""
          We have $N$ test assets and 2 factors ($f$ and $g$).
 """)
 
-T = 5
+T = 10
 K = 2
 
 
@@ -137,14 +137,14 @@ noise = np.random.normal(0, 0.005, T)  # Small noise for residuals (epsilon)
 
 # T \times 1, should look like returns for one asset over time
 # Generate returns R based on the selected case
-if case == "Both factors have risk premia":
+if case == "g rewarded":
     # Returns include risk premia for both factors
     R_num = np.array([
         alpha + lambda_f * (0.01 * t) + lambda_g * (0.02 * t) + noise[t - 1] for t in range(1, T + 1)
     ])
 
 
-elif case == "Only first factor has a risk premium":
+elif case == "g unrewarded":
     # Returns only include risk premium for the first factor
     R_num = np.array([
         alpha + lambda_f * (0.01 * t) + noise[t - 1] for t in range(1, T + 1)
@@ -165,13 +165,13 @@ st.write(r"""
 np.random.seed(42)
 factor_realizations = []
 for t in range(1, T + 1):
-    if case == "Both factors have risk premia":
+    if case == "g rewarded":
         f_t = lambda_f + np.random.normal(0, 0.01)  # Around lambda_f with noise
         g_t = lambda_g + np.random.normal(0, 0.01)  # Around lambda_g with noise
         factor_realizations.append([1, f_t, g_t])
-    elif case == "Only first factor has a risk premium":
+    elif case == "g unrewarded":
         f_t = lambda_f + np.random.normal(0, 0.01)  # Around lambda_f with noise
-        g_t = np.random.normal(0, 0.02)  # Zero mean but non-zero realizations
+        g_t = np.random.normal(0, 0.01)  # Zero mean but non-zero realizations
         factor_realizations.append([1, f_t, g_t])
 
 # Convert factor realizations to a sympy Matrix
@@ -264,50 +264,46 @@ st.write(r"""
          the mean of the factor. This is the essence of a rewarded risk: assets 
          that load on factors with positive means (ie. $\lambda > 0$) are expected to have higher returns.
          """)
-         
-# Generate data for the numerical example and plot the graph
-# Number of assets
+         # Number of assets
 N = 10
 
-# Generate beta_i values (factor exposures) between -1 and 1
-beta_i = np.random.uniform(-1, 1, N)
+# Generate gamma_i (loadings for the second factor g) values between -1 and 1
+gamma_i = np.random.uniform(-1, 1, N)
 
-# Assume a slope lambda (risk premium)
-lambda_val = 0.05
+lambda_val = lambda_[2]  # The lambda value for the second factor g
 
-# Assume small alpha_i values (cross-sectional error)
+# Small alpha values for assets
 alpha_i = np.random.normal(0, 0.01, N)
 
-# Compute expected returns E(R^e_i) = alpha_i + beta_i * lambda
-expected_returns = alpha_i + beta_i * lambda_val
+# Compute expected returns E(R^e_i) = alpha_i + gamma_i * lambda_g
+expected_returns_g = alpha_i + gamma_i * lambda_val
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(8,6))
-ax.scatter(beta_i, expected_returns, label="Assets", color="blue")
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.scatter(gamma_i, expected_returns_g, label="Assets", color="blue")
 
-# Plot the regression line with slope lambda (through origin)
+# Plot the regression line with slope lambda (for γ)
 x_vals = np.array([-1, 1])
 y_vals = lambda_val * x_vals
-ax.plot(x_vals, y_vals, label="Slope λ", color="orange", linestyle="--")
+ax.plot(x_vals, y_vals, label="Slope λ (for γ)", color="orange", linestyle="--")
 
-# Add a line representing E(f) (assumed to be constant for visualization purposes)
-E_f = lambda_val  # The average value of the factor is equal to lambda in this example
-ax.axhline(y=E_f, color="gray", linestyle=":", label="E(f)")
+# Add a line representing E(g) (assumed to be constant for visualization purposes)
+E_g = lambda_val  # The average value of the factor is equal to lambda in this example
+ax.axhline(y=E_g, color="gray", linestyle=":", label="E(g)")
 
-
-# Highlight the point where beta = 1 and E(R^e) = E(f)
-ax.plot(1, E_f, marker='o', markersize=8, color="red", label=r"$(\beta=1, E(f))$")
-ax.annotate(r"$(1, E(f))$", (1, E_f), xytext=(1.1, E_f + 0.01), 
+# Highlight the point where gamma = 1 and E(R^e) = E(g)
+ax.plot(1, E_g, marker='o', markersize=8, color="red", label=r"$(\gamma=1, E(g))$")
+ax.annotate(r"$(1, E(g))$", (1, E_g), xytext=(1.1, E_g + 0.01),
              arrowprops=dict(facecolor='black', arrowstyle='->'))
 
 # Highlight the intercept for a particular asset (choose one asset to demonstrate alpha)
-ax.annotate(r"$\alpha_i$", (beta_i[1], expected_returns[1]), xytext=(beta_i[1] + 0.2, expected_returns[1] - 0.02), 
+ax.annotate(r"$\alpha_i$", (gamma_i[1], expected_returns_g[1]), xytext=(gamma_i[1] + 0.2, expected_returns_g[1] - 0.02),
              arrowprops=dict(facecolor='black', arrowstyle='->'))
 
 # Labels and legend
-ax.set_xlabel(r"$\beta_i$")
+ax.set_xlabel(r"$\gamma_i$")
 ax.set_ylabel(r"$E(R^e_i)$")
-ax.set_title("Cross-Sectional Relationship: Expected Returns and Factor Exposures")
+ax.set_title("Relationship between Factor Loadings for $g$ (γ) and Expected Returns")
 ax.legend()
 ax.grid(True)
 
