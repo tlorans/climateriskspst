@@ -11,6 +11,7 @@ from plotnine import *
 from mizani.formatters import date_format
 from mizani.breaks import date_breaks
 import pandas as pd
+import matplotlib.pyplot as plt
 
 st.title('Are Climate Risks Rewarded or Unrewarded?')
 
@@ -83,80 +84,147 @@ st.write(r"""
 
 st.subheader("_Mean_ Factor (Rewarded Risk)...")
 
+st.write(r"""
+         We have $N$ test assets and $K$ factors. These factors could 
+         include traditional factors such as the market factor, size factor, value factor,
+         or our climate risk factor (e.g. Brown-Minus-Green factor).
+
+         Let's think of the data in matrix format:
+""")
+
+st.latex(r"""
+            \begin{equation}
+         R =
+            \begin{bmatrix}
+            R_{1,1} & R_{1,2} & \cdots & R_{1,N} \\
+            R_{2,1} & R_{2,2} & \cdots & R_{2,N} \\
+            \vdots & \vdots & \ddots & \vdots \\
+            R_{T,1} & R_{T,2} & \cdots & R_{T,N}
+            \end{bmatrix}
+            \end{equation}
+            """)
 
 st.write(r"""
-Is there a spread in average returns between green and brown firms?
-Test:
+         The factors $f_t$ are represented as $K-$dimensional vectors across 
+            time $t$:
+                """)
+
+st.latex(r"""
+            \begin{equation}
+            f_t =
+            \begin{bmatrix}
+            f_{t,1} \\
+            f_{t,2} \\
+            \vdots \\
+            f_{t,K}
+            \end{bmatrix}
+            \end{equation}
+            """)
+
+st.write(r"""
+         The goal is to estimate how these factors explain the cross-sectional variation in the 
+         expected returns of the assets.""")
+
+st.write(r"""For each test asset $i$, we run a time-series regression on the factors:
+            """)
+
+st.latex(r"""
+            \begin{equation}
+            R^e_{i,t} = \alpha_i + \beta_i^\top f_t + \epsilon_{i,t}
+            \end{equation}
+            """)
+st.write(r"""
+         where $R^e_{i,t}$ is the excess return of asset $i$ at time $t$, 
+         $\alpha_i$ is the intercept (cross-sectional error),
+            $\beta_i$ is the vector of factor loadings, 
+         $f_t$ are the factor realizations and $\epsilon_{i,t}$ is the idiosyncratic error term.""")
+
+st.write(r"""
+We then interpret the regression as a description of the cross section:
          """)
 
 st.latex(r"""
          \begin{equation}
-\hat{\lambda} = \frac{1}{T} \sum_{t=1}^{T} BMG_t = \bar{BMG}_t
-         \end{equation}
-         """)         
+         E(R^e_{i}) = \alpha_i + \beta_i^\top E(f_t)
+            \end{equation}
+            """)
 
 st.write(r"""
-Is this spread explained by exposure to other known risk factors?
-Test:
-         """)
-
-st.latex(r"""
-\begin{equation}
-         \alpha_{\text{BMG}} = 0
-         \end{equation}
+         If the factor is a mean factor (rewarded risk), then $\lambda = E(f_t)$,
+         meaning the factor's average value (mean) represents the compensation for bearing 
+         that risk
          """)
 
 st.write(r"""
-Or, alternatively, does it help to explain average returns ie. change alpha in the model 
-         of average (expected) returns?
+         We estimate the slope of the cross-sectional relationship by finding 
+         the mean of the factor. This is the essence of a rewarded risk: assets 
+         that load on factors with positive means (ie. $\lambda > 0$) are expected to have higher returns.
          """)
+         
+# Generate data for the numerical example and plot the graph
+# Number of assets
+N = 10
 
-st.latex(r"""
-         \begin{equation}
-         \begin{aligned}
-         \mathbb{E}[R_{i,t}] = \alpha + \beta_1 \mathbb{E}[R_{m,t}] + \beta_2 \mathbb{E}[SMB_t] + \\
-         \beta_3 \mathbb{E}[HML_t] + \beta_4 \mathbb{E}[RMW_t] + \beta_5 \mathbb{E}[CMA_t] + \beta_6 \mathbb{E}[BMG_t]
-         \end{aligned}
-         \end{equation}
-         """)
+# Generate beta_i values (factor exposures) between -1 and 1
+beta_i = np.random.uniform(-1, 1, N)
 
-st.write(r"""
-This is where we stop with BMG factor. Not rewarded risk (ie. not a mean factor ie. not associated with higher expected returns once controlled for known factors).
-         """)
+# Assume a slope lambda (risk premium)
+lambda_val = 0.05
 
-bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+# Assume small alpha_i values (cross-sectional error)
+alpha_i = np.random.normal(0, 0.01, N)
 
-if st.button("Cumulative Returns"):
-    bmg_cum = (1 + bmg).cumprod() - 1
-    plot = (ggplot(bmg_cum.reset_index(), aes(x='date', y='BMG')) +
-        geom_line() + 
-        scale_x_date(breaks=date_breaks('1 years'), labels=date_format('%Y')) + 
-        labs(title="Cumulative Returns of BMG Portfolio", x="Date", y="Cumulative Return") +
-        theme(axis_text_x=element_text(rotation=45, hjust=1))
-        )
-    
+# Compute expected returns E(R^e_i) = alpha_i + beta_i * lambda
+expected_returns = alpha_i + beta_i * lambda_val
 
-    st.pyplot(ggplot.draw(plot))
+# Create the plot
+fig, ax = plt.subplots(figsize=(8,6))
+ax.scatter(beta_i, expected_returns, label="Assets", color="blue")
+
+# Plot the regression line with slope lambda (through origin)
+x_vals = np.array([-1, 1])
+y_vals = lambda_val * x_vals
+ax.plot(x_vals, y_vals, label="Slope λ", color="orange", linestyle="--")
+
+# Add a line representing E(f) (assumed to be constant for visualization purposes)
+E_f = lambda_val  # The average value of the factor is equal to lambda in this example
+ax.axhline(y=E_f, color="gray", linestyle=":", label="E(f)")
+
+
+# Highlight the point where beta = 1 and E(R^e) = E(f)
+ax.plot(1, E_f, marker='o', markersize=8, color="red", label=r"$(\beta=1, E(f))$")
+ax.annotate(r"$(1, E(f))$", (1, E_f), xytext=(1.1, E_f + 0.01), 
+             arrowprops=dict(facecolor='black', arrowstyle='->'))
+
+# Highlight the intercept for a particular asset (choose one asset to demonstrate alpha)
+ax.annotate(r"$\alpha_i$", (beta_i[1], expected_returns[1]), xytext=(beta_i[1] + 0.2, expected_returns[1] - 0.02), 
+             arrowprops=dict(facecolor='black', arrowstyle='->'))
+
+# Labels and legend
+ax.set_xlabel(r"$\beta_i$")
+ax.set_ylabel(r"$E(R^e_i)$")
+ax.set_title("Cross-Sectional Relationship: Expected Returns and Factor Exposures")
+ax.legend()
+ax.grid(True)
+
+# Display the plot in Streamlit
+st.pyplot(fig)
+
 
 
 st.subheader("...or _Variance_ Factor? (Unrewarded Risk)")
 
 st.write(r"""
 BMG may not helps in explain average returns but it may help to explain return variance - it can help to increase
-         $R^2$ in:
+         $R^2$.
          """)
 
-st.latex(r"""
-            \begin{equation}
-         R_{i,t} = \alpha + \beta_1 R_{m,t} + \beta_2 SMB_t + \beta_3 HML_t + \beta_4 RMW_t + \beta_5 CMA_t + \beta_6 BMG_t + \epsilon_{i,t}
-            \end{equation}
-            """)
-
 st.write(r"""
-In that case, source of common variation in returns (as $g$). Associated variance 
-         but no additional expected return.
-         You want to hedge out from your portfolio.
-            """)
+         High $R^2$ is interesting. The fact that $R^2$ are high means that 
+         the regression used to define the loadings explains most of the variance $\sigma^2_i$ of the asset $i$, 
+         even if alpha is big.""")
+
+
 
 
 st.subheader("Project 4: Value and BMG Portfolio")
@@ -172,6 +240,20 @@ st.write(r"""Use the same recipe than in our unrewarded risk section:
         - Resulting variance of Value explained by BMG?
         """)
 
+
+# bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+
+# if st.button("Cumulative Returns"):
+#     bmg_cum = (1 + bmg).cumprod() - 1
+#     plot = (ggplot(bmg_cum.reset_index(), aes(x='date', y='BMG')) +
+#         geom_line() + 
+#         scale_x_date(breaks=date_breaks('1 years'), labels=date_format('%Y')) + 
+#         labs(title="Cumulative Returns of BMG Portfolio", x="Date", y="Cumulative Return") +
+#         theme(axis_text_x=element_text(rotation=45, hjust=1))
+#         )
+    
+
+#     st.pyplot(ggplot.draw(plot))
 
 # @st.cache_data
 # def load_ff3_data():
