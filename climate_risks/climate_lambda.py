@@ -85,59 +85,109 @@ st.write(r"""
 st.subheader("_Mean_ Factor (Rewarded Risk)...")
 
 st.write(r"""
-         We have $N$ test assets and $K$ factors. These factors could 
-         include traditional factors such as the market factor, size factor, value factor,
-         or our climate risk factor (e.g. Brown-Minus-Green factor).
+We go back to our initial model, with one factor describin the excess return. We want to test 
+         if there is a risk premia associated with $g$, to determine if:
+         """)
 
-         Let's think of the data in matrix format:
+st.latex(r"""
+        \begin{equation}
+r_i = \beta_i (f + \lambda_1) + \gamma_i (g + \lambda_2) + \epsilon_i
+\end{equation}
 """)
 
+st.write(r"""
+         OR:
+         """)
+
 st.latex(r"""
-            \begin{equation}
-         R =
-            \begin{bmatrix}
-            R_{1,1} & R_{1,2} & \cdots & R_{1,N} \\
-            R_{2,1} & R_{2,2} & \cdots & R_{2,N} \\
-            \vdots & \vdots & \ddots & \vdots \\
-            R_{T,1} & R_{T,2} & \cdots & R_{T,N}
+        \begin{equation}
+r_i = \beta_i (f + \lambda) + \gamma_i g + \epsilon_i
+\end{equation}
+""")
+st.write(r"""
+         OR:
+         """)
+
+st.latex(r"""
+        \begin{equation}
+r_i = \beta_i (f + \lambda) + \epsilon_i
+\end{equation}
+""")
+
+st.write(r"""
+         To do so, we need to run a time-series regression.
+         """)
+
+
+
+st.write(r"""
+         We have $N$ test assets and 2 factors ($f$ and $g$).
+""")
+
+T = 5
+K = 2
+
+
+st.write(r"""
+         We have the following returns vector for asset $i$ through time:
+         """)
+# Numerical example
+# T \times 1, should look like returns for one asset over time
+R = sp.Matrix([0.01, 0.02, 0.03, 0.04, 0.05])  # T x 1
+
+st.latex(f"""R_i = {sp.latex(R)}""")
+
+st.write(r"""
+            We have the following factor realizations (and intercept) through time:
+            """)
+# T \times K + 1 (for constant alpha) matrix
+F = sp.Matrix([
+    [1, 0.01, 0.02],
+    [1, 0.02, 0.03],
+    [1, 0.03, 0.04],
+    [1, 0.04, 0.05],
+    [1, 0.05, 0.06],
+])  
+
+st.latex(f"""F = {sp.latex(F)}""")
+
+st.write(r"""
+We can estimate the factor loadings $\beta_i$ and $\gamma_i$ by running the following regression:
+         """)
+
+st.latex(r"""
+         \begin{equation}
+            R = F \begin{bmatrix}
+            \alpha_i \\
+            \beta_i \\
+            \gamma_i \\
             \end{bmatrix}
+            + \epsilon
             \end{equation}
             """)
 
 st.write(r"""
-         The factors $f_t$ are represented as $K-$dimensional vectors across 
-            time $t$:
-                """)
+         with the following formula:""")
 
 st.latex(r"""
-            \begin{equation}
-            f_t =
-            \begin{bmatrix}
-            f_{t,1} \\
-            f_{t,2} \\
-            \vdots \\
-            f_{t,K}
-            \end{bmatrix}
+         \begin{equation}
+         \begin{bmatrix}
+         \alpha_i \\
+         \beta_i \\
+         \gamma_i \\
+         \end{bmatrix}
+         = (F^\top F)^{-1} F^\top R
             \end{equation}
             """)
 
-st.write(r"""
-         The goal is to estimate how these factors explain the cross-sectional variation in the 
-         expected returns of the assets.""")
 
-st.write(r"""For each test asset $i$, we run a time-series regression on the factors:
-            """)
+beta_hat_num = (F.T * F).inv() * F.T * R
 
-st.latex(r"""
-            \begin{equation}
-            R^e_{i,t} = \alpha_i + \beta_i^\top f_t + \epsilon_{i,t}
-            \end{equation}
-            """)
+
 st.write(r"""
-         where $R^e_{i,t}$ is the excess return of asset $i$ at time $t$, 
-         $\alpha_i$ is the intercept (cross-sectional error),
-            $\beta_i$ is the vector of factor loadings, 
-         $f_t$ are the factor realizations and $\epsilon_{i,t}$ is the idiosyncratic error term.""")
+            The estimated factor loadings are:
+            """)
+st.latex(f"""\\hat{{\\beta}}_i = {sp.latex(beta_hat_num)}""")
 
 st.write(r"""
 We then interpret the regression as a description of the cross section:
@@ -148,6 +198,29 @@ st.latex(r"""
          E(R^e_{i}) = \alpha_i + \beta_i^\top E(f_t)
             \end{equation}
             """)
+
+st.write(r"""
+         with $E(f_t)$ the average value of the factor:
+         """)
+
+st.latex(r"""
+            \begin{equation}
+            E(f_t) = \frac{1}{T} \sum_{t=1}^T f_t = \lambda
+            \end{equation}
+            """)
+         
+lambda_ = F.T * sp.ones(T, 1) / T
+
+st.latex(f"""\\lambda = {sp.latex(lambda_)}""")
+
+st.write(r"""
+         Therefore expected returns are:
+         """)
+
+expected_returns = (beta_hat_num.T * lambda_)[0]
+
+st.latex(f"""E(R^e_i) = {sp.latex(expected_returns)}""")
+
 
 st.write(r"""
          If the factor is a mean factor (rewarded risk), then $\lambda = E(f_t)$,
