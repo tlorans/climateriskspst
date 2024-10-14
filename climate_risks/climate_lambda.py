@@ -13,7 +13,7 @@ from mizani.breaks import date_breaks
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.title('Are Climate Risks Rewarded or Unrewarded?')
+st.title('_Mean_ Factor (Rewarded Risk)...')
 
 st.write("""
 
@@ -82,7 +82,7 @@ st.write(r"""
                   Nevertheless, these findings were not corroborated by the remaining studies in the Table.
 """)
 
-st.subheader("_Mean_ Factor (Rewarded Risk)...")
+st.subheader("Time-Series Regression")
 
 case = st.sidebar.selectbox(
     "Select case:",
@@ -217,6 +217,9 @@ st.write(r"""
             """)
 st.latex(f"""\\hat{{B}}_i = {sp.latex(beta_hat_num)}""")
 
+
+st.subheader("Cross-Sectional Interpretation")
+
 st.write(r"""
 We then interpret the regression as a description of the cross section:
          """)
@@ -312,34 +315,6 @@ ax.grid(True)
 st.pyplot(fig)
 
 
-
-st.subheader("...or _Variance_ Factor? (Unrewarded Risk)")
-
-st.write(r"""
-BMG may not helps in explain average returns but it may help to explain return variance - it can help to increase
-         $R^2$.
-         """)
-
-st.write(r"""
-         High $R^2$ is interesting. The fact that $R^2$ are high means that 
-         the regression used to define the loadings explains most of the variance $\sigma^2_i$ of the asset $i$, 
-         even if alpha is big.""")
-
-
-
-
-st.subheader("Project 4: Value and BMG Portfolio")
-
-st.write(r"""
-         Is climate risk an unrewarded factor that may 
-         decrease the mean-variance efficiency of investors' portfolios?
-            """)
-
-st.write(r"""Use the same recipe than in our unrewarded risk section:
-        - Volatility of the BMG portfolio?
-        - Correlation between Value and BMG portfolio?
-        - Resulting variance of Value explained by BMG?
-        """)
 
 
 # bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
