@@ -84,6 +84,12 @@ st.write(r"""
 
 st.subheader("_Mean_ Factor (Rewarded Risk)...")
 
+case = st.sidebar.selectbox(
+    "Select case:",
+    ("Both factors have risk premia", "Only first factor has a risk premium"),
+        index=0  # Default index to "Only first factor has a risk premium"
+)
+
 st.write(r"""
 We go back to our initial model, with one factor describin the excess return. We want to test 
          if there is a risk premia associated with $g$, to determine if:
@@ -102,15 +108,6 @@ st.write(r"""
 st.latex(r"""
         \begin{equation}
 r_i = \beta_i (f + \lambda) + \gamma_i g + \epsilon_i
-\end{equation}
-""")
-st.write(r"""
-         OR:
-         """)
-
-st.latex(r"""
-        \begin{equation}
-r_i = \beta_i (f + \lambda) + \epsilon_i
 \end{equation}
 """)
 
@@ -132,22 +129,53 @@ st.write(r"""
          We have the following returns vector for asset $i$ through time:
          """)
 # Numerical example
-# T \times 1, should look like returns for one asset over time
-R = sp.Matrix([0.01, 0.02, 0.03, 0.04, 0.05])  # T x 1
+# Initialize variables for the coefficients and the risk premia
+alpha = 0.01  # Intercept (constant term)
+lambda_f = 0.05  # Risk premium for the first factor (f)
+lambda_g = 0.02  # Risk premium for the second factor (g)
+noise = np.random.normal(0, 0.005, T)  # Small noise for residuals (epsilon)
 
-st.latex(f"""R_i = {sp.latex(R)}""")
+# T \times 1, should look like returns for one asset over time
+# Generate returns R based on the selected case
+if case == "Both factors have risk premia":
+    # Returns include risk premia for both factors
+    R_num = np.array([
+        alpha + lambda_f * (0.01 * t) + lambda_g * (0.02 * t) + noise[t - 1] for t in range(1, T + 1)
+    ])
+
+
+elif case == "Only first factor has a risk premium":
+    # Returns only include risk premium for the first factor
+    R_num = np.array([
+        alpha + lambda_f * (0.01 * t) + noise[t - 1] for t in range(1, T + 1)
+    ])
+
+
+# Show the returns (R) for the selected case
+st.write("The observed returns vector for asset $i$ is:")
+R_sympy = sp.Matrix(R_num)
+st.latex(f"R_i = {sp.latex(R_sympy)}")
 
 st.write(r"""
             We have the following factor realizations (and intercept) through time:
             """)
 # T \times K + 1 (for constant alpha) matrix
-F = sp.Matrix([
-    [1, 0.01, 0.02],
-    [1, 0.02, 0.03],
-    [1, 0.03, 0.04],
-    [1, 0.04, 0.05],
-    [1, 0.05, 0.06],
-])  
+
+# Factor realizations depend on the lambdas
+np.random.seed(42)
+factor_realizations = []
+for t in range(1, T + 1):
+    if case == "Both factors have risk premia":
+        f_t = lambda_f + np.random.normal(0, 0.01)  # Around lambda_f with noise
+        g_t = lambda_g + np.random.normal(0, 0.01)  # Around lambda_g with noise
+        factor_realizations.append([1, f_t, g_t])
+    elif case == "Only first factor has a risk premium":
+        f_t = lambda_f + np.random.normal(0, 0.01)  # Around lambda_f with noise
+        g_t = np.random.normal(0, 0.02)  # Zero mean but non-zero realizations
+        factor_realizations.append([1, f_t, g_t])
+
+# Convert factor realizations to a sympy Matrix
+F = sp.Matrix(factor_realizations)
 
 st.latex(f"""F = {sp.latex(F)}""")
 
@@ -181,13 +209,13 @@ st.latex(r"""
             """)
 
 
-beta_hat_num = (F.T * F).inv() * F.T * R
+beta_hat_num = (F.T * F).inv() * F.T * R_sympy
 
 
 st.write(r"""
             The estimated factor loadings are:
             """)
-st.latex(f"""\\hat{{\\beta}}_i = {sp.latex(beta_hat_num)}""")
+st.latex(f"""\\hat{{B}}_i = {sp.latex(beta_hat_num)}""")
 
 st.write(r"""
 We then interpret the regression as a description of the cross section:
