@@ -149,8 +149,9 @@ g = stats.Normal('g', 0, sp.symbols('sigma_g'))  # Unpriced factor g with E[g] =
 # Define symbols for variances of the factors and idiosyncratic error
 sigma_g = sp.symbols('sigma_g')
 # Define symbols for variances of the factors and idiosyncratic error
-sigma_f = sp.symbols('sigma_epsilon')
-sigma_epsilon = sp.symbols('sigma_epsilon')
+sigma_f, sigma_epsilon = sp.symbols('sigma_f sigma_epsilon')
+
+
 # Step 1: Define the portfolio return formula symbolically
 r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
 
@@ -172,8 +173,6 @@ st.latex(f"""r_h = {sp.latex(r_h)}""")
 st.write(r"""
          because $w_h^\top \beta = 0$. Therefore the expected return is:
             """)    
-# Step 2: Take the expectation using sympy.stats
-expected_portfolio_return_with_g = w_h.dot(beta) * lambda_
 
 # Step 2: Take the expectation using sympy.stats
 expected_r_h = w_h.dot(beta) * lambda_
@@ -203,8 +202,6 @@ st.latex(r"""
          \end{equation}
          """)
 
-
-
 covariance_matrix_f = beta * beta.T * sigma_f**2
 
 covariance_matrix_g = gamma * gamma.T * sigma_g**2
@@ -216,9 +213,9 @@ covariance_matrix_epsilon = sigma_epsilon**2 * sp.eye(N)
 covariance_matrix = covariance_matrix_f + covariance_matrix_g +  covariance_matrix_epsilon
 
 # Calculate the total portfolio variance as w.T * covariance_matrix * w
-total_portfolio_variance_h = (w_h.T * covariance_matrix * w_h)[0]
+var_h = (w_h.T * covariance_matrix * w_h)[0]
 
-st.latex(f"\\sigma^2_h = {sp.latex(total_portfolio_variance_h)}")
+st.latex(f"\\sigma^2_h = {sp.latex(var_h)}")
 
 st.write(r"""
          because $w_h^\top \beta = 0$. 
@@ -236,58 +233,6 @@ We now have an investment tool - a hedging portfolio - that helps to reduce the 
 while keeping the expected return of the portfolio unchanged. 
          """)
 
-# st.write(r""" The loadings of our initial portfolio $c$ on the rewarded and unrewarded factors are given by:
-# """)
-
-# # Use SymPy's Rational to keep weights as fractions
-# w_long = sp.Matrix([0] * N)
-# w_short = sp.Matrix([0] * N)
-
-# # Assign long positions (1/3) to the top 3 assets
-# for idx in sorted_indices[-6:]:
-#     w_long[idx] = sp.Rational(1, 6)
-
-# # Assign short positions (-1/3) to the bottom 3 assets
-# for idx in sorted_indices[:6]:
-#     w_short[idx] = sp.Rational(-1, 6)
-
-# # Combine long and short positions to form the final weight vector
-# w_c = w_long + w_short
-
-# beta_c = w_c.dot(beta)
-# gamma_c = w_c.dot(gamma)
-
-# st.latex(fr"\beta_c = {sp.latex(beta_c)}")
-# st.latex(f"\gamma_c = {sp.latex(gamma_c)}")
-
-# st.write(r"""And their respective returns are:
-# """)
-
-# r_c = w_c.dot(beta * (f + lambda_) + gamma * g + epsilon)
-# r_h = w_h.dot(beta * (f + lambda_) + gamma * g + epsilon)
-
-# var_c = (w_c.dot(gamma))**2 * sigma_g**2 + (w_c.dot(beta))**2 * sigma_f**2 + w_c.dot(w_c) * sigma_epsilon**2
-
-# st.latex(f"\\sigma^2_c = {sp.latex(var_c.simplify())}")
-
-# st.latex(f"r_c = {sp.latex(r_c)}")
-# st.latex(f"r_h = {sp.latex(r_h)}")
-
-# expected_r_c = stats.E(r_c)
-# expected_r_h = stats.E(r_h)
-
-# st.latex(f"E[r_c] = {sp.latex(expected_r_c)}")
-# st.latex(f"E[r_h] = {sp.latex(expected_r_h)}")
-
-# cov = (w_c.dot(gamma) * w_h.dot(gamma) * sigma_g**2) + (w_c.dot(beta) * w_h.dot(beta) * sigma_f**2) + (w_c.dot(w_h) * sigma_epsilon**2)
-
-# st.latex(fr"""\text{{Cov}}(r_c, r_h) = {sp.latex(cov)}""")
-
-# delta = cov / var_h
-
-# st.latex(fr"""\delta = {sp.latex(delta.simplify())}""")
-
-# st.latex(fr"""{sp.latex(w_h.dot(w_h) * sigma_epsilon**2)}""")
 
 st.write(r"""
          Daniel $\textit{et al.}$ (2020) show that we can improve the portfolio $c$ by combining it with the hedge portfolio $h$ in order to maximize the Sharpe ratio.
@@ -363,27 +308,85 @@ st.latex(r"""
 \end{aligned}
             \end{equation}
             """)
-# var_optim = var_c + delta ** 2 * var_h - 2 * delta * cov
 
-# st.latex(fr"""\text{{var}}(r_c - \delta^* r_h) = {sp.latex(var_optim.simplify())}""")
 
-# st.write(r"""
-#          since $\rho_{c,h} = \frac{\text{Cov}(r_c, r_h)}{\sigma_c \sigma_h}$, we can substitute $\text{Cov}(r_c, r_h)$ by $\rho_{c,h} \sigma_c \sigma_h$:
-#             """)
+# Use SymPy's Rational to keep weights as fractions
+w_long_c = sp.Matrix([0] * N)
+w_short_c = sp.Matrix([0] * N)
 
-# st.latex(r"""
-# \begin{equation}
-#          \begin{aligned}
-#          \delta^* = \frac{\rho_{c,h} \sigma_c \sigma_h}{\sigma_h^2} \\
-#           = \rho_{c,h} \frac{\sigma_c}{\sigma_h}
-#             \end{aligned}
-# \end{equation}
-#          """)
+# Get the indices of the sorted beta values
+sorted_indices_c = np.argsort(beta_np)
 
-# st.write(r"""
-#          Therefore, the optimal hedge portfolio is the one that is maximally correlated 
-#          with the initial portfolio $c$.
-#             """)
+# Assign long positions (1/3) to the top 3 assets
+for idx in sorted_indices_c[-6:]:
+    w_long_c[idx] = sp.Rational(1, 6)
+
+# Assign short positions (-1/3) to the bottom 3 assets
+for idx in sorted_indices_c[:6]:
+    w_short_c[idx] = sp.Rational(-1, 6)
+
+# Combine long and short positions to form the final weight vector
+w_c = w_long_c + w_short_c
+
+var_c = (w_c.T * covariance_matrix * w_c)[0]
+
+st.latex(f"\\sigma^2_c = {sp.latex(var_c)}")
+
+gamma_c = w_c.dot(gamma)
+gamma_h = w_h.dot(gamma)
+
+delta_optim = gamma_c / gamma_h
+
+st.write(fr"""
+Which, in our case with $\gamma_c = {gamma_c}$ and $\gamma_h = {gamma_h}$, gives:
+         """)
+
+st.latex(f"\delta^* = {sp.latex(delta_optim)}")
+
+
+gamma_optim = gamma_c - delta_optim * gamma_h
+
+
+w_optim = w_c - delta_optim * w_h
+
+gamma_optim = w_optim.dot(gamma)
+
+st.write(r"""
+         The loading on the unrewarded factor of the combined portfolio is:""")
+
+st.latex(f"\gamma^* = {sp.latex(gamma_optim)}")
+
+st.write(r"""
+         The variance of the combined portfolio is:
+            """)
+
+var_optim = (w_optim.T * covariance_matrix * w_optim)[0]
+
+st.latex(f"\\sigma^2(r_c - \delta^* r_h) = {sp.latex(var_optim)}")
+
+st.write(r"""
+         While the expected return of the combined portfolio is:
+         """)
+
+expected_r_optim = w_optim.dot(beta) * lambda_
+
+st.latex(f"E[r_c - \delta^* r_h] = {sp.latex(expected_r_optim)}")
+
+st.write(r"""
+         Therefore the new Sharpe ratio is:
+         """)
+
+sharpe_optim = expected_r_optim / sp.sqrt(var_optim)
+
+st.latex(f"\\text{{Sharpe ratio}}^* = {sp.latex(sharpe_optim)}")
+
+
+st.write(r""" while the Sharpe ratio of the initial portfolio $c$ was:
+         """)
+
+sharpe_c = w_c.dot(beta) * lambda_ / sp.sqrt(var_c)
+
+st.latex(f"\\text{{Sharpe ratio}} = {sp.latex(sharpe_c)}")
 
 # # Function to retrieve S&P 500 tickers from Wikipedia
 # @st.cache_data
