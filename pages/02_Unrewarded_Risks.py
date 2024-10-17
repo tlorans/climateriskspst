@@ -304,7 +304,7 @@ st.latex(f"R^2 = {sp.latex(round(r_squared_eval.simplify(), 2))}")
 
 # Further explanation
 st.write(r"""
-This R² shows how much of the portfolio's total variance can be attributed to the variance in the unrewarded risk factor $g$. 
+This $R^2$ shows how much of the portfolio's total variance can be attributed to the variance in the unrewarded risk factor $g$. 
 The influence of $g$ depends on its volatility, ($\sigma_g^2$), and the cross-correlation between the rewarded and unrewarded risks.
          """)
 
@@ -323,22 +323,155 @@ Magnitude of the issue:
 """)
 
 
-st.subheader('Climate Risks Factor as a Variance Factor')
+st.subheader('Climate Risks Factor as $g$')
+
 
 st.write(r"""
-BMG may not helps in explain average returns but it may help to explain return variance - it can help to increase
-         $R^2$.
+We have seen that the BMG factor is not a rewarded risk factor. May it acts as an unrewarded risk factor as $g$?
+To investigate this, let's first see if any of the traditional Fama-French factors loads on the BMG factor.
+What we are going to do is to run a regression of the BMG factor on the Fama-French factors.
+We want to see if $\gamma_g$ is significantly different for any of the Fama-French factors.
          """)
 
+@st.cache_data
+def load_ff3_data():
+    """Load the Fama-French factors data."""
+    start_date = '2000-01-01'
+    end_date = '2019-06-30'
+    factors_ff3_daily_raw = pdr.DataReader(
+        name="F-F_Research_Data_Factors_daily",
+        data_source="famafrench",
+        start=start_date,
+        end=end_date)[0]
+    factors_ff3_daily = (factors_ff3_daily_raw
+                         .divide(100)
+                         .reset_index(names="date")
+                         .rename(str.lower, axis="columns")
+                         .rename(columns={"mkt-rf": "mkt_excess"}))
+    return factors_ff3_daily
+
+bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+ff3_data = load_ff3_data()
+data = pd.merge(ff3_data, bmg, on='date')
+
+# st.write(ff3_data.head())
+
+@st.cache_data
+def compute_rolling_beta(f, g, rolling_window=126):
+    """Compute rolling beta of HML on Money Industry portfolio."""
+    beta_values = [np.nan] * (rolling_window - 1)  # Prepend NaN for the first observations
+    for i in range(len(f) - rolling_window + 1):
+        y = f.iloc[i:i + rolling_window]
+        X = sm.add_constant(g.iloc[i:i + rolling_window])
+        model = sm.OLS(y, X).fit()
+        beta_values.append(model.params[1])  # The slope (beta) coefficient
+    return np.array(beta_values)
+
+# Assuming 'data' is your DataFrame with columns ['date', 'hml', 'BMG']
+gamma_values = (data 
+               .get(["date","smb","hml"])
+               .assign(
+                   gamma_hml = compute_rolling_beta(data['hml'], data['BMG']),
+                     gamma_smb = compute_rolling_beta(data['smb'], data['BMG'])
+            )
+            .dropna()
+)
+
+# Create a long-form DataFrame to plot both gamma_hml and gamma_smb
+gamma_long = pd.melt(gamma_values, id_vars=['date'], value_vars=['gamma_hml', 'gamma_smb'],
+                     var_name='Factor', value_name='Gamma')
+
+# Plot both gamma_hml and gamma_smb
+plot_values = (
+    ggplot(gamma_long, aes(x='date', y='Gamma', color='Factor')) +   
+    geom_line() +
+    labs(title="Rolling Gamma of HML and SMB on BMG Factor",
+         x="", y="$\gamma$") +
+    scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1))
+)
+
+# Display the plot in Streamlit
+st.pyplot(ggplot.draw(plot_values))
+
 st.write(r"""
-         High $R^2$ is interesting. The fact that $R^2$ are high means that 
-         the regression used to define the loadings explains most of the variance $\sigma^2_i$ of the asset $i$, 
-         even if alpha is big.""")
+We are now going to investigate the magnitude of it, such as the $\sigma_g^2$.
+         """)
+
+@st.cache_data
+def compute_rolling_volatility(returns, rolling_window=126):
+    """Compute rolling annualized volatility of a portfolio."""
+    # Compute rolling standard deviation of daily returns
+    rolling_volatility = returns.rolling(window=rolling_window).std()
+    
+    # Annualize the volatility: Multiply by the square root of 252 (trading days per year)
+    annualized_volatility = rolling_volatility * np.sqrt(252)
+    
+    return annualized_volatility
+
+# Select the "Money Industry" portfolio (replace 'money' with actual column name)
+bmg_returns = data['BMG']  # Replace 'money' with the actual column name
+
+# Compute rolling annualized volatility (252-day window)
+annualized_volatility = compute_rolling_volatility(bmg_returns)
+
+# Prepare data for plotting
+data_volatility = data.copy()
+data_volatility['annualized_volatility'] = annualized_volatility
+
+# Create the plot for annualized volatility
+plot_volatility = (ggplot(data_volatility, aes(x='date', y='annualized_volatility')) +
+                    geom_line(color='green') +
+                    labs(title="126-Day Rolling Annualized Volatility: BMG",
+                        x="Date", y="Annualized Volatility") +
+                    scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+                    theme(axis_text_x=element_text(rotation=45, hjust=1)))
+
+st.pyplot(ggplot.draw(plot_volatility))
+
+st.write(r"""
+         Results in the $R^2$.
+            """)
+
+@st.cache_data
+def compute_rolling_r2(f, g, rolling_window=126):
+    """Compute rolling R-squared values from regression of HML on industry portfolios."""
+    r2_values = [np.nan] * (rolling_window - 1)  # Prepend NaN for the first observations
+    for i in range(len(f) - rolling_window + 1):
+        y = f.iloc[i:i + rolling_window]
+        X = g.iloc[i:i + rolling_window]
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X).fit()
+        r2_values.append(model.rsquared)
+    return np.array(r2_values)
 
 
+# Assuming 'data' is your DataFrame with columns ['date', 'hml', 'BMG']
+r_values = (data 
+               .get(["date","smb","hml"])
+               .assign(
+                   r_hml = compute_rolling_r2(data['hml'], data['BMG']),
+                     r_smb = compute_rolling_r2(data['smb'], data['BMG'])
+            )
+            .dropna()
+)
 
+# Create a long-form DataFrame to plot both gamma_hml and gamma_smb
+r_values_long = pd.melt(r_values, id_vars=['date'], value_vars=['r_hml', 'r_smb'],
+                     var_name='Factor', value_name='R_squared')
 
+# Plot both gamma_hml and gamma_smb
+plot_r_values = (
+    ggplot(r_values_long, aes(x='date', y='R_squared', color='Factor')) +   
+    geom_line() +
+    labs(title="Rolling $R^2$ of HML and SMB on BMG Factor",
+         x="", y="$R^2$$") +
+    scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1))
+)
 
+# Display the plot in Streamlit
+st.pyplot(ggplot.draw(plot_r_values))
 
 # st.write(r"""
 #          First plot show the $R^2$ from 126-days rolling regressions of daily HML returns on the twelve daily Fama and French (1997) value-weighted industry excess returns.
