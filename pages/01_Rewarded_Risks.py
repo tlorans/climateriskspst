@@ -307,25 +307,38 @@ st.latex(r"""
 \end{equation}
                 """)
 
-st.write(r"""
-         This equation shows that the characteristic is a perfect 
-proxy for the exposure to the rewarded factor. 
 
-We now consider only 6 assets with equal market capitalization.
-The assets have characteristics and loadings on the rewarded factor as:
-""")
 
 N = 12  # Number of assets
 
-# Predefined fixed values for beta
-fixed_beta = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
+st.write(fr"""
+         This equation shows that the loading on the rewarded factor is a linear
+         function of the characteristic $x$.
+We now consider {N} assets with equal market capitalization.
+""")
 
-# Create a LaTeX table for the beta inputs
-beta_latex = r"\begin{array}{|c|c|} \hline Asset & \beta \\ \hline "
+
+# Define characteristic values for the 6 assets
+characteristics_x = [1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]
+
+# Define the relationship between beta and x
+lambda_c = 1
+lambda_f = 1
+fixed_beta = [int(x * (lambda_c / lambda_f)) for x in characteristics_x]
+
+st.write(r"""
+         For simplicity, let's assume that $\frac{\lambda_c}{\lambda} = 1$.
+         Therefore, $x$ and $\beta$ are the same.
+         The assets have characteristics and loadings on the rewarded factor as:
+         """)
+
+# Create a LaTeX table for the beta and characteristic values
+table_latex = r"\begin{array}{|c|c|c|} \hline Asset & x & \beta \\ \hline "
 for i in range(N):
-    beta_latex += f"{i+1} & {fixed_beta[i]} \\\\ \\hline "
-beta_latex += r"\end{array}"
-st.latex(beta_latex)
+    table_latex += f"{i+1} & {characteristics_x[i]} & {fixed_beta[i]} \\\\ \\hline "
+table_latex += r"\end{array}"
+st.latex(table_latex)
+
 
 
 
@@ -356,8 +369,7 @@ w = w_long + w_short
 # Display the resulting portfolio in LaTeX format
 st.write(r"""
         We can construct a portfolio $c$ on the basis of characteristic 
-$x$ (or $\beta$, as we have supposed that $x$ is a perfect proxy for $\beta$).
-The weights are given by:
+$x$. The weights are given by:
          """)
 # Prepare weights in LaTeX format as a row vector
 weights_latex = r"\begin{bmatrix} "
