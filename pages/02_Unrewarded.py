@@ -323,15 +323,22 @@ Magnitude of the issue:
 """)
 
 
-st.subheader("Project 2: Illustration with Industry")
+st.subheader('Climate Risks Factor as a Variance Factor')
 
 st.write(r"""
-         Asness $\textit{et al.}$ (2000) have shown that if book-to-market ratios (the characteristic used to build the value factor) 
-         are decomposed into an across-industry component and a within-industry comopnent, then only the within-industry component is related 
-            to expected returns. This literature then suggests that the exposure of HML to industry returns is unpriced, that is, that industry is one 
-         unpriced source of common variation $g$. 
+BMG may not helps in explain average returns but it may help to explain return variance - it can help to increase
+         $R^2$.
+         """)
 
-            """)
+st.write(r"""
+         High $R^2$ is interesting. The fact that $R^2$ are high means that 
+         the regression used to define the loadings explains most of the variance $\sigma^2_i$ of the asset $i$, 
+         even if alpha is big.""")
+
+
+
+
+
 
 # st.write(r"""
 #          First plot show the $R^2$ from 126-days rolling regressions of daily HML returns on the twelve daily Fama and French (1997) value-weighted industry excess returns.
