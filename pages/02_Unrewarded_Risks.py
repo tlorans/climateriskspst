@@ -465,7 +465,7 @@ plot_r_values = (
     ggplot(r_values_long, aes(x='date', y='R_squared', color='Factor')) +   
     geom_line() +
     labs(title="Rolling $R^2$ of HML and SMB on BMG Factor",
-         x="", y="$R^2$$") +
+         x="", y="$R^2$") +
     scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
     theme(axis_text_x=element_text(rotation=45, hjust=1))
 )
