@@ -11,6 +11,7 @@ from plotnine import *
 from mizani.formatters import date_format
 from mizani.breaks import date_breaks
 import pandas as pd
+from regtabletotext import prettify_result
 
 
 st.title('Rewarded Risks')
@@ -28,9 +29,16 @@ characteristics positively associated with expected returns.
 The resultant portfolios, which go long a portfolio of high characteristic
 firms and short a portfolio of low characteristic firms helps
 to estimate the associated risk premia (see Fama and French 1992 and 2015).
-The characteristic-sorted portfolio is what we call risk factors. A risk factor with a positive risk premium is called a rewarded risk.
-         
+The characteristic-sorted portfolio is what we call risk factors. A risk factor with a positive risk premium is called a rewarded risk.                  
 """)
+
+st.write("""
+The climate finance literature employ characteristic-sorted portfolio to investigate the relationship between climate risks and cross-sectional stock returns.
+The investigation is two fold:
+         1. Identifying what characteristics are the most relevant to capture climate risks.
+        2. Understand whether climate change risks are a new rewarded risk to be added to the list of traditional risk factors.
+         """)
+
 
 st.subheader('Characteristics and the Cross Section of Stock Returns')
 
@@ -456,18 +464,7 @@ st.write(r"""
 
 st.latex(f"\\text{{Sharpe Ratio}} = {sp.latex(sharpe_ratio)}")
 
-st.subheader('Climate Risk Factor?')
-
-
-st.write("""
-
-The climate finance literature employ characteristic-sorted portfolio to investigate the relationship between climate risks and cross-sectional stock returns.
-Reasoning in terms of portfolio,
-         the fundamental debate in the literature is to understand whether climate change risk dynamics 
-            are rewarded or unrewarded in the cross-section of stock returns.
-         """)
-
-
+st.subheader('A Climate Risks Factor?')
 
 st.write(r"""
 Some studies found the evidence of a carbon premium in the cross-section.
@@ -522,12 +519,56 @@ st.write(r"""
          are pricing cabron risk to the same extent. 
          On the other hand, Hsu $\textit{et al.} (2020)$ discovered that 
          the carbon premium is related to the emission intensity measure.
+         Nevertheless, these findings were not corroborated by the remaining studies in the Table.
             """)
 
 st.write(r"""
-                  Nevertheless, these findings were not corroborated by the remaining studies in the Table.
-""")
+We are going to focus on the BMG factor from Gorgen et al. (2020).
+First, let's have a look at the cumulative returns of the BMG portfolio.
+It seems to be negative for the sample period considered. This is an 
+unexpected result, as we would expect a positive return for a rewarded risk.
+Brown firms should be riskier and thus offer higher expected returns. It seems 
+not to be the case here. 
+Thus, first, we do no have the expected sign for the eventually associated risk premia.        
+         """)
 
+bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
+
+bmg_cum = (1 + bmg).cumprod() - 1
+plot = (ggplot(bmg_cum.reset_index(), aes(x='date', y='BMG')) +
+    geom_line() + 
+    scale_x_date(breaks=date_breaks('1 years'), labels=date_format('%Y')) + 
+    labs(title="Cumulative Returns of BMG Portfolio", x="", y="Cumulative Return") +
+    theme(axis_text_x=element_text(rotation=45, hjust=1))
+    )
+
+
+st.pyplot(ggplot.draw(plot))
+
+st.write(r"""
+Pastor et al. (2021, 2022) and Ardia et al. (2021) found an interesting 
+explanation to this unexpected sign of the BMG factor. They argue that
+estimating the expected returns based on realized returns may lead to bias, especially in the case of climate risks.
+In an event of unexpected change in climate concerns, we may observe positive 
+unexpected returns for green stocks (outperformance) and negative unexpected returns for brown stocks (underperformance).
+Estimating the risk premia as the simple average of the realized returns may lead to a negative risk premia for the BMG factor 
+if the sample period is characterized by a strengthening of climate concerns.
+         """)
+
+st.write(r"""
+A second simple test is to check if the average return of the BMG portfolio is different from zero.
+The results indicate that we cannot reject the null hypothesis of average 
+returns being equal to zero. 
+         """)
+
+model_fit = (sm.OLS.from_formula(
+    formula="BMG ~ 1",
+    data=bmg
+)
+  .fit(cov_type="HAC", cov_kwds={"maxlags": 6})
+)
+
+st.write(model_fit.summary())
 
 
 # @st.cache_data
