@@ -15,17 +15,28 @@ import pandas as pd
 
 st.title('Rewarded Risks')
 
-
-st.subheader('Characteristics and the Cross Section of Stock Returns')
-
 st.write(r"""
 The asset pricing literature has found that some characteristics does a good job in describing the cross-section of stocks returns. 
 These characteristics may act as proxies for exposure to an underlying risk factors. It means that 
 it helps to identify stocks that are more likely to perform poorly during bad times. 
 Because they are seen as riskier, investors require higher expected returns to hold these stocks.
+                  
+
+A common practice in the academic finance literature 
+has been to create characteristic portfolios by sorting on 
+characteristics positively associated with expected returns.
+The resultant portfolios, which go long a portfolio of high characteristic
+firms and short a portfolio of low characteristic firms helps
+to estimate the associated risk premia (see Fama and French 1992 and 2015).
+The characteristic-sorted portfolio is what we call risk factors. A risk factor with a positive risk premium is called a rewarded risk.
          
+""")
+
+st.subheader('Characteristics and the Cross Section of Stock Returns')
+
+st.write(r"""
 To get a sense of the idea, let's see a simple dividend discount model (as in Fama and French 2015).
-We can use this model to link firm characteristics—value, profitability, and investment—with stock returns. 
+We can use this model to link firm characteristics—value, profitability, and investment—with expected returns. 
 The following equation represents a simplified one-period dividend discount model (DDM):
 """)
 
@@ -168,16 +179,13 @@ at the firm level by aggregating plant-level data from the Toxic Release Invento
 The Trucost and Thomson Reuters' Asset4 ESG databases provide emission data 
          at the aggregated firm level, both for the United States and the entire world.
 Moreover, these databases also provide data related to the three different types of scope emissions. 
-         """)
-
-st.write(r"""
          Bolton and Kacperczyk (2020) decomposed the three measures of carbon risk for each type of emissions.
          Notably, as Busch $\textit{et al.}$ (2018) observed, there is little variation 
          in the reported scope 1 and 2 emissions among data providers. 
          """)
 
 st.write(r"""
-One must understand how the emission variables are related to the cross-section fo stocks retuns. Bolton and 
+Bolton and 
          Kacperczyk (2020) argued the total amount of emissions should proxy 
          for the long-term company's exposure to transition risks, as it is likely that regulations 
          aimed to curb emissions are targeted more toward these types of fims. The 
@@ -192,6 +200,13 @@ The economic rationale behind the emission intensity measure is explained using 
          emissions as in Bolton and Kacperczyk (2021). 
          """)
 
+st.write(r"""
+         Pastor $\textit{et al.}$ (2021) proxies this overall climate risk exposure by means 
+         of the E-scores provided by the MSCI and Sustainalytics databases, arguing that they should capture the 
+         different dynamics. Engle $\textit{et al.}$ (2020) 
+         constructed E-score measures at the firm level by taking the difference between positive and negative 
+         E-scores subcategories. 
+         """)
 
 st.write(r"""
 Görgen $\textit{et al.}$ construct a score able to proxy for the 
@@ -214,28 +229,12 @@ $\text{Adaptability}_{i,t}$ and $\text{Public Perception}_{i,t}$ are
          preference risk, respectively.
          To build the measure, they relied on 10 different ESG variables, retrieved 
          from four different data providers.
-         They argued that merging the ESG variables between these datasets should minimise the 
-         potential self-reporting bias.
+
          """)
 
-st.write(r"""
-         Pastor $\textit{et al.}$ (2021) proxies this overall climate risk exposure by means 
-         of the E-scores provided by the MSCI and Sustainalytics databases, arguing that they should capture the 
-         different dynamics. Engle $\textit{et al.}$ (2020) 
-         constructed E-score measures at the firm level by taking the difference between positive and negative 
-         E-scores subcategories. 
-         """)
+
 
 st.subheader('Characteristic-Sorted Portfolio')
-
-st.write(r"""
-A common practice in the academic finance literature 
-has been to create characteristic portfolios by sorting on 
-characteristics positively associated with expected returns.
-The resultant portfolios, which go long a portfolio of high characteristic
-firms and short a portfolio of low characteristic firms serve as a proxy for 
-the risk factor returns (see Fama and French 1992 and 2015).
-""")
 
 st.write(r"""
 Following Daniel $\textit {et al.}$ (2020), 
