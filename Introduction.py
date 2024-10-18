@@ -8,8 +8,8 @@ st.title('Climate Risks in Portfolio Construction')
 
 st.subheader('Mean-Variance Efficient Portfolio with Multi-factor Model')
 
-st.write(r"""We follow Rjaily $\textit{et al.}$ (2024). In an investment universe with $N$ assets, the investor assumes 
-         that asset returns follow a multi-factor risk model:""")
+st.write(r"""In an investment universe with $N$ assets, we assume the assets
+         realized excess returns to follow a multi-factor risk model with $K$ factors:""")
 
 st.latex(r"""
 \begin{equation}
@@ -35,7 +35,33 @@ st.latex(r"""
 \end{equation}
          """)
 
-st.write(r"""While the covariance matrix of asset returns is given by:""")
+
+st.write(r"""We assume a linear relation between expected excess returns and characteristics:""")
+
+st.latex(r"""
+\begin{equation}
+         \mu = X \lambda_c
+\end{equation}
+         """)
+
+st.write(r"""where $X$ is the $N \times M$ vector of characteristics and $\lambda_c$ is the $M \times 1$ vector of characteristic 
+         premiums.""")
+
+st.write(r"""For both equations to hold simulatenously, it must be that:""")
+
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         B \lambda = X \lambda_c \\
+         B = \frac{1}{\lambda}X \lambda_c \\
+        \end{aligned}
+\end{equation}
+         """)
+
+st.write("""Thus, assets' exposure to factors is a linear cmobination of the $M$ characteristics that 
+         describe expected excess returns""") 
+
+st.write(r"""The covariance matrix of asset returns is given by:""")
 
 st.latex(r"""
 \begin{equation}
@@ -454,7 +480,7 @@ for idx in sorted_indices[:6]:
 
 
 # Combine long and short positions to form the final weight vector
-w = w_long + w_short
+w_ls = w_long + w_short
 
 # Display the weights
 st.write(r"""
@@ -463,11 +489,13 @@ st.write(r"""
 
 weights_latex = r"\begin{bmatrix} "
 for i in range(N):
-    weights_latex += f"{sp.latex(w[i])} & "
+    weights_latex += f"{sp.latex(w_ls[i])} & "
 weights_latex = weights_latex[:-2] + r" \end{bmatrix}"
 
 st.latex(r"""
 w_c^T = """ + weights_latex)
+
+
 
 st.sidebar.header("Input Desired Cross-Correlation")
 
