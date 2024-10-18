@@ -36,31 +36,6 @@ st.latex(r"""
          """)
 
 
-st.write(r"""We assume a linear relation between expected excess returns and characteristics:""")
-
-st.latex(r"""
-\begin{equation}
-         \mu = X \lambda_c
-\end{equation}
-         """)
-
-st.write(r"""where $X$ is the $N \times M$ vector of characteristics and $\lambda_c$ is the $M \times 1$ vector of characteristic 
-         premiums.""")
-
-st.write(r"""For both equations to hold simulatenously, it must be that:""")
-
-st.latex(r"""
-\begin{equation}
-         \begin{aligned}
-         B \lambda = X \lambda_c \\
-         B = \frac{1}{\lambda}X \lambda_c \\
-        \end{aligned}
-\end{equation}
-         """)
-
-st.write("""Thus, assets' exposure to factors is a linear cmobination of the $M$ characteristics that 
-         describe expected excess returns""") 
-
 st.write(r"""The covariance matrix of asset returns is given by:""")
 
 st.latex(r"""
@@ -435,7 +410,8 @@ st.write(r"""
             expected return of the portfolio. The investor would be taking on less risk without sacrificing expected return.
             """)
 
-st.subheader("The Problem")
+
+st.subheader("When $F$ loads on Climate Risks")
 
 st.write(r"""
 Now the problem, in the case where climate risks is an unrewarded risk factor, lies in the way $F$ is defined.
@@ -447,24 +423,67 @@ Now the problem, in the case where climate risks is an unrewarded risk factor, l
          """)
 
 
-st.write(r"""Let's consider the following vector of characteristics for 12 assets:""")
+st.write(r"""Daniel $\textit{et al.}$ (2020) have shown that, if the characteristics are positively correlated with the unrewarded factor,
+         the resulting $F$ (factor-mimicking portfolios) will load on the unrewarded factor. This is because the long-short portfolios
+            will load on the unrewarded factor.""")
 
+st.write(r"""
+
+         """)
 
 N = 12  # Number of assets
 
 # Predefined fixed values for C
-C = sp.Matrix([[1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]])
+B_1 = sp.Matrix([1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1])
 
-# Convert the SymPy matrix to a LaTeX string
-C_latex = sp.latex(C)
+st.sidebar.header("Input Desired Cross-Correlation")
 
-# Display the equation for characteristics
-st.latex(rf"""C^\top = {C_latex}""")
+# Ask user for the desired correlation coefficient
+correlation = st.sidebar.selectbox(
+    "Select the correlation between $B_1$ and $B_2$", 
+    ("0", "1/3", "2/3")
+)
 
-c_np = np.array(C).flatten()
+# Predefined sets of gamma based on the correlation choices
+B_2_sets = {
+    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
+    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
+    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
+}
+
+selected_B_2 = B_2_sets[correlation]
+
+# Define the matrix B_2
+B_2 = sp.Matrix(selected_B_2)
+
+# concat B_1 and B_2 to form B
+B = B_1.row_join(B_2)
+
+st.write(r"""Too see this, let's define a universe of 12 assets. We have the following matrix $B$ of factor loadings:""")
+
+st.latex(fr"""B = {sp.latex(B)}""")
+
+
+# Step 1: Compute the means of beta and gamma
+B1_mean = sp.Rational(sum(B_1), N)
+B2_mean = sp.Rational(sum(B_2), N)
+# Step 2: Compute the covariance between beta and gamma
+cov_B1_B2 = sp.Rational(0, 1)
+for i in range(N):
+    cov_B1_B2 += (B_1[i] - B1_mean) * (B_2[i] - B2_mean)
+cov_B1_B2 /= N
+
+# Step 3: Compute the standard deviations of beta and gamma
+std_B1 = sp.sqrt(sum((B_1[i] - B1_mean)**2 for i in range(N)) / N)
+std_B2 = sp.sqrt(sum((B_2[i] - B2_mean)**2 for i in range(N)) / N)
+
+# Step 4: Compute the correlation
+correlation = cov_B1_B2 / (std_B1 * std_B2)
+
+beta_np = np.array(B_1).flatten()
 
 # Get the indices of the sorted beta values
-sorted_indices = np.argsort(c_np)
+sorted_indices = np.argsort(beta_np)
 
 # Use SymPy's Rational to keep weights as fractions
 w_long = sp.Matrix([0] * N)
@@ -484,7 +503,7 @@ w_ls = w_long + w_short
 
 # Display the weights
 st.write(r"""
-         The weights of the portfolio are:
+         The weights of the factor-mimicking portfolio are:
          """)
 
 weights_latex = r"\begin{bmatrix} "
@@ -493,21 +512,153 @@ for i in range(N):
 weights_latex = weights_latex[:-2] + r" \end{bmatrix}"
 
 st.latex(r"""
-w_c^T = """ + weights_latex)
+w_f^T = """ + weights_latex)
+
+# Recompute the expected returns and portfolio statistics as before
+
+# Define lambda_factors_2 based on the new risk premia
+lambda_factors_2 = sp.Matrix([0.04, 0.00])
+
+# Recompute expected returns (mu)
+mu_3 = B * lambda_factors_2
+
+# Define the covariance matrix Omega for the factors
+Omega = sp.diag(0.20**2, 0.2**2)
+
+# Define the diagonal matrix D for idiosyncratic risks
+D = sp.diag(0.12**2, 0.10**2, 0.08**2, 0.10**2, 0.12**2, 0.15**2, 0.10**2, 0.09**2, 0.13**2, 0.14**2, 0.11**2, 0.16**2)
+
+# Recompute the covariance matrix of assets (Sigma)
+Sigma = B * Omega * B.T + D
+
+# Compute the expected return and variance of the portfolio
+portfolio_expected_return_f = w_ls.T * mu_3   # Portfolio expected return
+portfolio_variance_f = w_ls.T * Sigma * w_ls  # Portfolio variance
+
+# Extract scalar values from the 1x1 matrices
+portfolio_expected_return_f_scalar = portfolio_expected_return_f[0]
+portfolio_variance_f_scalar = portfolio_variance_f[0] 
 
 
+# Compute portfolio betas
+portfolio_betas_f = B.T * w_ls
+# Display the correlation formula
+st.write(r"""
+The correlation between $B_1$ and $B_2$ is:
+""")
+st.latex(r"\rho(B_1, B_2) = " + sp.latex(correlation.simplify()))
 
-st.sidebar.header("Input Desired Cross-Correlation")
 
-# Ask user for the desired correlation coefficient
-correlation = st.sidebar.selectbox(
-    "Select the correlation between $C$ and $B_2$", 
-    ("0", "1/3", "2/3")
-)
+st.write(r"""
+         Therefore the portfolio $f$ has the following $\beta$ coefficients:""")
 
-# Predefined sets of gamma based on the correlation choices
-gamma_sets = {
-    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
-    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
-    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
-}
+portfolio_betas_f_latex = sp.latex(portfolio_betas_f)
+st.latex(fr'\beta_f = {portfolio_betas_f_latex}')
+
+st.write(r"""
+The higher the correlation between the characteristic and $B_2$, the higher the loading of the portfolio $f$ on the factor $B_2$.
+         """)
+
+st.write(r"""The expected return of $f$ is directly linked to its loading on the factors $\beta_f$: """)
+
+
+portfolio_expected_return_f_scalar_latex = sp.latex(portfolio_expected_return_f_scalar)
+st.latex(fr"""E(f) = \beta^\top \lambda = {portfolio_betas_f_latex}^T {lambda_latex_2} = {portfolio_expected_return_f_scalar_latex}""")
+
+st.write(r"""and the portfolio variance is:""")
+
+portfolio_variance_f_scalar_latex = sp.latex(portfolio_variance_f_scalar)
+
+st.latex(fr"""\sigma_f^2 = {portfolio_variance_f_scalar_latex}""")
+
+st.write(r"""
+The variance of the portfolio $f$ explained by the unrewarded factor is:
+         """)
+
+numerator_r_squared_c_3 = (w_ls.T * B_2 * Omega[1, 1] * B_2.T * w_ls)[0]  # Extract scalar
+denominator_r_squared_c_3 = (w_ls.T * Sigma * w_ls)[0]  # Extract scalar
+
+r_squared_c_3 = numerator_r_squared_c_3 / denominator_r_squared_c_3 
+
+st.latex(rf"\text{{R}}^2 = \frac{{w_f^\top B_2 \Omega_2 B_2^\top w_f}}{{w_f^\top \Sigma w_f}} = {sp.latex(r_squared_c_3)}")
+
+st.write(r"""
+So now we have a situation where the factor-mimicking portfolio $F_1$ loads on the unrewarded factor $F_2$.
+         """)
+
+st.write(fr"""
+We keep all the same except now that $\sigma_1^2 = {round(portfolio_variance_f_scalar,2)}$, the new tangency portfolio displays the following statistics:
+         """)
+
+
+# Matrix of factor loadings B (5 assets, 2 factors)
+B = sp.Matrix([[0.5, -0.3], [1.2, 0.6], [1.4, -0.3], [0.7, 0.3], [0.8, -0.9]])
+
+Omega = sp.diag(portfolio_variance_f_scalar, 0.2**2)
+
+# Idiosyncratic risk matrix D (5x5)
+D = sp.diag(0.12**2, 0.10**2, 0.08**2, 0.10**2, 0.12**2)
+
+# Expected returns vector for factors lambda (2x1)
+lambda_factors = sp.Matrix([portfolio_expected_return_f_scalar, 0.00])
+
+# Compute expected returns for the 5 assets
+mu = B * lambda_factors  # This will be a (5x1) vector
+
+# Compute the covariance matrix of asset returns
+Sigma = B * Omega * B.T + D  # Sigma will be a (5x5) matrix
+
+# Compute the new optimal portfolio weights (tangency portfolio)
+numerator_2 = Sigma.inv() * mu_2
+denominator_2 = sp.Matrix([1]*n).T * Sigma.inv() * mu_2
+w_star_2 = numerator_2 / denominator_2[0]
+
+# Step 2: Compute the new portfolio statistics
+
+# Expected return of the new portfolio
+portfolio_expected_return_2 = w_star_2.T * mu_2   # Portfolio expected return
+portfolio_variance_2 = w_star_2.T * Sigma * w_star_2  # Portfolio variance
+
+# Extract scalar values from the 1x1 matrices
+portfolio_expected_return_scalar_2 = round(portfolio_expected_return_2[0] * 100, 2)
+portfolio_variance_scalar_2 = round(portfolio_variance_2[0] * 100, 2)
+
+# Compute Sharpe ratio
+portfolio_sharpe_ratio_2 = portfolio_expected_return_scalar_2 / sp.sqrt(portfolio_variance_scalar_2)
+
+# Compute portfolio betas and R-squared as before
+portfolio_betas_2 = B.T * w_star_2
+
+# Compute the overall R-squared of the portfolio
+numerator_r_squared_c_2 = (w_star_2.T * B * Omega * B.T * w_star_2)[0]  # Extract scalar
+denominator_r_squared_c_2 = (w_star_2.T * Sigma * w_star_2)[0]  # Extract scalar
+
+# Compute R-squared (overall)
+r_squared_c_2 = numerator_r_squared_c_2 / denominator_r_squared_c_2 * 100
+
+# Compute R-squared for each factor
+r_squared_factors_2 = []
+for j in range(B.shape[1]):  # Loop through each factor
+    numerator_r_squared_j_2 = (w_star_2.T * B[:, j] * B[:, j].T * Omega[j, j] * w_star_2)[0]  # Extract scalar
+    denominator_r_squared_j_2 = denominator_r_squared_c_2  # The denominator is the same
+    r_squared_j_2 = numerator_r_squared_j_2 / denominator_r_squared_j_2
+    r_squared_factors_2.append(r_squared_j_2)
+
+# Convert values to latex-friendly strings
+r_squared_c_latex_2 = sp.latex(round(r_squared_c_2, 2))
+r_squared_factors_latex_2 = [sp.latex(round(r2 * 100, 2)) for r2 in r_squared_factors_2]
+
+# Step 3: Display the results in a LaTeX table
+
+table_latex_2 = r"\begin{array}{|c|c|} \hline \text{Metric} & \text{Value} \\ \hline"
+table_latex_2 += rf"\text{{Expected Return}} & {sp.latex(portfolio_expected_return_scalar_2)} \\"  # New expected return in %
+table_latex_2 += rf"\text{{Volatility}} & {sp.latex(sp.sqrt(portfolio_variance_scalar_2))} \\"  # New volatility in %
+table_latex_2 += rf"\text{{Sharpe Ratio}} & {sp.latex(portfolio_sharpe_ratio_2)} \\"  # New Sharpe ratio in %
+table_latex_2 += rf"\beta_1 & {sp.latex(round(portfolio_betas_2[0], 2))} \\"  # Beta 1
+table_latex_2 += rf"\beta_2 & {sp.latex(round(portfolio_betas_2[1], 2))} \\"  # Beta 2
+table_latex_2 += rf"\text{{R}}^2_1 & {r_squared_factors_latex_2[0]} \\"  # R-squared factor 1
+table_latex_2 += rf"\text{{R}}^2_2 & {r_squared_factors_latex_2[1]} \\"  # R-squared factor 2
+table_latex_2 += r"\hline"
+table_latex_2 += r"\end{array}"
+
+st.latex(table_latex_2)
