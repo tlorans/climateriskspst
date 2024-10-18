@@ -3,7 +3,9 @@ import sympy as sp
 
 st.set_page_config(page_title="Climate Risks")
 
-st.title('Mean-Variance Efficient Portfolio with Multi-factor Model')
+st.title('Climate Risks in Portfolio Construction')
+
+st.subheader('Mean-Variance Efficient Portfolio with Multi-factor Model')
 
 st.write(r"""We follow Rjaily $\textit{et al.}$ (2024). In an investment universe with $N$ assets, the investor assumes 
          that asset returns follow a multi-factor risk model:""")
@@ -139,7 +141,7 @@ gamma = sp.Symbol('gamma')  # Risk tolerance parameter
 w_star = gamma * inv_Sigma * mu
 
 # Display numerical example
-st.subheader("Numerical Example")
+st.subheader("Climate Risks as a New Risk Factor")
 
 st.write(r"""
          We consider a simple example with two uncorrelated factors $F_1$ and $F_2$, with the following expected returns:
@@ -262,7 +264,7 @@ r_squared_factors_latex = [sp.latex(round(r2 * 100,2)) for r2 in r_squared_facto
 
 table_latex = r"\begin{array}{|c|c|} \hline \text{Metric} & \text{Value} \\ \hline"
 table_latex += rf"\text{{Expected Return}} & {sp.latex(portfolio_expected_return_scalar)} \\"
-table_latex += rf"\text{{Variance}} & {sp.latex(portfolio_variance_scalar)} \\"
+table_latex += rf"\text{{Volatility}} & {sp.latex(sp.sqrt(portfolio_variance_scalar))} \\"
 table_latex += rf"\text{{Sharpe Ratio}} & {sp.latex(portfolio_sharpe_ratio)} \\"
 table_latex += rf"\beta_1 & {sp.latex(round(portfolio_betas[0], 2))} \\"
 table_latex += rf"\beta_2 & {sp.latex(round(portfolio_betas[1], 2))} \\"
@@ -273,3 +275,8 @@ table_latex += r"\hline"
 table_latex += r"\end{array}"
 
 st.latex(table_latex)
+
+st.subheader("Climate Risks as an Unrewarded Risk Factor")
+
+
+st.subheader("The Problem")
