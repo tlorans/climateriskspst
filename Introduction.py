@@ -90,3 +90,30 @@ st.latex(r"""
          \text{R}_j^{2} = \frac{w^\top B_j B_j^\top \sigma_j^2 w}{w^\top(B \Omega B^\top w + D) w}
             \end{equation}
             """)
+
+st.write(r"""where $B_j$ is the $N \times 1$ vector of factor loadings on factor $j$,
+            and $\sigma_j^2$ is the variance of factor $j$.""")
+
+st.write(r"""
+         The investor seeks to maximize the Sharpe ratio of the portfolio by choosing the optimal weights $w$.
+         """)
+
+st.write(r"""We consider the following optimization problem:""")
+
+st.latex(r'''
+         \begin{equation}
+         \begin{aligned}
+w^*(\gamma) = \underset{w}{\text{arg min}} \left( \frac{1}{2} w^\top \Sigma w - \gamma w^\top \mu \right) \\
+\text{ subject to } \mathbf{1}_n^\top w = 1
+\end{aligned}
+\end{equation}
+''')
+
+st.write("where $\gamma$ is the risk tolerance parameter. We have the following solution:")
+
+st.latex(r'''
+w^* = \gamma \Sigma^{-1} \mu
+''')
+
+st.write(r"""where $\gamma = (1_n^\top \Sigma^{-1}\mu)^{-1}$.""")
+
