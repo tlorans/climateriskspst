@@ -141,14 +141,21 @@ gamma = sp.Symbol('gamma')  # Risk tolerance parameter
 w_star = gamma * inv_Sigma * mu
 
 # Display numerical example
-st.subheader("Climate Risks as a New Risk Factor")
+st.subheader("Climate Risks as a Rewarded Risk")
 
 st.write(r"""
-         We consider a simple example with two uncorrelated factors $F_1$ and $F_2$, with the following expected returns:
+         Now that we have set up the stage, let's first consider what it would mean 
+         for portfolio construction if climate risks is to be considered as a new risk factor. 
+         We consider a simple example with a factor $F_1$ and the new climate risks factor $F_2$. Both 
+         are assumed to be uncorrelated. To be considered as a new rewarded risk factor, it must be that the 
+            expected return of the new factor is positive $E(F_2) > 0$. 
+         We have the following expected returns for the factors:
          """)
 
 default_F_1_risk_premia = 0.04
 default_F_2_risk_premia = 0.01
+
+st.sidebar.header("Climate Risks as a Rewarded Risk")
 
 F1_risk_premia_val = st.sidebar.number_input('$E(F_1)$',min_value=0., max_value=0.1, value=default_F_1_risk_premia, step=0.01)
 F2_risk_premia_val = st.sidebar.number_input('$E(F_2)$',min_value=0., max_value=0.1, value=default_F_2_risk_premia, step=0.01)
@@ -268,15 +275,137 @@ table_latex += rf"\text{{Volatility}} & {sp.latex(sp.sqrt(portfolio_variance_sca
 table_latex += rf"\text{{Sharpe Ratio}} & {sp.latex(portfolio_sharpe_ratio)} \\"
 table_latex += rf"\beta_1 & {sp.latex(round(portfolio_betas[0], 2))} \\"
 table_latex += rf"\beta_2 & {sp.latex(round(portfolio_betas[1], 2))} \\"
-table_latex += rf"\text{{R}}^2_c & {r_squared_c_latex} \\"
 table_latex += rf"\text{{R}}^2_1 & {r_squared_factors_latex[0]} \\"
 table_latex += rf"\text{{R}}^2_2 & {r_squared_factors_latex[1]} \\"
 table_latex += r"\hline"
 table_latex += r"\end{array}"
 
+st.write("The tangency portfolio displays the following statistics:")
 st.latex(table_latex)
 
-st.subheader("Climate Risks as an Unrewarded Risk Factor")
+st.write("Note: Expected return, variance, Sharpe ratio, and R-squared values are expressed in percentages.")
 
+st.write(r"""
+As you can see, the tangency portfolio loads both on the factor $F_1$ and the new climate risks factor $F_2$.
+If climate risks is a new rewarded risk factor, then the mean-variance efficient portfolio will load on it. There is therefore no 
+reason a priori to exclude climate risks from the investment universe, as investors are compensated for bearing the risk.
+         """)
+
+st.write(r"""
+         In that case, if investors choose to exclude climate risks from their investment universe, they would be missing out on the
+         expected returns associated with the factor. This would lead to suboptimal portfolios. It can be 
+         a choice to exclude climate risks from the investment universe, but it should be a conscious choice.
+         This choice would be based on the investor's preferences and beliefs, and not on the basis of
+         risk and return considerations.
+         """)
+
+st.subheader("Climate Risks as an Unrewarded Risk")
+
+
+st.sidebar.header("Climate Risks as an Unrewarded Risk")
+default_F_1_risk_premia_2 = 0.04
+default_F_2_risk_premia_2 = 0.00
+F1_risk_premia_val_2 = st.sidebar.number_input('Rewarded Factor: $E(F_1)$',min_value=0., max_value=0.1, value=default_F_1_risk_premia_2, step=0.01)
+F2_risk_premia_val_2 = st.sidebar.number_input('Unrewarded Factor: $E(F_2)$',min_value=0., max_value=0.0, value=default_F_2_risk_premia_2, step=0.01)
+
+st.write(r"""
+         Now, let's consider the case where climate risks is not rewarded. This would be the case if the expected return of the
+            climate risks factor is zero $E(F_2) = 0$. We now have the following expected returns for the factors:
+            """)
+
+
+selected_risk_premia_2 = [F1_risk_premia_val_2, F2_risk_premia_val_2]
+lambda_factors_2 = sp.Matrix(selected_risk_premia_2)
+
+# Convert the SymPy matrix to a LaTeX string
+lambda_latex_2 = sp.latex(lambda_factors_2)
+
+# Display the equation for risk premia
+st.latex(rf"\lambda = \begin{{bmatrix}} {F1_risk_premia_val_2:.2f} \\ {F2_risk_premia_val_2:.2f} \end{{bmatrix}}")
+
+st.write("Keeping all the same except now that $E(F_2) = 0$, the new tangency portfolio displays the following statistics:")
+
+# Step 1: Recalculate the optimal portfolio with the new expected returns
+
+# Use the new selected risk premia for the factors
+selected_risk_premia_2 = [F1_risk_premia_val_2, F2_risk_premia_val_2]
+lambda_factors_2 = sp.Matrix(selected_risk_premia_2)
+
+# Recompute the expected returns vector (mu)
+mu_2 = B * lambda_factors_2
+
+# Recompute the covariance matrix of assets (Sigma remains the same)
+Sigma = B * Omega * B.T + D
+
+# Compute the new optimal portfolio weights (tangency portfolio)
+numerator_2 = Sigma.inv() * mu_2
+denominator_2 = sp.Matrix([1]*n).T * Sigma.inv() * mu_2
+w_star_2 = numerator_2 / denominator_2[0]
+
+# Step 2: Compute the new portfolio statistics
+
+# Expected return of the new portfolio
+portfolio_expected_return_2 = w_star_2.T * mu_2   # Portfolio expected return
+portfolio_variance_2 = w_star_2.T * Sigma * w_star_2  # Portfolio variance
+
+# Extract scalar values from the 1x1 matrices
+portfolio_expected_return_scalar_2 = round(portfolio_expected_return_2[0] * 100, 2)
+portfolio_variance_scalar_2 = round(portfolio_variance_2[0] * 100, 2)
+
+# Compute Sharpe ratio
+portfolio_sharpe_ratio_2 = portfolio_expected_return_scalar_2 / sp.sqrt(portfolio_variance_scalar_2)
+
+# Compute portfolio betas and R-squared as before
+portfolio_betas_2 = B.T * w_star_2
+
+# Compute the overall R-squared of the portfolio
+numerator_r_squared_c_2 = (w_star_2.T * B * Omega * B.T * w_star_2)[0]  # Extract scalar
+denominator_r_squared_c_2 = (w_star_2.T * Sigma * w_star_2)[0]  # Extract scalar
+
+# Compute R-squared (overall)
+r_squared_c_2 = numerator_r_squared_c_2 / denominator_r_squared_c_2 * 100
+
+# Compute R-squared for each factor
+r_squared_factors_2 = []
+for j in range(B.shape[1]):  # Loop through each factor
+    numerator_r_squared_j_2 = (w_star_2.T * B[:, j] * B[:, j].T * Omega[j, j] * w_star_2)[0]  # Extract scalar
+    denominator_r_squared_j_2 = denominator_r_squared_c_2  # The denominator is the same
+    r_squared_j_2 = numerator_r_squared_j_2 / denominator_r_squared_j_2
+    r_squared_factors_2.append(r_squared_j_2)
+
+# Convert values to latex-friendly strings
+r_squared_c_latex_2 = sp.latex(round(r_squared_c_2, 2))
+r_squared_factors_latex_2 = [sp.latex(round(r2 * 100, 2)) for r2 in r_squared_factors_2]
+
+# Step 3: Display the results in a LaTeX table
+
+table_latex_2 = r"\begin{array}{|c|c|} \hline \text{Metric} & \text{Value} \\ \hline"
+table_latex_2 += rf"\text{{Expected Return}} & {sp.latex(portfolio_expected_return_scalar_2)} \\"  # New expected return in %
+table_latex_2 += rf"\text{{Volatility}} & {sp.latex(sp.sqrt(portfolio_variance_scalar_2))} \\"  # New volatility in %
+table_latex_2 += rf"\text{{Sharpe Ratio}} & {sp.latex(portfolio_sharpe_ratio_2)} \\"  # New Sharpe ratio in %
+table_latex_2 += rf"\beta_1 & {sp.latex(round(portfolio_betas_2[0], 2))} \\"  # Beta 1
+table_latex_2 += rf"\beta_2 & {sp.latex(round(portfolio_betas_2[1], 2))} \\"  # Beta 2
+table_latex_2 += rf"\text{{R}}^2_1 & {r_squared_factors_latex_2[0]} \\"  # R-squared factor 1
+table_latex_2 += rf"\text{{R}}^2_2 & {r_squared_factors_latex_2[1]} \\"  # R-squared factor 2
+table_latex_2 += r"\hline"
+table_latex_2 += r"\end{array}"
+
+st.latex(table_latex_2)
+
+st.write("Note: Expected return, variance, Sharpe ratio, and R-squared values are expressed in percentages.")
+
+st.write(r"""
+         As you can see, the tangency portfolio no longer loads on the new climate risks factor $F_2$.
+         This is because the expected return of the factor is zero. The investor is not compensated for bearing the risk. 
+         In this case, the mean-variance efficient portfolio
+         does not load on the factor. Indeed, loading on the factor would increase the volatility of the portfolio without
+            increasing the expected return. The investor would be taking on more risk without being compensated for it.
+         """)
+
+st.write(r"""
+         If climate risks is an unrewarded risk factor, then the mean-variance efficient portfolio will not load on it.
+            In that case, the investor can choose to exclude climate risks from the investment universe without affecting the
+            expected return of the portfolio. The investor would be taking on less risk without sacrificing expected return.
+            """)
 
 st.subheader("The Problem")
