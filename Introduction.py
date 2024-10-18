@@ -1,5 +1,6 @@
 import streamlit as st
 import sympy as sp
+import numpy as np
 
 st.set_page_config(page_title="Climate Risks")
 
@@ -409,3 +410,76 @@ st.write(r"""
             """)
 
 st.subheader("The Problem")
+
+st.write(r"""
+Now the problem, in the case where climate risks is an unrewarded risk factor, lies in the way $F$ is defined.
+         Those are the excess returns of long-short portfolios. The common 
+         practice in the academic finance literature is 
+         to create factor-mimicking portfolios by sorting on characteristics positively associated with expected returns.
+         The resultant portfolios, which go long a portfolio of high characteristic stocks and short a portfolio of low characteristic stocks,
+         helps to estimate the associated risk premia (see Fama and French 1992 and 2015).
+         """)
+
+
+st.write(r"""Let's consider the following vector of characteristics for 12 assets:""")
+
+
+N = 12  # Number of assets
+
+# Predefined fixed values for C
+C = sp.Matrix([[1, 1, 1, 1, 1,1, -1, -1, -1,-1,-1,-1]])
+
+# Convert the SymPy matrix to a LaTeX string
+C_latex = sp.latex(C)
+
+# Display the equation for characteristics
+st.latex(rf"""C^\top = {C_latex}""")
+
+c_np = np.array(C).flatten()
+
+# Get the indices of the sorted beta values
+sorted_indices = np.argsort(c_np)
+
+# Use SymPy's Rational to keep weights as fractions
+w_long = sp.Matrix([0] * N)
+w_short = sp.Matrix([0] * N)
+
+# Assign long positions (1/3) to the top 3 assets
+for idx in sorted_indices[-6:]:
+    w_long[idx] = sp.Rational(1, 6)
+
+# Assign short positions (-1/3) to the bottom 3 assets
+for idx in sorted_indices[:6]:
+    w_short[idx] = sp.Rational(-1, 6)
+
+
+# Combine long and short positions to form the final weight vector
+w = w_long + w_short
+
+# Display the weights
+st.write(r"""
+         The weights of the portfolio are:
+         """)
+
+weights_latex = r"\begin{bmatrix} "
+for i in range(N):
+    weights_latex += f"{sp.latex(w[i])} & "
+weights_latex = weights_latex[:-2] + r" \end{bmatrix}"
+
+st.latex(r"""
+w_c^T = """ + weights_latex)
+
+st.sidebar.header("Input Desired Cross-Correlation")
+
+# Ask user for the desired correlation coefficient
+correlation = st.sidebar.selectbox(
+    "Select the correlation between $C$ and $B_2$", 
+    ("0", "1/3", "2/3")
+)
+
+# Predefined sets of gamma based on the correlation choices
+gamma_sets = {
+    "0": [1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1],
+    "1/3": [1, 1, 1, 1, -1, -1, -1, -1, 1, -1, 1, -1],
+    "2/3": [1, 1, -1, 1, 1, 1, -1, -1, 1, -1, -1, -1],
+}
