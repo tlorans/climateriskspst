@@ -8,39 +8,90 @@ st.title('Climate Risks in Portfolio Construction')
 
 st.subheader('Mean-Variance Efficient Portfolio with Multi-factor Model')
 
-st.write(r"""In an investment universe with $N$ assets, we assume the assets
-         realized excess returns to follow a multi-factor risk model with $K$ factors:""")
+
+st.write(r"""
+         The true multifactor model is such as:"""
+         )
 
 st.latex(r"""
 \begin{equation}
-         R = B F + \epsilon
+         R = B(F + \lambda) + \Gamma G + \epsilon
 \end{equation}
          """)
 
 st.write(r"""where $R$ is the $N \times 1$ vector of asset excess returns,
             $F$ is the $K \times 1$ vector of factor excess returns,
-            $B$ is the $N \times K$ matrix of factor loadings, and
+            $\lambda$ is the $K \times 1$ vector of factor risk premia,
+            $B$ is the $N \times K$ matrix of factor loadings,
+            $G$ is the $L \times 1$ vector of unrewarded factor excess returns,
+            $\Gamma$ is the $N \times L$ matrix of loadings on unrewarded factors, and
             $\epsilon$ is the $N \times 1$ vector of idiosyncratic returns.""")
 
 st.write(r"""
-We assume that $E(F) = \lambda$, $\text{Cov}(F) = \Omega$, $E(\epsilon) = 0$, $\text{Cov}(\epsilon) = D$,
-and $\text{Cov}(F, \epsilon) = 0$.
+         The investor has access to an estimated risk factor model such as:
          """)
-
-st.write(r"""The vector of expected returns is given by:""")
 
 st.latex(r"""
 \begin{equation}
-         \mu = B \lambda
+         \begin{aligned}
+         R = \tilde{B} \tilde{F} + \epsilon \\
+         R = \tilde{B} \begin{bmatrix} w_1^\top R \\ \vdots \\ w_K^\top R \end{bmatrix} + \epsilon \\
+         R = \tilde{B} \begin{bmatrix} w_1^\top (B(F + \lambda) + \Gamma G + \epsilon) \\ \vdots \\ w_K^\top (B(F + \lambda) + \Gamma G + \epsilon) \end{bmatrix} + \epsilon \\
+         \end{aligned}
 \end{equation}
          """)
 
-
-st.write(r"""The covariance matrix of asset returns is given by:""")
+st.write(r"""The vector of expected returns for factors F is given by:""")
 
 st.latex(r"""
 \begin{equation}
-         \Sigma = B \Omega B^\top + D
+         \begin{aligned}
+         \mu = \tilde{B} E(\tilde{F}) \\
+         = \tilde{B} \begin{bmatrix} w_1^\top B \lambda \\ \vdots \\ w_K^\top B \lambda \end{bmatrix} \\
+         = \tilde{B} \begin{bmatrix} \beta_1 \lambda \\ \vdots \\ \beta_K \lambda \end{bmatrix}
+\end{aligned}
+         \end{equation}
+
+         """)
+
+st.write(r"""The estimated covariance matrix of asset returns is given by:""")
+
+st.latex(r"""
+\begin{equation}
+         \tilde{\Sigma} = \tilde{B} \tilde{\Omega} \tilde{B}^\top + \tilde{D}
+\end{equation}
+         """)
+
+st.write(r"""With $\tilde{\Omega}$ the $K \times K$ covariance matrix of the estimated factors:""")
+
+st.latex(r"""
+\begin{equation}
+         \begin{aligned}
+         \tilde{\Omega} = \begin{bmatrix}
+         \tilde{\sigma}_1^2 & 0 & \cdots & 0 \\
+         0 & \tilde{\sigma}_2^2 & \cdots & 0 \\
+         \vdots & \vdots & \ddots & \vdots \\
+         0 & 0 & \cdots & \tilde{\sigma}_K^2
+         \end{bmatrix} \\
+         = \begin{bmatrix}
+         w_1^\top \Sigma w_1 & 0 & \cdots & 0 \\
+         0 & w_2^\top \Sigma w_2 & \cdots & 0 \\
+         \vdots & \vdots & \ddots & \vdots \\
+         0 & 0 & \cdots & w_K^\top \Sigma w_K
+         \end{bmatrix} \\
+         = \begin{bmatrix}
+         w_1^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_1 & 0 & \cdots & 0 \\
+         0 & w_2^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_2 & \cdots & 0 \\
+         \vdots & \vdots & \ddots & \vdots \\
+         0 & 0 & \cdots & w_K^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_K
+         \end{bmatrix} \\
+         = \begin{bmatrix}
+         \beta_1^\top \Omega \beta_1 + \gamma_1^\top \Omega_g \gamma_1 + w_1^\top D w_1 & 0 & \cdots & 0 \\
+         0 & \beta_2^\top \Omega \beta_2 + \gamma_2^\top \Omega_g \gamma_2 + w_2^\top D w_2 & \cdots & 0 \\
+         \vdots & \vdots & \ddots & \vdots \\
+         0 & 0 & \cdots & \beta_K^\top \Omega \beta_K + \gamma_K^\top \Omega_g \gamma_K + w_K^\top D w_K
+         \end{bmatrix}
+         \end{aligned}
 \end{equation}
          """)
 
@@ -311,7 +362,8 @@ default_F_2_risk_premia_2 = 0.00
 
 st.write(r"""
          Now, let's consider the case where climate risks is not rewarded. This would be the case if the expected return of the
-            climate risks factor is zero $E(F_2) = 0$. We now have the following expected returns for the factors:
+            climate risks factor is zero $E(F_2) = 0$. The investor decides to ignore the climate risks factor in the risk factor 
+            model. We now have the following expected returns for the factors:
             """)
 
 
@@ -322,7 +374,16 @@ lambda_factors_2 = sp.Matrix(selected_risk_premia_2)
 lambda_latex_2 = sp.latex(lambda_factors_2)
 
 # Display the equation for risk premia
-st.latex(rf"\lambda = \begin{{bmatrix}} {default_F_1_risk_premia_2:.2f} \\ {default_F_2_risk_premia_2:.2f} \end{{bmatrix}}")
+st.latex(rf"\lambda = \lambda_1 =  {default_F_1_risk_premia_2:.2f}")
+
+
+st.write(r"""and the covariance of factors become simply the variance of the rewarded risk factor $F_1$:""")
+
+st.latex(r"""
+\begin{equation}
+         \Omega = \begin{bmatrix} \sigma_1^2 \end{bmatrix} = \sigma_1^2
+\end{equation}
+         """)
 
 st.write(r"""Daniel $\textit{et al.}$ (2020) have shown that characteristics-sorted portfolios used 
 to construct $F_1$ in fact load on unrewarded risks, as soon as there is some correlation between 
@@ -334,11 +395,11 @@ It results in increased volatility for the rewarded risk factor $F_1$.
 st.latex(r"""
 \begin{equation}
 \begin{aligned}
-\Omega = \begin{bmatrix} w_1^\top \Sigma w_1 & 0 \\ 0 & \sigma^2_2 \end{bmatrix} \\
- = \begin{bmatrix} w_1^\top(B \Omega B^\top w_1 + D) w_1 & 0 \\ 0 & \sigma^2_2 \end{bmatrix} \\
-= \begin{bmatrix} \beta_1^\top \Omega \beta_1 + w_1^\top D w_1 & 0 \\ 0 & \sigma^2_2 \end{bmatrix} \\
-= \begin{bmatrix} \beta_1^\top \begin{bmatrix} \sigma_1^2 & 0 \\ 0 & \sigma_2^2 \end{bmatrix} \beta_1 + w_1^\top D w_1 & 0 \\ 0 & \sigma^2_2 \end{bmatrix} \\
-= \begin{bmatrix} \beta_{1,1}^2 \sigma_1^2 + \beta_{1,2}^2 \sigma_2^2 + w_1^\top D w_1 & 0 \\ 0 & \sigma^2_2 \end{bmatrix}
+\sigma^2_1 = w_1^\top \Sigma w_1  \\
+ = w_1^\top(B \Omega B^\top w_1 + D) w_1  \\
+=  \beta_1^\top \Omega \beta_1 + w_1^\top D w_1 \\
+= \beta_1^\top \begin{bmatrix} \sigma_1^2 & 0 \\ 0 & \sigma_2^2 \end{bmatrix} \beta_1 + w_1^\top D w_1 \\
+= \beta_{1,1}^2 \sigma_1^2 + \beta_{1,2}^2 \sigma_2^2 + w_1^\top D w_1 
 \end{aligned}
 \end{equation}
 """)
@@ -354,9 +415,9 @@ sigma_2 = sigma_2_val
 beta_1_1 = 1. 
 beta_1_2 = beta_1_2_val
 
-Omega = sp.Matrix([[beta_1_1**2 * sigma_1**2 + beta_1_2**2 * sigma_2**2 + 0.10**2, 0], [0, sigma_2**2]])
+inflated_sigma_1 = beta_1_1**2 * sigma_1**2 + beta_1_2**2 * sigma_2**2 + 0.10**2
 
-st.latex(rf"\Omega = {sp.latex(Omega)}")
+st.latex(rf"\sigma_1^2 = {sp.latex(inflated_sigma_1)}")
 
 st.write("Now the variance of the portfolio $F_1$ explained by the unrewarded risk factor $F_2$ is given by:")
 
