@@ -17,7 +17,7 @@ from statsmodels.regression.rolling import RollingOLS
 import yfinance as yf
 
 
-st.title('Hedging from Unrewarded Risks')
+st.title('Hedging from Climate Risks')
 
 st.write(r"""
 We have seen that, as of today, no risk premium seems to be associated with climate risks. It is therefore to be treated as unrewarded risk. 
