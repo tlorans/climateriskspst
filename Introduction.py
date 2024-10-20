@@ -10,7 +10,7 @@ st.subheader('Mean-Variance Efficient Portfolio with Multi-factor Model')
 
 
 st.write(r"""
-         The true multifactor model is such as:"""
+         The multifactor model is such as:"""
          )
 
 st.latex(r"""
@@ -28,15 +28,13 @@ st.write(r"""where $R$ is the $N \times 1$ vector of asset excess returns,
             $\epsilon$ is the $N \times 1$ vector of idiosyncratic returns.""")
 
 st.write(r"""
-         The investor has access to an estimated risk factor model such as:
-         """)
+         The estimated factors excess returns $\tilde{F}$ are given by:""")
 
 st.latex(r"""
 \begin{equation}
          \begin{aligned}
-         R = \tilde{B} \tilde{F} + \epsilon \\
-         R = \tilde{B} \begin{bmatrix} w_1^\top R \\ \vdots \\ w_K^\top R \end{bmatrix} + \epsilon \\
-         R = \tilde{B} \begin{bmatrix} w_1^\top (B(F + \lambda) + \Gamma G + \epsilon) \\ \vdots \\ w_K^\top (B(F + \lambda) + \Gamma G + \epsilon) \end{bmatrix} + \epsilon \\
+         \tilde{F} = \begin{bmatrix} w_1^\top R \\ \vdots \\ w_K^\top R \end{bmatrix} \\
+         = \begin{bmatrix} w_1^\top (B(F + \lambda) + \Gamma G + \epsilon) \\ \vdots \\ w_K^\top (B(F + \lambda) + \Gamma G + \epsilon) \end{bmatrix}\\
          \end{aligned}
 \end{equation}
          """)
@@ -46,77 +44,55 @@ st.write(r"""The vector of expected returns for factors F is given by:""")
 st.latex(r"""
 \begin{equation}
          \begin{aligned}
-         \mu = \tilde{B} E(\tilde{F}) \\
-         = \tilde{B} \begin{bmatrix} w_1^\top B \lambda \\ \vdots \\ w_K^\top B \lambda \end{bmatrix} \\
-         = \tilde{B} \begin{bmatrix} \beta_1 \lambda \\ \vdots \\ \beta_K \lambda \end{bmatrix}
+         E(\tilde{F}) = \begin{bmatrix} w_1^\top B \lambda \\ \vdots \\ w_K^\top B \lambda \end{bmatrix} \\
+         = \begin{bmatrix} \beta_1 \lambda \\ \vdots \\ \beta_K \lambda \end{bmatrix}
 \end{aligned}
          \end{equation}
-
          """)
 
-st.write(r"""The estimated covariance matrix of asset returns is given by:""")
-
-st.latex(r"""
-\begin{equation}
-         \tilde{\Sigma} = \tilde{B} \tilde{\Omega} \tilde{B}^\top + \tilde{D}
-\end{equation}
-         """)
-
-st.write(r"""With $\tilde{\Omega}$ the $K \times K$ covariance matrix of the estimated factors:""")
+st.write(r"""The variance of the estimated factors is given by:""")
 
 st.latex(r"""
 \begin{equation}
          \begin{aligned}
-         \tilde{\Omega} = \begin{bmatrix}
-         \tilde{\sigma}_1^2 & 0 & \cdots & 0 \\
-         0 & \tilde{\sigma}_2^2 & \cdots & 0 \\
-         \vdots & \vdots & \ddots & \vdots \\
-         0 & 0 & \cdots & \tilde{\sigma}_K^2
-         \end{bmatrix} \\
-         = \begin{bmatrix}
-         w_1^\top \Sigma w_1 & 0 & \cdots & 0 \\
-         0 & w_2^\top \Sigma w_2 & \cdots & 0 \\
-         \vdots & \vdots & \ddots & \vdots \\
-         0 & 0 & \cdots & w_K^\top \Sigma w_K
-         \end{bmatrix} \\
-         = \begin{bmatrix}
-         w_1^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_1 & 0 & \cdots & 0 \\
-         0 & w_2^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_2 & \cdots & 0 \\
-         \vdots & \vdots & \ddots & \vdots \\
-         0 & 0 & \cdots & w_K^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_K
-         \end{bmatrix} \\
-         = \begin{bmatrix}
-         \beta_1^\top \Omega \beta_1 + \gamma_1^\top \Omega_g \gamma_1 + w_1^\top D w_1 & 0 & \cdots & 0 \\
-         0 & \beta_2^\top \Omega \beta_2 + \gamma_2^\top \Omega_g \gamma_2 + w_2^\top D w_2 & \cdots & 0 \\
-         \vdots & \vdots & \ddots & \vdots \\
-         0 & 0 & \cdots & \beta_K^\top \Omega \beta_K + \gamma_K^\top \Omega_g \gamma_K + w_K^\top D w_K
-         \end{bmatrix}
+         \begin{bmatrix} \tilde{\sigma}^2_1 \\
+         \vdots \\
+         \tilde{\sigma}^2_K \end{bmatrix} = \begin{bmatrix} w_1^\top \Sigma w_1 \\
+         \vdots \\
+         w_K^\top \Sigma w_K \end{bmatrix} \\
+         = \begin{bmatrix} w_1^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_1 \\
+         \vdots \\
+         w_K^\top (B \Omega B^\top + \Gamma \Omega_G \Gamma^\top + D) w_K \end{bmatrix} \\
+         = \begin{bmatrix} \beta_1^\top \Omega \beta_1 + \gamma_1^\top \Omega_g \gamma_1 + w_1^\top D w_1 \\
+         \vdots \\
+         \beta_K^\top \Omega \beta_K + \gamma_K^\top \Omega_g \gamma_K + w_K^\top D w_K \end{bmatrix}
          \end{aligned}
 \end{equation}
          """)
 
-
-st.write(r"""Given a portfolio $x$ with a vector of weight $w$, it's expected returns is given by:""")
+st.write(r"""where $\Omega$ is the $K \times K$ matrix of factor covariances, assumed to be diagonal (uncorrelated factors):""")
 
 st.latex(r"""
 \begin{equation}
-         \mu_x = w^\top \mu = w^\top B \lambda
+         \Omega = \begin{bmatrix} \sigma_1^2 & 0 & \cdots & 0 \\ 0 & \sigma_2^2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & \sigma_K^2 \end{bmatrix}
 \end{equation}
          """)
 
-st.write(r"""The variance of the portfolio is given by:""")
+
+st.write(r"""The investor may invest in a portfolio $x$ with the estimated factors $F$ as investment universe.
+         It's expected returns is given by:""")
 
 st.latex(r"""
 \begin{equation}
-         \sigma_x^2 = w^\top \Sigma w = w^\top(B \Omega B^\top w + D) w
+         \mu_x = w^\top E(\tilde{F})
 \end{equation}
          """)
 
-st.write(r"""The vector of beta coefficients is given by:""")
+st.write(r""" with w a $K \times 1$ vector of weights. The variance of the portfolio is given by:""")
 
 st.latex(r"""
 \begin{equation}
-         \beta_x = B^\top w
+         \sigma_x^2 = w^\top \Sigma w = w^\top \begin{bmatrix} \tilde{\sigma}^2_1 & 0 & \cdots & 0 \\ 0 & \tilde{\sigma}^2_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & \tilde{\sigma}^2_K \end{bmatrix} w
 \end{equation}
          """)
 
@@ -128,25 +104,9 @@ st.latex(r"""
 \end{equation}
          """)
 
-st.write(r"""We can assess the importance of common factors by calculating the propotyion 
-         of the portfolio variance that is explained by the factors.""")
 
-st.latex(r"""
-         \begin{equation}
-         \text{R}_c^{2} = \frac{w^\top B \Omega B^\top w}{w^\top(B \Omega B^\top w + D) w}
-         \end{equation}
-         """)
 
-st.write(r"""We can uncover the individual contribution of each factor to the portfolio variance:""")
 
-st.latex(r"""
-            \begin{equation}
-         \text{R}_j^{2} = \frac{w^\top B_j B_j^\top \sigma_j^2 w}{w^\top(B \Omega B^\top w + D) w}
-            \end{equation}
-            """)
-
-st.write(r"""where $B_j$ is the $N \times 1$ vector of factor loadings on factor $j$,
-            and $\sigma_j^2$ is the variance of factor $j$.""")
 
 st.write(r"""
          The investor seeks to maximize the Sharpe ratio of the portfolio by choosing the optimal weights $w$.
@@ -170,6 +130,36 @@ w^* = \gamma \Sigma^{-1} \mu
 ''')
 
 st.write(r"""where $\gamma = (1_n^\top \Sigma^{-1}\mu)^{-1}$.""")
+
+
+# st.write(r"""The vector of beta coefficients is given by:""")
+
+# st.latex(r"""
+# \begin{equation}
+#          \beta_x = B^\top w
+# \end{equation}
+#          """)
+
+# st.write(r"""We can assess the importance of common factors by calculating the propotyion 
+#          of the portfolio variance that is explained by the factors.""")
+
+# st.latex(r"""
+#          \begin{equation}
+#          \text{R}_c^{2} = \frac{w^\top B \Omega B^\top w}{w^\top(B \Omega B^\top w + D) w}
+#          \end{equation}
+#          """)
+
+# st.write(r"""We can uncover the individual contribution of each factor to the portfolio variance:""")
+
+# st.latex(r"""
+#             \begin{equation}
+#          \text{R}_j^{2} = \frac{w^\top B_j B_j^\top \sigma_j^2 w}{w^\top(B \Omega B^\top w + D) w}
+#             \end{equation}
+#             """)
+
+# st.write(r"""where $B_j$ is the $N \times 1$ vector of factor loadings on factor $j$,
+#             and $\sigma_j^2$ is the variance of factor $j$.""")
+
 
 
 # Define symbols for SymPy
