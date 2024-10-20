@@ -227,9 +227,33 @@ but diversify away unrewarded risks. The problem is if rewarded risks factor the
 In that case, our portfolio will indirectly load on unrewarded risks because rewarded risks load on them!
 This is what Daniel $\textit{et al.}$ (2020) have shown: characteristics-sorted portfolio loads on unrewarded 
 risks as long as there exist a correlation betwen the characteristics and the loadings on the unrewarded risks.
+            """)
 
+st.write(r"""
+         Let's call the rewarded factor as $f$ and the unrewarded factor as $g$.
+        We denote the loading of the rewarded factor on the unrewarded factor as $\gamma_f$.
+         The variance of the rewarded factor is $\sigma_f^2$, and the variance of the unrewarded factor is $\sigma_g^2$.
+         The proportion of the variance of the rewarded factor explained by the unrewared factor is given by the $R^2$:
+         """)
 
-To investigate this, let's first see if any of the traditional Fama-French factors loads on the BMG factor.
+st.latex(r'''
+\begin{equation}
+         R^{2} = \frac{\gamma_{f}^2 \sigma_g^2}{\sigma_f^2}
+            \end{equation}
+         ''')
+
+gamma_f_default = 0.1
+sigma_g_default = 0.1  # Default to 1
+sigma_f = .1  # Default to 1
+gamma_f = st.sidebar.slider("$\gamma_f$", 0.0, 1.0, gamma_f_default, 0.1)
+sigma_g = st.sidebar.slider("$\sigma_g$", 0.1, 1.0, sigma_g_default, 0.1)
+
+R_squared = (gamma_f ** 2 * sigma_g ** 2) / (sigma_f ** 2)
+
+st.latex(f"R^2 = {sp.latex(round(R_squared, 2))}")
+
+st.write(r"""
+We ca now investigate if any of the traditional Fama-French factors loads on the BMG factor.
 What we are going to do is to run a regression of the BMG factor on the Fama-French factors.
 We want to see if $\gamma_g$ is significantly different for any of the Fama-French factors.
          """)
