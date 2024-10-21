@@ -50,12 +50,12 @@ st.write(r"""
 
 
 @st.cache_data
-def load_ff5_data():
+def load_ff3_data():
     """Load the Fama-French factors data."""
     start_date = '2000-01-01'
     end_date = '2019-06-30'
     factors_ff3_daily_raw = pdr.DataReader(
-        name="F-F_Research_Data_5_Factors_2x3_daily",
+        name="F-F_Research_Data_Factors_daily",
         data_source="famafrench",
         start=start_date,
         end=end_date)[0]
@@ -67,8 +67,8 @@ def load_ff5_data():
     return factors_ff3_daily
 
 bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
-ff5_data = load_ff5_data()
-data = pd.merge(ff5_data, bmg, on='date')
+ff3_data = load_ff3_data()
+data = pd.merge(ff3_data, bmg, on='date')
 
 # st.write(ff3_data.head())
 
@@ -94,6 +94,29 @@ gamma_values = (data
 
 gamma_values['hedging portfolio'] = gamma_values['gamma'] * gamma_values['BMG']
 
+cumulative_returns = (1 + gamma_values[['hml', 'BMG', 'hedging portfolio']]).cumprod() - 1
+
+# Reset index to use 'date' in plotting
+cumulative_returns = cumulative_returns.reset_index()
+
+# Convert 'date' to datetime for better plotting
+cumulative_returns['date'] = pd.to_datetime(gamma_values['date'])
+
+# Transform the cumulative_returns DataFrame to long format
+cumulative_returns_long = pd.melt(cumulative_returns, id_vars=['date'], 
+                                  value_vars=['hml', 'BMG', 'hedging portfolio'], 
+                                  var_name='Portfolio', value_name='Cumulative Return')
+
+# Create the cumulative returns plot using plotnine
+plot = (ggplot(cumulative_returns_long, aes(x='date', y='Cumulative Return', color='Portfolio')) +
+        geom_line() +
+        labs(title='Cumulative Returns of HML, BMG, and Hedging Portfolio',
+             x='Date', y='Cumulative Returns') +
+        theme(axis_text_x=element_text(rotation=45, hjust=1)) +
+        scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
+
+# Display the plot in Streamlit
+st.pyplot(ggplot.draw(plot))
 
 st.subheader('Portfolio Hedged From Climate Risks')
 
@@ -179,47 +202,3 @@ sharpe_ratio_hml = r_values['hml'].mean() / r_values['hml'].std()
 st.write(f"""
 The Sharpe ratio of the hedged portfolio is {sharpe_ratio_hedged:.2f}, while the Sharpe ratio of the HML portfolio is {sharpe_ratio_hml:.2f}.
 """)
-
-
-@st.cache_data
-def compute_rolling_volatility(returns, rolling_window=126):
-    """Compute rolling annualized volatility of a portfolio."""
-    # Compute rolling standard deviation of daily returns
-    rolling_volatility = returns.rolling(window=rolling_window).std()
-    
-    # Annualize the volatility: Multiply by the square root of 252 (trading days per year)
-    annualized_volatility = rolling_volatility * np.sqrt(252)
-    
-    return annualized_volatility
-# Compute rolling volatility for both portfolios (HML and Hedged portfolio)
-rolling_vol_hml = compute_rolling_volatility(gamma_values['hml'])
-rolling_vol_hedged = compute_rolling_volatility(gamma_values['hedged portfolio'])
-
-# Create a DataFrame with both rolling volatilities
-volatility_df = pd.DataFrame({
-    'date': gamma_values['date'],
-    'Rolling Volatility HML': rolling_vol_hml,
-    'Rolling Volatility Hedged': rolling_vol_hedged
-}).dropna()
-
-# Reset index for better plotting
-volatility_df = volatility_df.reset_index(drop=True)
-
-# Convert 'date' to datetime for better plotting
-volatility_df['date'] = pd.to_datetime(volatility_df['date'])
-
-# Transform the volatility DataFrame to long format for plotting
-volatility_df_long = pd.melt(volatility_df, id_vars=['date'], 
-                             value_vars=['Rolling Volatility HML', 'Rolling Volatility Hedged'], 
-                             var_name='Portfolio', value_name='Annualized Volatility')
-
-# Create the rolling volatility plot using plotnine
-plot_volatility = (ggplot(volatility_df_long, aes(x='date', y='Annualized Volatility', color='Portfolio')) +
-                   geom_line() +
-                   labs(title='Rolling Annualized Volatility of HML and Hedged Portfolio',
-                        x='Date', y='Annualized Volatility') +
-                   theme(axis_text_x=element_text(rotation=45, hjust=1)) +
-                   scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
-
-# Display the plot in Streamlit
-st.pyplot(ggplot.draw(plot_volatility))
