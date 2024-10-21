@@ -220,3 +220,25 @@ plot_volatility = (ggplot(volatility_df_long, aes(x='date', y='Annualized Volati
 
 # Display the volatility plot
 st.pyplot(ggplot.draw(plot_volatility))
+
+
+# get the loading of the hedged portfolio on the BMG factor
+
+gamma_values['loading'] = compute_rolling_beta(gamma_values['hedged portfolio'], gamma_values['BMG'])
+
+# melt 'loading' and 'gamma' columns in gamma_values to plot them
+plot_values = pd.melt(gamma_values, id_vars=['date'], value_vars=['loading', 'gamma'],
+                       var_name='Factor', value_name='Beta')
+
+
+# Create the plot for the loading of the hedged portfolio on the BMG factor
+plot_loading = (ggplot(plot_values.query('date < "01-01-2019"'), aes(x='date', y='Beta', color='Factor')) +
+                geom_line() +
+                labs(title="Rolling $\\beta$ of Hedged Portfolio on BMG Factor",
+                     x="", y="$\\beta$") +
+                scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+                theme(axis_text_x=element_text(rotation=45, hjust=1))
+)
+
+# Display the plot
+st.pyplot(ggplot.draw(plot_loading))
