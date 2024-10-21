@@ -220,4 +220,3 @@ plot_volatility = (ggplot(volatility_df_long, aes(x='date', y='Annualized Volati
 
 # Display the volatility plot
 st.pyplot(ggplot.draw(plot_volatility))
-
