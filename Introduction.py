@@ -283,7 +283,13 @@ r_squared_c = numerator_r_squared_c / denominator_r_squared_c * 100
 # Compute R-squared for each factor
 r_squared_factors = []
 for j in range(B.shape[1]):  # Loop through each factor
-    numerator_r_squared_j = (w_star.T * B[:, j] * B[:, j].T * Omega[j, j] * w_star)[0]  # Extract scalar
+    B_j = sp.zeros(*B.shape)
+    
+    # Keep only the j-th column of B (set other columns to zero)
+    B_j[:, j] = B[:, j]
+
+    # Use the modified B_j matrix to calculate the numerator for the specific factor's R^2
+    numerator_r_squared_j = (w_star.T * (B_j * Omega * B_j.T) * w_star)[0]  # Factor's own contribution + covariances
     denominator_r_squared_j = denominator_r_squared_c  # The denominator is the same
     r_squared_j = numerator_r_squared_j / denominator_r_squared_j
     r_squared_factors.append(r_squared_j)
@@ -393,7 +399,7 @@ r_squared_c_2 = numerator_r_squared_c_2 / denominator_r_squared_c_2 * 100
 # Compute R-squared for each factor
 r_squared_factors_2 = []
 for j in range(B.shape[1]):  # Loop through each factor
-    numerator_r_squared_j_2 = (w_star_2.T * B[:, j] * B[:, j].T * Omega[j, j] * w_star_2)[0]  # Extract scalar
+    numerator_r_squared_j_2 = (w_star_2.T * (B[:, j] * B[:, j].T * Omega[j, j]) * w_star_2)[0]  # Extract scalar
     denominator_r_squared_j_2 = denominator_r_squared_c_2  # The denominator is the same
     r_squared_j_2 = numerator_r_squared_j_2 / denominator_r_squared_j_2
     r_squared_factors_2.append(r_squared_j_2)

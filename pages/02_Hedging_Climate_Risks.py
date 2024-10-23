@@ -22,7 +22,7 @@ st.title('Hedging from Climate Risks')
 st.subheader('Disentangling Rewarded and Unrewarded Risks')
 
 st.write(r"""
-We can now $\beta$-hedged the rewarded risk. We can do this by regressing the rewarded risk on the unrewarded risk.
+We can  $\beta$-hedged the rewarded risk from the unrewarded risk.
          """)
 
 st.latex(r"""
@@ -232,3 +232,4 @@ st.pyplot(ggplot.draw(plot_r_values))
 #         theme(axis_text_x=element_text(rotation=45, hjust=1)) +
 #         scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
 # st.pyplot(ggplot.draw(plot))
+

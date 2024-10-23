@@ -564,4 +564,3 @@ st.latex(table_latex)
 
 st.write("The higher the loading of the rewarded factor on the unrewarded factor, the higher the variance of the rewarded factor that is correlated with the unrewarded factor. This leads to a higher overall variance of the portfolio, and a lower Sharpe ratio. The portfolio is therefore less efficient, as it is exposed to unrewarded risks.")
 
-
