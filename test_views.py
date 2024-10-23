@@ -15,7 +15,7 @@ Phi_lambda_ = sp.Matrix([[0.10**2, 0], [0, 0.05**2]])  # View uncertainty (confi
 
 # Bayesian update formula to compute the posterior factor risk premia
 Omega_posterior = (Omega.inv() + Phi_lambda_.inv()).inv()  # Updated covariance matrix
-lambda_posterior = Omega_posterior * (Omega_posterior.inv() * lambda_ + Phi_lambda_.inv() * lambda_views)
+lambda_posterior = Omega_posterior * (Omega.inv() * lambda_ + Phi_lambda_.inv() * lambda_views)
 
 
 # Display the posterior factor risk premia
