@@ -19,10 +19,22 @@ import yfinance as yf
 
 st.title('Hedging from Climate Risks')
 
+st.subheader('Disentangling Rewarded and Unrewarded Risks')
+
 st.write(r"""
-We have seen that, as of today, no risk premium seems to be associated with climate risks. It is therefore to be treated as unrewarded risk. 
-We have seen that if exposure to the rewarded risk is correlated with exposure to unrewarded risk, a portfolio rightly exposed to rewarded risk is mean-variance inefficient because
-it loads in the unrewarded risk. We can improve upon this. We want a method that (1) let untouched the expected return and (2) reduce the variance of our portfolio.
+We can now $\beta$-hedged the rewarded risk. We can do this by regressing the rewarded risk on the unrewarded risk.
+         """)
+
+st.latex(r"""
+\begin{equation}
+         F_t = \alpha + \beta BMG_t + \epsilon_t 
+\end{equation}
+         """)
+
+st.latex(r"""
+\begin{equation}
+         F^*_t = F_t - \beta BMG_t
+\end{equation}
          """)
 
 
@@ -68,31 +80,14 @@ def compute_rolling_beta(f, g, rolling_window=126):
 gamma_values = (data
                 .get(["date", factor_to_hedge, "BMG"])
                 .assign(
-                    gamma=compute_rolling_beta(data[factor_to_hedge], data['BMG']),
+                    unhedged=compute_rolling_beta(data[factor_to_hedge], data['BMG']),
                 )
                 .dropna()
 )
 
 # Calculate hedging portfolio based on the rolling beta
-gamma_values['hedging portfolio'] = gamma_values['gamma'] * gamma_values['BMG']
+gamma_values['hedging portfolio'] = gamma_values['unhedged'] * gamma_values['BMG']
 
-st.subheader('Portfolio Hedged From Climate Risks')
-
-st.write(r"""
-We can now construct a portfolio that is orthogonalized from climate risks.
-         """)
-
-st.latex(r"""
-\begin{equation}
-         R_t = \alpha + \beta BMG_t + \epsilon_t 
-\end{equation}
-         """)
-
-st.latex(r"""
-\begin{equation}
-         R^*_t = R_t - \beta BMG_t
-\end{equation}
-         """)
 
 
 # Create the hedged portfolio by subtracting the hedging portfolio from the selected factor
@@ -111,15 +106,6 @@ cumulative_returns_hedged['date'] = pd.to_datetime(gamma_values['date'])
 cumulative_returns_hedged_long = pd.melt(cumulative_returns_hedged, id_vars=['date'], 
                                          value_vars=[factor_to_hedge, 'hedged portfolio'], 
                                          var_name='Portfolio', value_name='Cumulative Return')
-
-# Create the cumulative returns plot using plotnine
-plot = (ggplot(cumulative_returns_hedged_long, aes(x='date', y='Cumulative Return', color='Portfolio')) +
-        geom_line() +
-        labs(title=f'Cumulative Returns of {factor_to_hedge.upper()} and Hedged Portfolio',
-             x='Date', y='Cumulative Returns') +
-        theme(axis_text_x=element_text(rotation=45, hjust=1)) +
-        scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
-st.pyplot(ggplot.draw(plot))
 
 
 @st.cache_data
@@ -149,26 +135,11 @@ r_values = (gamma_values
 r_values_long = pd.melt(r_values, id_vars=['date'], value_vars=['r_factor', 'r_hedged'],
                      var_name='Portfolio', value_name='R_squared')
 
-# Plot R-squared values
-plot_r_values = (
-    ggplot(r_values_long.query('date < "01-01-2019"'), aes(x='date', y='R_squared', color='Portfolio')) +   
-    geom_line() +
-    labs(title=f"Rolling $R^2$ of {factor_to_hedge.upper()} and Hedge Portfolio on BMG Factor",
-         x="", y="$R^2$") +
-    scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
-    theme(axis_text_x=element_text(rotation=45, hjust=1))
-)
 
-# Display the R-squared plot
-st.pyplot(ggplot.draw(plot_r_values))
 
 # Calculate Sharpe ratios
 sharpe_ratio_hedged = r_values['hedged portfolio'].mean() / r_values['hedged portfolio'].std() * np.sqrt(252) 
 sharpe_ratio_factor = r_values[factor_to_hedge].mean() / r_values[factor_to_hedge].std() * np.sqrt(252) 
-
-st.write(f"""
-The Sharpe ratio of the hedged portfolio is {sharpe_ratio_hedged:.2f}, while the Sharpe ratio of the {factor_to_hedge.upper()} portfolio is {sharpe_ratio_factor:.2f}.
-""")
 
 
 @st.cache_data
@@ -204,6 +175,31 @@ volatility_df_long = pd.melt(volatility_df, id_vars=['date'],
                              value_vars=[f'Rolling Volatility {factor_to_hedge.upper()}', 'Rolling Volatility Hedged'], 
                              var_name='Portfolio', value_name='Annualized Volatility')
 
+
+
+
+# get the loading of the hedged portfolio on the BMG factor
+
+gamma_values['hedged'] = compute_rolling_beta(gamma_values['hedged portfolio'], gamma_values['BMG'])
+
+# melt 'loading' and 'gamma' columns in gamma_values to plot them
+plot_values = pd.melt(gamma_values, id_vars=['date'], value_vars=['hedged', 'unhedged'],
+                       var_name='Factor', value_name='Beta')
+
+
+# Create the plot for the loading of the hedged portfolio on the BMG factor
+plot_loading = (ggplot(plot_values.query('date < "01-01-2019"'), aes(x='date', y='Beta', color='Factor')) +
+                geom_line() +
+                labs(title="Rolling $\\beta$ on BMG Factor",
+                     x="", y="$\\beta$") +
+                scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+                theme(axis_text_x=element_text(rotation=45, hjust=1))
+)
+
+# Display the plot
+st.pyplot(ggplot.draw(plot_loading))
+
+
 # Create the rolling volatility plot using plotnine
 plot_volatility = (ggplot(volatility_df_long, aes(x='date', y='Annualized Volatility', color='Portfolio')) +
                    geom_line() +
@@ -215,24 +211,24 @@ plot_volatility = (ggplot(volatility_df_long, aes(x='date', y='Annualized Volati
 # Display the volatility plot
 st.pyplot(ggplot.draw(plot_volatility))
 
-
-# get the loading of the hedged portfolio on the BMG factor
-
-gamma_values['loading'] = compute_rolling_beta(gamma_values['hedged portfolio'], gamma_values['BMG'])
-
-# melt 'loading' and 'gamma' columns in gamma_values to plot them
-plot_values = pd.melt(gamma_values, id_vars=['date'], value_vars=['loading', 'gamma'],
-                       var_name='Factor', value_name='Beta')
-
-
-# Create the plot for the loading of the hedged portfolio on the BMG factor
-plot_loading = (ggplot(plot_values.query('date < "01-01-2019"'), aes(x='date', y='Beta', color='Factor')) +
-                geom_line() +
-                labs(title="Rolling $\\beta$ of Hedged Portfolio on BMG Factor",
-                     x="", y="$\\beta$") +
-                scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
-                theme(axis_text_x=element_text(rotation=45, hjust=1))
+# Plot R-squared values
+plot_r_values = (
+    ggplot(r_values_long.query('date < "01-01-2019"'), aes(x='date', y='R_squared', color='Portfolio')) +   
+    geom_line() +
+    labs(title=f"Rolling $R^2$ of {factor_to_hedge.upper()} and Hedge Portfolio on BMG Factor",
+         x="", y="$R^2$") +
+    scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
+    theme(axis_text_x=element_text(rotation=45, hjust=1))
 )
 
-# Display the plot
-st.pyplot(ggplot.draw(plot_loading))
+# Display the R-squared plot
+st.pyplot(ggplot.draw(plot_r_values))
+
+# # Create the cumulative returns plot using plotnine
+# plot = (ggplot(cumulative_returns_hedged_long, aes(x='date', y='Cumulative Return', color='Portfolio')) +
+#         geom_line() +
+#         labs(title=f'Cumulative Returns of {factor_to_hedge.upper()} and Hedged Portfolio',
+#              x='Date', y='Cumulative Returns') +
+#         theme(axis_text_x=element_text(rotation=45, hjust=1)) +
+#         scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
+# st.pyplot(ggplot.draw(plot))
