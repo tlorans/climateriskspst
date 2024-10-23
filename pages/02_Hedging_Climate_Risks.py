@@ -224,12 +224,12 @@ plot_r_values = (
 # Display the R-squared plot
 st.pyplot(ggplot.draw(plot_r_values))
 
-# # Create the cumulative returns plot using plotnine
-# plot = (ggplot(cumulative_returns_hedged_long, aes(x='date', y='Cumulative Return', color='Portfolio')) +
-#         geom_line() +
-#         labs(title=f'Cumulative Returns of {factor_to_hedge.upper()} and Hedged Portfolio',
-#              x='Date', y='Cumulative Returns') +
-#         theme(axis_text_x=element_text(rotation=45, hjust=1)) +
-#         scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
-# st.pyplot(ggplot.draw(plot))
+# Create the cumulative returns plot using plotnine
+plot = (ggplot(cumulative_returns_hedged_long, aes(x='date', y='Cumulative Return', color='Portfolio')) +
+        geom_line() +
+        labs(title=f'Cumulative Returns of {factor_to_hedge.upper()} and Hedged Portfolio',
+             x='Date', y='Cumulative Returns') +
+        theme(axis_text_x=element_text(rotation=45, hjust=1)) +
+        scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')))
+st.pyplot(ggplot.draw(plot))
 
