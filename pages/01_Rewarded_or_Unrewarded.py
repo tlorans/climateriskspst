@@ -221,50 +221,48 @@ st.subheader('What If Rewarded Risks Load on Climate Risks?')
 
 
 st.write(r"""
-We have seen that the BMG factor is not a rewarded risk factor. 
+We have seen that the BMG factor may be not a rewarded risk factor, as of today.
 As we have seen in the introduction, the mean-variance efficient portfolio should load on rewarded risks, 
-but diversify away unrewarded risks. The problem is if rewarded risks factor themselves load on unrewarded risks.
-In that case, our portfolio will indirectly load on unrewarded risks because rewarded risks load on them!
+but diversify away from unrewarded risks. The problem is if rewarded risks factor themselves load on unrewarded risks.
+         In that case, our portfolio will indirectly load on unrewarded risks because rewarded risks load on them!
 This is what Daniel $\textit{et al.}$ (2020) have shown: characteristics-sorted portfolio loads on unrewarded 
 risks as long as there exist a correlation betwen the characteristics and the loadings on the unrewarded risks.
             """)
 
 st.write(r"""
-         Let's call the rewarded factor as $f$ and the unrewarded factor as $g$.
-        We denote the loading of the rewarded factor on the unrewarded factor as $\gamma_f$.
-         The variance of the rewarded factor is $\sigma_f^2$, and the variance of the unrewarded factor is $\sigma_g^2$.
          The proportion of the variance of the rewarded factor explained by the unrewared factor is given by the $R^2$:
          """)
 
 st.latex(r'''
 \begin{equation}
-         R^{2} = \frac{\gamma_{f}^2 \sigma_g^2}{\sigma_f^2}
+         R^{2} = \frac{\beta^2 \sigma_g^2}{\sigma_f^2}
             \end{equation}
          ''')
 
 gamma_f_default = 0.1
 sigma_g_default = 0.1  # Default to 1
 sigma_f = .1  # Default to 1
-gamma_f = st.sidebar.slider("$\gamma_f$", 0.0, 1.0, gamma_f_default, 0.1)
+beta_f = st.sidebar.slider("$\\beta$", 0.0, 1.0, gamma_f_default, 0.1)
 sigma_g = st.sidebar.slider("$\sigma_g$", 0.1, 1.0, sigma_g_default, 0.1)
 
-R_squared = (gamma_f ** 2 * sigma_g ** 2) / (sigma_f ** 2)
+R_squared = (beta_f ** 2 * sigma_g ** 2) / (sigma_f ** 2)
 
 st.latex(f"R^2 = {sp.latex(round(R_squared, 2))}")
 
+
+
+
 st.write(r"""
-We ca now investigate if any of the traditional Fama-French factors loads on the BMG factor.
-What we are going to do is to run a regression of the BMG factor on the Fama-French factors.
-We want to see if $\gamma_g$ is significantly different for any of the Fama-French factors.
+We can now investigate if any of the traditional Fama-French factors loads on the BMG factor.
          """)
 
 @st.cache_data
-def load_ff3_data():
+def load_ff5_data():
     """Load the Fama-French factors data."""
     start_date = '2000-01-01'
     end_date = '2019-06-30'
     factors_ff3_daily_raw = pdr.DataReader(
-        name="F-F_Research_Data_Factors_daily",
+        name="F-F_Research_Data_5_Factors_2x3_daily",
         data_source="famafrench",
         start=start_date,
         end=end_date)[0]
@@ -276,8 +274,8 @@ def load_ff3_data():
     return factors_ff3_daily
 
 bmg = pd.read_excel('data/carbon_risk_factor_updated.xlsx', sheet_name='daily', index_col=0)
-ff3_data = load_ff3_data()
-data = pd.merge(ff3_data, bmg, on='date')
+ff5_data = load_ff5_data()
+data = pd.merge(ff5_data, bmg, on='date')
 
 # st.write(ff3_data.head())
 
@@ -293,24 +291,26 @@ def compute_rolling_beta(f, g, rolling_window=126):
     return np.array(beta_values)
 
 # Assuming 'data' is your DataFrame with columns ['date', 'hml', 'BMG']
-gamma_values = (data 
-               .get(["date","smb","hml"])
+beta_values = (data 
                .assign(
-                   gamma_hml = compute_rolling_beta(data['hml'], data['BMG']),
-                     gamma_smb = compute_rolling_beta(data['smb'], data['BMG'])
+                   beta_hml = compute_rolling_beta(data['hml'], data['BMG']),
+                    beta_smb = compute_rolling_beta(data['smb'], data['BMG']),
+                    beta_rmw = compute_rolling_beta(data['rmw'], data['BMG']),
+                    beta_cma = compute_rolling_beta(data['cma'], data['BMG']),
+                    beta_mkt = compute_rolling_beta(data['mkt_excess'], data['BMG'])
             )
             .dropna()
 )
 
 # Create a long-form DataFrame to plot both gamma_hml and gamma_smb
-gamma_long = pd.melt(gamma_values, id_vars=['date'], value_vars=['gamma_hml', 'gamma_smb'],
+beta_long = pd.melt(beta_values, id_vars=['date'], value_vars=['beta_hml', 'beta_smb', 'beta_rmw', 'beta_cma', 'beta_mkt'],
                      var_name='Factor', value_name='Gamma')
 
 # Plot both gamma_hml and gamma_smb
 plot_values = (
-    ggplot(gamma_long.query('date < "01-01-2019"'), aes(x='date', y='Gamma', color='Factor')) +   
+    ggplot(beta_long.query('date < "01-01-2019"'), aes(x='date', y='Gamma', color='Factor')) +   
     geom_line() +
-    labs(title="Rolling $\\beta$ of HML and SMB on BMG Factor",
+    labs(title="Rolling $\\beta$ of Rewarded Factors on BMG Factor",
          x="", y="$\\beta$") +
     scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
     theme(axis_text_x=element_text(rotation=45, hjust=1))
@@ -355,7 +355,7 @@ plot_volatility = (ggplot(data_volatility.query('date < "01-01-2019"'), aes(x='d
 st.pyplot(ggplot.draw(plot_volatility))
 
 st.write(r"""
-         Results in the $R^2$.
+         Results in the $R^2$:
             """)
 
 @st.cache_data
@@ -373,23 +373,25 @@ def compute_rolling_r2(f, g, rolling_window=126):
 
 # Assuming 'data' is your DataFrame with columns ['date', 'hml', 'BMG']
 r_values = (data 
-               .get(["date","smb","hml"])
                .assign(
                    r_hml = compute_rolling_r2(data['hml'], data['BMG']),
-                     r_smb = compute_rolling_r2(data['smb'], data['BMG'])
+                     r_smb = compute_rolling_r2(data['smb'], data['BMG']),
+                     r_rmw = compute_rolling_r2(data['rmw'], data['BMG']),
+                        r_cma = compute_rolling_r2(data['cma'], data['BMG']),
+                        r_mkt = compute_rolling_r2(data['mkt_excess'], data['BMG'])
             )
             .dropna()
 )
 
 # Create a long-form DataFrame to plot both gamma_hml and gamma_smb
-r_values_long = pd.melt(r_values, id_vars=['date'], value_vars=['r_hml', 'r_smb'],
+r_values_long = pd.melt(r_values, id_vars=['date'], value_vars=['r_hml', 'r_smb', 'r_rmw', 'r_cma', 'r_mkt'],
                      var_name='Factor', value_name='R_squared')
 
 # Plot both gamma_hml and gamma_smb
 plot_r_values = (
     ggplot(r_values_long.query('date < "01-01-2019"'), aes(x='date', y='R_squared', color='Factor')) +   
     geom_line() +
-    labs(title="Rolling $R^2$ of HML and SMB on BMG Factor",
+    labs(title="Rolling $R^2$ of Rewarded Factors on BMG Factor",
          x="", y="$R^2$") +
     scale_x_datetime(breaks=date_breaks('1 year'), labels=date_format('%Y')) +
     theme(axis_text_x=element_text(rotation=45, hjust=1))
@@ -397,5 +399,169 @@ plot_r_values = (
 
 # Display the plot in Streamlit
 st.pyplot(ggplot.draw(plot_r_values))
+
+
+st.subheader("Portfolio Implications: an Hidden Risk")  
+
+st.write(r"""What does it means for investors portfolio?
+         Let's assume that the investors use the Fama-French five-factors to build their portfolios.""")
+
+st.write(r"""We have the risk premia of the five factors:""")
+
+st.latex(r'''
+         \lambda = \begin{bmatrix}
+            \lambda_{smb} \\
+            \lambda_{hml} \\
+            \lambda_{rmw} \\
+            \lambda_{cma} \\
+            \lambda_{mkt}
+            \end{bmatrix}
+            ''')
+
+st.write(r"""Let's assume the following values for the risk premia:""")
+
+# Define symbols for SymPy
+k = 5  # Number of factors
+
+lambda_factors = sp.Matrix([0.02, 0.03, 0.04, 0.01, 0.05])
+lambda_factors_latex = sp.latex(lambda_factors)
+st.latex(fr'''\lambda = {lambda_factors_latex}''')
+
+st.write(r"""The covariance matrix for the factors, assumed to be uncorrelated:""")
+
+st.latex(r'''
+\begin{equation}
+         \Omega = \begin{bmatrix}
+         \sigma_{smb}^2 & 0 & 0 & 0 & 0 \\
+        0 & \sigma_{hml}^2 & 0 & 0 & 0 \\
+        0 & 0 & \sigma_{rmw}^2 & 0 & 0 \\
+        0 & 0 & 0 & \sigma_{cma}^2 & 0 \\
+        0 & 0 & 0 & 0 & \sigma_{mkt}^2
+         \end{bmatrix}
+            \end{equation}
+         ''')
+
+st.write(r"""Let's now express the variance of the rewarded factors as a combination of two components:
+1. A part that is uncorrelated with the unrewarded risk,
+2. A part that is correlated with the unrewarded risk (expressed through the loading or beta).
+
+This way, we can decompose the variance of the rewarded factor as follows:""")
+
+st.latex(r'''
+\begin{equation}
+\sigma_f^2 = (1 - \beta^2) \sigma_f^2 + \beta^2 \sigma_g^2
+\end{equation}
+''')
+
+st.write(r"""In this equation:
+- $\sigma_f^2$ is the total variance of the rewarded factor,
+- $(1 - \beta^2) \sigma_f^2$ represents the portion of the variance of the rewarded factor that is uncorrelated from the unrewarded risk,
+- $\beta^2 \sigma_g^2$ represents the portion of the variance that is correlated with the unrewarded risk.
+            """)
+
+
+# Original variances of the Fama-French factors (you can change these values if needed)
+sigma_factors = sp.Matrix([0.1, 0.15, 0.2, 0.12, 0.18])
+
+# Decompose the variance for each factor, incorporating the effect of the unrewarded risk
+omega_elements = [(1 - beta_f**2) * sigma_factors[i]**2 + beta_f**2 * sigma_g**2 for i in range(k)]
+
+# Create the Omega matrix (covariance matrix of the factors)
+Omega = sp.diag(*omega_elements)
+
+# Display the Omega matrix
+st.latex(r'\Omega = ' + sp.latex(Omega))
+
+st.write(r"""We assume the investor) can invest in 5 assets, each one perfectly correlated
+         with one of the Fama-French factors. The matrix of factor loadings is the identity matrix:""")
+# one asset loads perfectly on one rewarded factor, 0 on the others (Identity matrix)
+B = sp.Matrix(np.eye(k))
+
+# Display the B matrix
+st.latex(r'B = ' + sp.latex(B))
+
+st.write(r"""Ignoring idiocyncratic risk, the covariance matrix of the asset returns is therefore the covariance matrix of factors:""")
+
+# Compute the covariance matrix of asset returns
+Sigma = B * Omega * B.T
+
+# Display the covariance matrix of asset returns
+st.latex(r'\Sigma = ' + sp.latex(Sigma))
+
+st.write(r"""The expected return of the portfolio is given by the factor loadings times the risk premia, which is the same as the expected return of the factors:""")
+
+# Compute the expected return of the portfolio
+mu = B * lambda_factors
+
+# Display the expected return of the portfolio
+st.latex(r'\mu = ' + sp.latex(mu))
+
+st.write(r"""We therefore have the optimal portfolio weights:""")
+
+# Compute the optimal portfolio weights
+numerator = Sigma.inv() * mu
+denominator = sp.Matrix([1] * k).T * Sigma.inv() * mu
+
+# Compute the optimal portfolio weights
+w_star = numerator / denominator[0]
+
+# Display the optimal portfolio weights
+st.latex(r'w^* = ' + sp.latex(w_star))
+
+
+portfolio_expected_return = w_star.T * mu   # Portfolio expected return
+portfolio_variance = w_star.T * Sigma * w_star  # Portfolio variance
+
+# Extract scalar values from the 1x1 matrices
+portfolio_expected_return_scalar = round(portfolio_expected_return[0] * 100,2)
+portfolio_variance_scalar = round(portfolio_variance[0] * 100,2)
+
+# Compute Sharpe ratio
+portfolio_sharpe_ratio = portfolio_expected_return_scalar / sp.sqrt(portfolio_variance_scalar)
+# Compute portfolio betas and R-squared as before
+portfolio_betas = B.T * w_star
+
+# Compute the overall R-squared of the portfolio
+numerator_r_squared_c = (w_star.T * B * Omega * B.T * w_star)[0]  # Extract scalar
+denominator_r_squared_c = (w_star.T * Sigma * w_star)[0]  # Extract scalar
+
+# Compute R-squared (overall)
+r_squared_c = numerator_r_squared_c / denominator_r_squared_c * 100
+
+# Compute R-squared for each factor
+r_squared_factors = []
+for j in range(B.shape[1]):  # Loop through each factor
+    numerator_r_squared_j = (w_star.T * B[:, j] * B[:, j].T * Omega[j, j] * w_star)[0]  # Extract scalar
+    denominator_r_squared_j = denominator_r_squared_c  # The denominator is the same
+    r_squared_j = numerator_r_squared_j / denominator_r_squared_j
+    r_squared_factors.append(r_squared_j)
+
+# Convert values to latex-friendly strings
+r_squared_c_latex = sp.latex(round(r_squared_c,2))
+r_squared_factors_latex = [sp.latex(round(r2 * 100,2)) for r2 in r_squared_factors]
+
+# Display the results in a LaTeX table
+
+table_latex = r"\begin{array}{|c|c|} \hline \text{Metric} & \text{Value} \\ \hline"
+table_latex += rf"\text{{Expected Return}} & {sp.latex(portfolio_expected_return_scalar)} \\"
+table_latex += rf"\text{{Volatility}} & {sp.latex(sp.sqrt(portfolio_variance_scalar))} \\"
+table_latex += rf"\text{{Sharpe Ratio}} & {sp.latex(portfolio_sharpe_ratio)} \\"
+table_latex += rf"\beta_{{smb}} & {sp.latex(round(portfolio_betas[0], 2))} \\"
+table_latex += rf"\beta_{{hml}} & {sp.latex(round(portfolio_betas[1], 2))} \\"
+table_latex += rf"\beta_{{rmw}} & {sp.latex(round(portfolio_betas[2], 2))} \\"
+table_latex += rf"\beta_{{cma}} & {sp.latex(round(portfolio_betas[3], 2))} \\"
+table_latex += rf"\beta_{{mkt}} & {sp.latex(round(portfolio_betas[4], 2))} \\"
+table_latex += rf"\text{{R}}^2_{{smb}} & {r_squared_factors_latex[0]} \\"
+table_latex += rf"\text{{R}}^2_{{hml}} & {r_squared_factors_latex[1]} \\"
+table_latex += rf"\text{{R}}^2_{{rmw}} & {r_squared_factors_latex[2]} \\"
+table_latex += rf"\text{{R}}^2_{{cma}} & {r_squared_factors_latex[3]} \\"
+table_latex += rf"\text{{R}}^2_{{mkt}} & {r_squared_factors_latex[4]} \\"
+table_latex += r"\hline"
+table_latex += r"\end{array}"
+
+st.write("The tangency portfolio displays the following statistics:")
+st.latex(table_latex)
+
+st.write("The higher the loading of the rewarded factor on the unrewarded factor, the higher the variance of the rewarded factor that is correlated with the unrewarded factor. This leads to a higher overall variance of the portfolio, and a lower Sharpe ratio. The portfolio is therefore less efficient, as it is exposed to unrewarded risks.")
 
 

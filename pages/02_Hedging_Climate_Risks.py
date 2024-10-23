@@ -26,12 +26,6 @@ it loads in the unrewarded risk. We can improve upon this. We want a method that
          """)
 
 
-
-st.write(r"""Our final objective is to obtain a portfolio that is orthogonalized (or beta-hedged) from climate risks. 
-         To do so, we first isolate the part of the portfolio that is exposed to climate risks.
-         """
-   )
-
 @st.cache_data
 def load_ff5_data():
     """Load the Fama-French factors data."""
