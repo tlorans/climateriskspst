@@ -44,30 +44,6 @@ st.latex(r"""
 \end{equation}
          """)
 
-st.write(r"""with:""")
-st.latex(r"""
-\begin{equation}
-         \begin{aligned}
-\Omega = \begin{bmatrix}
-\sigma_1^2 & \sigma_{12} & \dots & \sigma_{1K} \\
-\sigma_{21} & \sigma_2^2 & \dots & \sigma_{2K} \\
-\vdots & \vdots & \ddots & \vdots \\
-\sigma_{K1} & \sigma_{K2} & \dots & \sigma_K^2
-\end{bmatrix}
-         \end{aligned}
-         = \begin{bmatrix}
-\sigma_1^2 & \rho_{12} \sigma_1 \sigma_2 & \dots & \rho_{1K} \sigma_1 \sigma_K \\
-\rho_{21} \sigma_2 \sigma_1 & \sigma_2^2 & \dots & \rho_{2K} \sigma_2 \sigma_K \\
-\vdots & \vdots & \ddots & \vdots \\
-\rho_{K1} \sigma_K \sigma_1 & \rho_{K2} \sigma_K \sigma_2 & \dots & \sigma_K^2
-\end{bmatrix}
-\end{equation}
-""")
-
-st.write(r"""$\sigma_k^2$ is the variance of factor $k$ and $\sigma_{jk}$
-is the covariance between factors $j$ and $k$. In the case where the factors are uncorrelated, $\Omega$
-is a diagonal matrix with the variances $\sigma_k^2$ on the diagonal and zeros elsewhere.""")
-
 st.write(r"""Given a portfolio $x$ with a vector of weight $w$, it's expected returns is given by:""")
 
 st.latex(r"""
@@ -100,8 +76,8 @@ st.latex(r"""
 \end{equation}
          """)
 
-st.write(r"""We can assess the importance of common factors by calculating the propotyion 
-         of the portfolio variance that is explained by the factors.""")
+st.write(r"""We can assess the importance of common factors by calculating the proportion 
+         of the portfolio variance that is explained by the factors:""")
 
 st.latex(r"""
          \begin{equation}
