@@ -515,19 +515,19 @@ contrib_idiosyncratic = y_complement.T * breve_upsilon
 
 st.write(r"""The residual risk premium is given by:""")
 
-st.latex(rf"\breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(contrib_idiosyncratic)}")
+st.latex(rf"\breve{{\upsilon}}_x = \breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(contrib_idiosyncratic)}")
 
 st.write(r"""The common risk premium is given by:""") 
 
 common_risk_premium = y.T * psi_tilde
 
-st.latex(rf"y^\top \tilde{{\psi}} = {sp.latex(common_risk_premium)}")
+st.latex(rf"\tilde{{\psi}}_x = y^\top \tilde{{\psi}} = {sp.latex(common_risk_premium)}")
 
 st.write(r"""The total risk premium is given by:""")
 
 total_risk_premium = common_risk_premium + contrib_idiosyncratic
 
-st.latex(rf"\tilde{{\pi}}_x = y^\top \tilde{{\psi}} + \breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(total_risk_premium[0])}")
+st.latex(rf"\tilde{{\pi}}_x = \tilde{{\psi}}_x + \breve{{\upsilon}}_x =  y^\top \tilde{{\psi}} + \breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(total_risk_premium[0])}")
 
 st.write(r"""Again, we see that the total risk premium $\tilde{\pi}_x$ is exactly the same to the theorethical risk premium $\pi_x$ in the case of the tangent portfolio.""")
 
