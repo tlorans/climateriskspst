@@ -233,6 +233,61 @@ st.latex(rf"\text{{Sharpe Ratio}} = \frac{{\pi_x}}{{\sigma_x}} = {portfolio_shar
 # Compute portfolio betas and R-squared as before
 portfolio_betas = B.T * w_star
 
+st.write(r"""The vector of beta coefficients is given by:""")
+
+# Convert the SymPy matrix to a LaTeX string
+portfolio_betas_latex = sp.latex(portfolio_betas)
+
+# Display the equation for the beta coefficients
+st.latex(rf"\beta_x = B^\top w = {portfolio_betas_latex}")
+
+
+
+# # Compute the overall R-squared of the portfolio
+numerator_r_squared_c = (w_star.T * B * Omega * B.T * w_star)[0]  # Extract scalar
+denominator_r_squared_c = (w_star.T * Sigma * w_star)[0]  # Extract scalar
+# Compute R-squared (overall)
+r_squared_c = numerator_r_squared_c / denominator_r_squared_c * 100
+
+# Compute R-squared for each factor
+r_squared_factors = []
+for j in range(B.shape[1]):  # Loop through each factor
+    B_j = sp.zeros(*B.shape)
+    
+    # Keep only the j-th column of B (set other columns to zero)
+    B_j[:, j] = B[:, j]
+
+    # Use the modified B_j matrix to calculate the numerator for the specific factor's R^2
+    numerator_r_squared_j = (w_star.T * (B_j * Omega * B_j.T) * w_star)[0]  # Factor's own contribution + covariances
+    denominator_r_squared_j = denominator_r_squared_c  # The denominator is the same
+    r_squared_j = numerator_r_squared_j / denominator_r_squared_j
+    r_squared_factors.append(r_squared_j)
+
+# Convert values to latex-friendly strings
+r_squared_c_latex = sp.latex(round(r_squared_c,2))
+r_squared_factors_latex = [sp.latex(round(r2 * 100,2)) for r2 in r_squared_factors]
+
+# Display the results in a LaTeX table
+
+table_latex = r"\begin{array}{|c|c|} \hline \text{Metric} & \text{Value} \\ \hline"
+table_latex += rf"\pi_x & {sp.latex(portfolio_expected_return_scalar)} \\"
+table_latex += rf"\sigma_x & {sp.latex(sp.sqrt(portfolio_variance_scalar))} \\"
+table_latex += rf"SR_x & {sp.latex(portfolio_sharpe_ratio)} \\"
+table_latex += rf"\beta_1 & {sp.latex(round(portfolio_betas[0], 2))} \\"
+table_latex += rf"\beta_2 & {sp.latex(round(portfolio_betas[1], 2))} \\"
+table_latex += rf"\text{{R}}^c & {round(r_squared_c, 2)} \\"
+table_latex += rf"\text{{R}}^2_1 & {r_squared_factors_latex[0]} \\"
+table_latex += rf"\text{{R}}^2_2 & {r_squared_factors_latex[1]} \\"
+table_latex += r"\hline"
+table_latex += r"\end{array}"
+
+st.write("The tangency portfolio displays the following statistics:")
+st.latex(table_latex)
+
+st.write("Note: Expected return, variance, Sharpe ratio, and R-squared values are expressed in percentages.")
+
+
+
 st.subheader('Portfolio Implied Risk Premia')
 
 
@@ -247,7 +302,7 @@ st.latex(r'''
 ''')
 
 st.write(r"""
-         Assuming we know the Sharpe ratio of the initial aallocation, we can dedure that:
+         Assuming we know the Sharpe ratio of the initial allocation, we can dedure that:
          """)
 
 st.latex(r'''
@@ -256,9 +311,26 @@ st.latex(r'''
 \end{equation}
 ''')
 
+x = w_star
+
+# Define SR (Sharpe ratio) as a SymPy Matrix if it isn't already
+SR = 2.16
+
+# Calculate implied risk premia using SymPy's sqrt instead of NumPy's sqrt
+implied_risk_premia_numerator = SR * (Sigma @ x) / sp.sqrt((x.T @ Sigma @ x)[0])
+
+# Convert the SymPy matrix to a LaTeX string
+implied_risk_premia_latex = sp.latex(implied_risk_premia_numerator)
+
+# Display the equation for the implied risk premia
+st.latex(rf"\tilde{{\pi}} = SR_x \frac{{\Sigma x}}{{ \sqrt{{x^\top \Sigma x}}}} = {implied_risk_premia_latex}")
+
 st.write(r"""
          This last equation gives the risk premia required, or priced in, by the investor to hold portfolio $x$.
+We see that the implied risk premia $\tilde{\pi}$ are exactly the same to the theorethical risk premia $\pi$ in the case of the tangent portfolio.
          """)
+
+
 
 st.write(r"""We can decompose the portfolio's asset exposures $x$ by the portfolio's risk factor exposures $y$ as follows:""")
 
@@ -292,6 +364,18 @@ st.latex(r'''
     \breve{B}_x = (\mathrm{null}(B^{+}))^+ \left(I_n - (B^{+})^{\top} B^{\top}\right)
 \end{equation}
 ''')
+
+B_x = B.T
+y = B_x @ x
+
+# display the equation for the factor exposures
+y_latex = sp.latex(y)
+
+st.write("With the tangent portfolio, we deduce the following factor exposures:")
+
+st.latex(rf"y = B_x x = {sp.latex(B_x)} {sp.latex(x)} = {y_latex}")
+
+st.write(r"""Again, we see that $y$ is the same as the factor exposures $\beta_x$ of the tangent portfolio.""")
 
 st.write(r"""
          In order to calculate the vector of factor risk premia, we use the relationship between the factor risk premia and the asset risk premia and deduce that:
