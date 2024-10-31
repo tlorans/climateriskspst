@@ -317,13 +317,13 @@ x = w_star
 SR = 2.16
 
 # Calculate implied risk premia using SymPy's sqrt instead of NumPy's sqrt
-implied_risk_premia_numerator = SR * (Sigma @ x) / sp.sqrt((x.T @ Sigma @ x)[0])
+pi_tilde = SR * (Sigma @ x) / sp.sqrt((x.T @ Sigma @ x)[0])
 
 # Convert the SymPy matrix to a LaTeX string
-implied_risk_premia_latex = sp.latex(implied_risk_premia_numerator)
+pi_tilde_latex = sp.latex(pi_tilde)
 
 # Display the equation for the implied risk premia
-st.latex(rf"\tilde{{\pi}} = SR_x \frac{{\Sigma x}}{{ \sqrt{{x^\top \Sigma x}}}} = {implied_risk_premia_latex}")
+st.latex(rf"\tilde{{\pi}} = SR_x \frac{{\Sigma x}}{{ \sqrt{{x^\top \Sigma x}}}} = {pi_tilde_latex}")
 
 st.write(r"""
          This last equation gives the risk premia required, or priced in, by the investor to hold portfolio $x$.
@@ -377,6 +377,39 @@ st.latex(rf"y = B_x x = {sp.latex(B_x)} {sp.latex(x)} = {y_latex}")
 
 st.write(r"""Again, we see that $y$ is the same as the factor exposures $\beta_x$ of the tangent portfolio.""")
 
+
+# Compute B^+ (Moore-Penrose inverse of B)
+B_pseudo_inv = B.pinv()
+
+# Compute the null space of B^+ (as a SymPy Matrix)
+null_B_plus = B_pseudo_inv.nullspace()
+
+# Extract the null space matrix if it’s non-empty
+if null_B_plus:
+    null_B_plus_matrix = sp.Matrix.hstack(*null_B_plus)
+else:
+    raise ValueError("The null space of B^+ is empty.")
+
+# Identity matrix of size n
+I_n = sp.eye(B.shape[0])
+
+# Compute \breve{B}_x using the formula provided
+B_x_complement = null_B_plus_matrix.pinv() * (I_n - B_pseudo_inv.T * B.T)
+
+# Calculate \breve{y} = \breve{B}_x * x
+y_complement = B_x_complement * x
+
+# Convert to LaTeX strings for display
+B_x_complement_latex = sp.latex(B_x_complement)
+y_complement_latex = sp.latex(y_complement)
+
+# Display in Streamlit
+st.latex(rf"\breve{{B}}_x = {B_x_complement_latex}")
+
+st.write("The residual factor exposures are given by:")
+st.latex(rf"\breve{{y}} = \breve{{B}}_x x = {y_complement_latex}")
+
+
 st.write(r"""
          In order to calculate the vector of factor risk premia, we use the relationship between the factor risk premia and the asset risk premia and deduce that:
          """)
@@ -395,8 +428,22 @@ st.latex(r'''
 \end{equation}
          ''')
 
+
+psi_tilde = SR * B_pseudo_inv * (B @ Omega @ B.T + D) @ x / sp.sqrt((x.T @ (B @ Omega @ B.T + D) @ x)[0]) 
+
+# Convert the SymPy matrix to a LaTeX string
+psi_tilde_latex = sp.latex(psi_tilde)
+
+# Display the equation for the factor risk premia
+st.latex(rf"\tilde{{\psi}} = {psi_tilde_latex}")
+
 st.write(r"""
-         where $B^+$ is the Moore-Penrose inverse of $B$. We can show that:""")
+         where $B^+$ is the Moore-Penrose inverse of $B$. Again, we see that the implied factor risk premia $\tilde{\psi}$ are exactly the same to the theorethical factor risk premia $\psi$ in the case of the tangent portfolio.""")
+
+
+st.write(r"""
+         We can show that:
+         """)
 
 st.latex(r'''
          \begin{equation}
