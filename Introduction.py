@@ -89,6 +89,27 @@ st.latex(r"""
 st.write(r"""where $B_j$ is the $N \times 1$ vector of factor loadings on factor $j$,
             and $\sigma_j^2$ is the variance of factor $j$.""")
 
+st.write(r"""
+         We have $\mu$ and $\Sigma$ any vector of expected excess returns and covariance matrix. We consider the following optimization problem:
+         """)
+
+st.latex(r'''
+         \begin{equation}
+         \begin{aligned}
+w^*(\gamma) = \underset{w}{\text{arg min}} \left( \frac{1}{2} w^\top \Sigma w - \gamma w^\top \mu \right) \\
+\text{ subject to } \mathbf{1}_n^\top w = 1
+\end{aligned}
+\end{equation}
+''')
+
+st.write("where $\gamma$ is the risk tolerance parameter. We have the following solution:")
+
+st.latex(r'''
+w^* = \gamma \Sigma^{-1} \mu
+''')
+
+st.write(r"""where $\gamma = (1_n^\top \Sigma^{-1}\mu)^{-1}$.""")
+
 
 
 st.write(r"""Let's consider an investment universe with five assets and two factors. The loading matrix $B$ is given by:""")
@@ -158,28 +179,62 @@ Sigma_latex = sp.latex(Sigma)
 st.latex(rf"\Sigma = {B_latex} {Omega_latex} {B_latex}^\top + {D_latex}")
 st.latex(rf"\Sigma = {Sigma_latex}")
 
+st.write(r"""We have therefore all what we need to get the tangent portfolio weights:""")
+
+numerator = Sigma.inv()*pi
+denominator = sp.Matrix([1]*n).T * Sigma.inv() * pi
+
+w_star = numerator / denominator[0]
+
+
+# Convert the SymPy matrix to a LaTeX string
+w_star_latex = sp.latex(w_star)
+
+# Display the equation for the optimal portfolio weights
+st.latex(rf"""w^* = \gamma \Sigma^{{-1}} \mu = {w_star_latex}""")
+
+
+
+st.write(r"""The portfolio risk premia is given by:""")
+portfolio_expected_return = w_star.T * pi   # Portfolio expected return
+
+# convert the SymPy matrix to a LaTeX string
+portfolio_expected_return_latex = sp.latex(portfolio_expected_return[0])
+
+# Display the equation for the expected return of the portfolio
+st.latex(rf"\pi_x = w^\top \pi = {w_star_latex} {pi_latex} = {portfolio_expected_return_latex}")
+
+portfolio_variance = w_star.T * Sigma * w_star  # Portfolio variance
+
+# Extract scalar values from the 1x1 matrices
+portfolio_expected_return_scalar = round(portfolio_expected_return[0] * 100,2)
+portfolio_variance_scalar = round(portfolio_variance[0] * 100,2)
+
+st.write(r"""The volatility of the portfolio is given by:""")
+
+# Convert the SymPy matrix to a LaTeX string
+portfolio_vol_latex = sp.latex(sp.sqrt(portfolio_variance[0]))
+
+# Display the equation for the variance of the portfolio
+st.latex(rf"\sigma_x = \sqrt{{w^\top \Sigma w}} = \sqrt{{w^\top(B \Omega B^\top w + D) w}} = {portfolio_vol_latex}")
+
+st.write(r"""and the Sharpe ratio is given by:""")
+
+# Compute Sharpe ratio
+portfolio_sharpe_ratio = portfolio_expected_return_scalar / sp.sqrt(portfolio_variance_scalar)
+
+# Convert the SymPy matrix to a LaTeX string
+portfolio_sharpe_ratio_latex = sp.latex(portfolio_sharpe_ratio)
+
+# Display the equation for the Sharpe ratio
+st.latex(rf"\text{{Sharpe Ratio}} = \frac{{\pi_x}}{{\sigma_x}} = {portfolio_sharpe_ratio_latex}")
+
+
+# Compute portfolio betas and R-squared as before
+portfolio_betas = B.T * w_star
+
 st.subheader('Portfolio Implied Risk Premia')
 
-st.write(r"""
-         We have $\mu$ and $\Sigma$ any vector of expected excess returns and covariance matrix. We consider the following optimization problem:
-         """)
-
-st.latex(r'''
-         \begin{equation}
-         \begin{aligned}
-w^*(\gamma) = \underset{w}{\text{arg min}} \left( \frac{1}{2} w^\top \Sigma w - \gamma w^\top \mu \right) \\
-\text{ subject to } \mathbf{1}_n^\top w = 1
-\end{aligned}
-\end{equation}
-''')
-
-st.write("where $\gamma$ is the risk tolerance parameter. We have the following solution:")
-
-st.latex(r'''
-w^* = \gamma \Sigma^{-1} \mu
-''')
-
-st.write(r"""where $\gamma = (1_n^\top \Sigma^{-1}\mu)^{-1}$.""")
 
 st.write(r"""
 Given an initial allocation $x$, we deduce that this portfolio is optimal if the vector of implied risk premia is equal to:
@@ -412,26 +467,8 @@ st.write(r"""
          These three properties show that we can decomposte the risk premium into two dimensions. The first approach considers a variance-covariance decomposition,
          while the second approach consider a factor decomposition between the contribution of common risk factors and the contribution of idiosyncratic risk factors.""")
 
-# Define symbols for SymPy
-n = 5  # Number of assets
-k = 2  # Number of factors
 
-B = sp.Matrix([[0.5, -0.3], [1.2, 0.6], [1.4, -0.3], [0.7, 0.3], [0.8, -0.9]])
-Omega = sp.diag(0.20**2, 0.05**2)
-D = sp.diag(0.12**2, 0.10**2, 0.08**2, 0.10**2, 0.12**2)
-lambda_factors = sp.Matrix([0.04, 0.01])
-r_f = 0.00  # Risk-free rate
 
-# Compute expected returns of assets
-mu = B * lambda_factors
-
-# Compute covariance matrix of assets
-Sigma = B * Omega * B.T + D
-
-# Compute the optimal portfolio weights (tangency portfolio)
-inv_Sigma = Sigma.inv()
-gamma = sp.Symbol('gamma')  # Risk tolerance parameter
-w_star = gamma * inv_Sigma * mu
 
 # # Display numerical example
 # st.subheader("Climate Risks as a Rewarded Risk")
