@@ -507,128 +507,152 @@ st.latex(r'''
 st.write(r"""
          The last two equations are the core relationships for decomposing the risk premium of a portfolio with respect to the factor risk premia.""")
 
+breve_upsilon = B_x_complement * pi_tilde
 
-st.write(r"""
-         The factor exposures are equal to the beta sensitivities:""")
+st.latex(rf"\breve{{\upsilon}} = \breve{{B}}_x^+ \tilde{{\pi}} = {sp.latex(breve_upsilon)}")
 
-st.latex(r'''
-         \begin{equation}
-         y = \beta_x 
-         \end{equation}
-         ''')
+contrib_idiosyncratic = y_complement.T * breve_upsilon
 
-st.write(r"""The covariance model is obtained by setting $B = I_n$ and $D = 0_{n \times n}$. Then we have $R = F$ and $\Sigma = \Omega$. We have:""")
+st.write(r"""The residual risk premium is given by:""")
 
-st.latex(r'''
-         \begin{equation}
-         \tilde{\psi} = \tilde{\pi}
-         \end{equation}
-         ''')
+st.latex(rf"\breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(contrib_idiosyncratic)}")
 
-st.write(r"""The implied risk premium priced in by the tangent portfolio is equal to the vector of risk premia:""")
+st.write(r"""The common risk premium is given by:""") 
 
-st.latex(r'''
-         \begin{equation}
-         \tilde{\pi} = \pi = \mu
-         \end{equation}
-         ''')
+common_risk_premium = y.T * psi_tilde
 
-st.write(r"""
-The residual premium of the tangency portfolio is zero, which implies that the risk premium of the tangency portfolio is fully explained by the common risk factors:
-         """)
+st.latex(rf"y^\top \tilde{{\psi}} = {sp.latex(common_risk_premium)}")
 
-st.latex(r'''
-         \begin{equation}
-         \begin{aligned}
-         \tilde{\upsilon}_{x^*} = \breve{y}^\top \breve{\upsilon} = 0 \\
-         \tilde{\pi}_{x^*} = \tilde{\psi}_{x^*} = \frac{\pi^\top \Sigma^{-1} \pi}{1_n^\top \Sigma^{-1} \pi}
-         \end{aligned}
-         \end{equation}
-         ''')
+st.write(r"""The total risk premium is given by:""")
 
-st.write(r"""
-         If the portfolio is not optimal, the residual premium does not depend on the factor covariance $\Omega$, but only on the idiosyncratic covariance $D$. The residual 
-         premium is then positive:
-         """)
+total_risk_premium = common_risk_premium + contrib_idiosyncratic
 
-st.latex(r'''
-         \begin{equation}
-         \breve{\upsilon}_{x} = x^\top (\breve{B}_x^\top \breve{B}_x D) x \geq 0
-         \end{equation}
-         ''')
+st.latex(rf"\tilde{{\pi}}_x = y^\top \tilde{{\psi}} + \breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(total_risk_premium[0])}")
 
-st.write(r"""
-         The factor risk premium of any portfolio is always positive:
-         """)
-
-st.latex(r'''
-         \begin{equation}
-         \tilde{\psi}_x \geq 0
-         \end{equation}
-         ''')
+st.write(r"""Again, we see that the total risk premium $\tilde{\pi}_x$ is exactly the same to the theorethical risk premium $\pi_x$ in the case of the tangent portfolio.""")
 
 
-st.write(r"""
-         The last three properties are interesting because we have the decomposition of the portfolio risk premium into the factor risk premium and the residual risk 
-         premium:
-         """)
+# st.write(r"""
+#          The factor exposures are equal to the beta sensitivities:""")
 
-st.latex(r'''
-         \begin{equation}
-         \tilde{\pi}_x = \tilde{\psi}_x + \breve{\upsilon}_x
-         \end{equation}
-         ''')
+# st.latex(r'''
+#          \begin{equation}
+#          y = \beta_x 
+#          \end{equation}
+#          ''')
 
-st.write(r"""The two terms should be positive. If the portfolio is optimal and corresponds to the tangency portfolio, the residual risk premium is zero.
-         In all other cases, there is a positive residual risk premium. This means that the investor believes that some idiosyncratic risk factors are 
-         being rewarded.""")
+# st.write(r"""The covariance model is obtained by setting $B = I_n$ and $D = 0_{n \times n}$. Then we have $R = F$ and $\Sigma = \Omega$. We have:""")
 
-st.write(r"""
-         The asset risk premia admit a variance-covariance decomposition:
-         """)
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\psi} = \tilde{\pi}
+#          \end{equation}
+#          ''')
 
-st.latex(r'''
-         \begin{equation}
-         \tilde{\pi} = \tilde{pi}^{\text{var}} + \tilde{pi}^{\text{cov}}
-         \end{equation}
-         ''')
+# st.write(r"""The implied risk premium priced in by the tangent portfolio is equal to the vector of risk premia:""")
 
-st.write(r"""
-         where $\tilde{pi}^{\text{var}}$ depends on the asset variances and $\tilde{pi}^{\text{cov}}$ depends on the asset covariances.""")
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\pi} = \pi = \mu
+#          \end{equation}
+#          ''')
 
-st.write(r"""
-         The asset risk premia admit a factor decomposition: 
-         """)
+# st.write(r"""
+# The residual premium of the tangency portfolio is zero, which implies that the risk premium of the tangency portfolio is fully explained by the common risk factors:
+#          """)
 
-st.latex(r'''
-         \begin{equation}
-         \tilde{\pi} = \tilde{\pi}^{\text{factor}} + \tilde{\pi}^{\text{residual}}
-         \end{equation}
-         ''')
+# st.latex(r'''
+#          \begin{equation}
+#          \begin{aligned}
+#          \tilde{\upsilon}_{x^*} = \breve{y}^\top \breve{\upsilon} = 0 \\
+#          \tilde{\pi}_{x^*} = \tilde{\psi}_{x^*} = \frac{\pi^\top \Sigma^{-1} \pi}{1_n^\top \Sigma^{-1} \pi}
+#          \end{aligned}
+#          \end{equation}
+#          ''')
 
-st.write(r"""
-         where $\tilde{\pi}^{\text{factor}}$ depends on the factor risk premia and $\tilde{\pi}^{\text{residual}}$ depends on the residual risk premia.""")
+# st.write(r"""
+#          If the portfolio is not optimal, the residual premium does not depend on the factor covariance $\Omega$, but only on the idiosyncratic covariance $D$. The residual 
+#          premium is then positive:
+#          """)
 
-st.write(r"""
-         The factor risk premia admit the same decomposition:
-         """)
+# st.latex(r'''
+#          \begin{equation}
+#          \breve{\upsilon}_{x} = x^\top (\breve{B}_x^\top \breve{B}_x D) x \geq 0
+#          \end{equation}
+#          ''')
 
-st.latex(r'''
-         \begin{equation}
-         \begin{aligned}
-         \tilde{\psi} = \tilde{\psi}^{\text{var}} + \tilde{\psi}^{\text{cov}} \\
-         \tilde{\psi} = \tilde{\psi}^{\text{factor}} + \tilde{\psi}^{\text{residual}}
-         \end{aligned}
-         \end{equation}
-         ''')
+# st.write(r"""
+#          The factor risk premium of any portfolio is always positive:
+#          """)
 
-st.write(r"""
-         where $\tilde{\psi}^{\text{var}}$ depends on the factor variances, $\tilde{\psi}^{\text{cov}}$ depends on the factor covariances, 
-         $\tilde{\psi}^{\text{factor}}$ depends on the factor risk premia, and $\tilde{\psi}^{\text{residual}}$ depends on the residual risk premia.""")
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\psi}_x \geq 0
+#          \end{equation}
+#          ''')
 
-st.write(r"""
-         These three properties show that we can decomposte the risk premium into two dimensions. The first approach considers a variance-covariance decomposition,
-         while the second approach consider a factor decomposition between the contribution of common risk factors and the contribution of idiosyncratic risk factors.""")
+
+# st.write(r"""
+#          The last three properties are interesting because we have the decomposition of the portfolio risk premium into the factor risk premium and the residual risk 
+#          premium:
+#          """)
+
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\pi}_x = \tilde{\psi}_x + \breve{\upsilon}_x
+#          \end{equation}
+#          ''')
+
+# st.write(r"""The two terms should be positive. If the portfolio is optimal and corresponds to the tangency portfolio, the residual risk premium is zero.
+#          In all other cases, there is a positive residual risk premium. This means that the investor believes that some idiosyncratic risk factors are 
+#          being rewarded.""")
+
+# st.write(r"""
+#          The asset risk premia admit a variance-covariance decomposition:
+#          """)
+
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\pi} = \tilde{pi}^{\text{var}} + \tilde{pi}^{\text{cov}}
+#          \end{equation}
+#          ''')
+
+# st.write(r"""
+#          where $\tilde{pi}^{\text{var}}$ depends on the asset variances and $\tilde{pi}^{\text{cov}}$ depends on the asset covariances.""")
+
+# st.write(r"""
+#          The asset risk premia admit a factor decomposition: 
+#          """)
+
+# st.latex(r'''
+#          \begin{equation}
+#          \tilde{\pi} = \tilde{\pi}^{\text{factor}} + \tilde{\pi}^{\text{residual}}
+#          \end{equation}
+#          ''')
+
+# st.write(r"""
+#          where $\tilde{\pi}^{\text{factor}}$ depends on the factor risk premia and $\tilde{\pi}^{\text{residual}}$ depends on the residual risk premia.""")
+
+# st.write(r"""
+#          The factor risk premia admit the same decomposition:
+#          """)
+
+# st.latex(r'''
+#          \begin{equation}
+#          \begin{aligned}
+#          \tilde{\psi} = \tilde{\psi}^{\text{var}} + \tilde{\psi}^{\text{cov}} \\
+#          \tilde{\psi} = \tilde{\psi}^{\text{factor}} + \tilde{\psi}^{\text{residual}}
+#          \end{aligned}
+#          \end{equation}
+#          ''')
+
+# st.write(r"""
+#          where $\tilde{\psi}^{\text{var}}$ depends on the factor variances, $\tilde{\psi}^{\text{cov}}$ depends on the factor covariances, 
+#          $\tilde{\psi}^{\text{factor}}$ depends on the factor risk premia, and $\tilde{\psi}^{\text{residual}}$ depends on the residual risk premia.""")
+
+# st.write(r"""
+#          These three properties show that we can decomposte the risk premium into two dimensions. The first approach considers a variance-covariance decomposition,
+#          while the second approach consider a factor decomposition between the contribution of common risk factors and the contribution of idiosyncratic risk factors.""")
 
 
 
