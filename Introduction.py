@@ -17,6 +17,7 @@ st.latex(r"""
 \end{equation}
          """)
 
+
 st.write(r"""where $R$ is the $N \times 1$ vector of asset excess returns,
             $F$ is the $K \times 1$ vector of factor excess returns,
             $B$ is the $N \times K$ matrix of factor loadings, and
@@ -87,6 +88,75 @@ st.latex(r"""
 
 st.write(r"""where $B_j$ is the $N \times 1$ vector of factor loadings on factor $j$,
             and $\sigma_j^2$ is the variance of factor $j$.""")
+
+
+
+st.write(r"""Let's consider an investment universe with five assets and two factors. The loading matrix $B$ is given by:""")
+
+# Define symbols for SymPy
+n = 5  # Number of assets
+k = 2  # Number of factors
+
+B = sp.Matrix([[0.5, -0.3], [1.2, 0.6], [1.4, -0.3], [0.7, 0.3], [0.8, -0.9]])
+
+# Convert the SymPy matrix to a LaTeX string
+B_latex = sp.latex(B)
+
+# Display the equation for factor loadings
+st.latex(rf"""B = {B_latex}""")
+
+
+st.write(r"""The two factor are uncorrelated and their volatilities are $20\%$ and $5\%$ respectively. The covariance matrix of the factors is given by:""")
+
+Omega = sp.diag(0.20**2, 0.05**2)
+
+# Convert the SymPy matrix to a LaTeX string
+Omega_latex = sp.latex(Omega)
+
+# Display the equation for the covariance matrix of factors
+st.latex(rf"\Omega = {Omega_latex}")
+
+st.write(r"""We assume a diagonal matrix $D$ with the following idiosyncratic volatilities $12\%, 10\%, 8\%, 10\%, 12\%$. The idiosyncratic covariance matrix is given by:""")
+
+D = sp.diag(0.12**2, 0.10**2, 0.08**2, 0.10**2, 0.12**2)
+
+# Convert the SymPy matrix to a LaTeX string
+D_latex = sp.latex(D)
+
+# Display the equation for the idiosyncratic risks
+st.latex(rf"""D = {D_latex}""")
+
+st.write(r"""The expected returns of the factors are $4\%$ and $1\%$ respectively:""")
+
+psi = sp.Matrix([0.04, 0.01])
+
+# Convert the SymPy matrix to a LaTeX string
+psi_latex = sp.latex(psi)
+
+# Display the equation for the expected returns of the factors
+st.latex(rf"\psi = {psi_latex}")
+
+st.write(r"""The vector of expected returns of the assets is given by:""")
+
+pi = B * psi
+
+# Convert the SymPy matrix to a LaTeX string
+pi_latex = sp.latex(pi)
+
+# Display the equation for expected returns
+st.latex(rf"\pi = {B_latex} {psi_latex} = {pi_latex}")
+
+st.write(r"""The covariance matrix of asset returns is given by:""")
+
+# Compute covariance matrix of assets
+Sigma = B * Omega * B.T + D
+
+# Convert the SymPy matrix to a LaTeX string
+Sigma_latex = sp.latex(Sigma)
+
+# Display the equation for the covariance matrix of asset returns
+st.latex(rf"\Sigma = {B_latex} {Omega_latex} {B_latex}^\top + {D_latex}")
+st.latex(rf"\Sigma = {Sigma_latex}")
 
 st.subheader('Portfolio Implied Risk Premia')
 
