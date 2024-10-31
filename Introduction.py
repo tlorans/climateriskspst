@@ -424,12 +424,12 @@ st.write(r""" and:""")
 
 st.latex(r'''
 \begin{equation}
-         \breve{\psi} = \breve{B}_y^+ \tilde{\pi} = SR_x \frac{B^+ (B \Omega B^\top + D)x}{\sqrt{x^\top (B \Omega B^\top + D)x}}
+         \tilde{\psi} = B^{+}\tilde{\pi} = SR_x \frac{B^+ (B \Omega B^\top + D)x}{\sqrt{x^\top (B \Omega B^\top + D)x}}
 \end{equation}
          ''')
 
 
-psi_tilde = SR * B_pseudo_inv * (B @ Omega @ B.T + D) @ x / sp.sqrt((x.T @ (B @ Omega @ B.T + D) @ x)[0]) 
+psi_tilde = B_pseudo_inv * pi_tilde
 
 # Convert the SymPy matrix to a LaTeX string
 psi_tilde_latex = sp.latex(psi_tilde)
