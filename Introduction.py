@@ -451,7 +451,39 @@ st.latex(r'''
          \end{equation}
          ''')
 
-st.write(r"""We deduce (some steps before)""")
+
+st.write(r"""Indeed, we have:""")
+
+
+st.latex(r'''
+         \begin{equation}
+         \frac{\partial \sigma_x}{\partial x} = B_y \frac{\partial \sigma_x}{\partial y} + \breve{B}_y \frac{\partial \sigma_x}{\partial \breve{y}}
+         \end{equation}
+         ''')
+
+st.write(r"""
+We deduce that the marginal risk of the $j$-th risk factor is given by:
+         """)
+
+st.latex(r'''
+         \begin{equation}
+         \frac{\partial \sigma_x}{\partial y_j} = (B_{\sigma} \frac{\partial \sigma_x}{\partial x})_j
+         \end{equation}
+         ''')
+
+st.write(r"""
+         where $B_{\sigma} = B^{+}$ For the residual factors, we have:
+         """)
+
+st.latex(r'''
+         \begin{equation}
+         \frac{\partial \sigma_x}{\partial \breve{y}} = (\breve{B}_{\sigma} \frac{\partial \sigma_x}{\partial x})_j
+         \end{equation}
+         ''')
+
+st.write(r"""
+         where $\breve{B}_{\sigma} = \text{null}(B^{+})^\top = \breve{B}_x$. We deduce that the risk premium of the portfolio is given by:
+         """)
 
 st.latex(r'''
          \begin{equation}
