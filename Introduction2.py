@@ -474,3 +474,95 @@ total_risk_premium = common_risk_premium
 st.latex(rf"\tilde{{\pi}}_x = \tilde{{\psi}}_x + \breve{{\upsilon}}_x =  y^\top \tilde{{\psi}} + \breve{{y}}^\top \breve{{\upsilon}} = {sp.latex(total_risk_premium[0])}")
 
 st.write(r"""Again, we see that the total risk premium $\tilde{\pi}_x$ is exactly the same to the theorethical risk premium $\pi_x$ in the case of the tangent portfolio.""")
+
+st.subheader('Portfolio Views')
+
+
+st.write(r"""
+         We have the following implied risk premia for the factors:
+            """)
+
+psi_tilde = sp.Matrix([0.0381, -0.0012])
+
+st.latex(rf"\tilde{{\psi}} = {sp.latex(psi_tilde)}")
+
+st.write(r"""
+         and the following covariance matrix of factor risk premia:
+            """)
+
+Gamma_psi = sp.Matrix([[0.20**2, 0], [0, 0.20**2]])
+
+st.latex(rf"\Gamma_\psi = {sp.latex(Gamma_psi)}")
+
+st.write(r"""
+The manager has one view portfolio:
+            """)
+
+P_psi = sp.Matrix([[0, 0], [-1, 1]])
+
+st.latex(rf"P_\psi = {sp.latex(P_psi)}")
+
+st.write(r"""
+and the following expected returns for the portfolio views:
+            """)
+
+v_psi = sp.Matrix([[0.],[0.05]])
+
+st.latex(rf"v_\psi = {sp.latex(v_psi)}")
+
+st.write(r"""
+and the following uncertainty for the portfolio views:
+            """)
+
+Omega_psi = sp.diag(0.1, 0.10**2)
+
+st.latex(rf"\Omega_\psi = {sp.latex(Omega_psi)}")
+
+st.write(r"""
+         That is, a long position in the second factor and a short position in the first factor. 
+         The manager believes that the second factor will outperform the first factor by $5\%$.
+            """)
+
+# Bayesian update formula to compute the posterior factor risk premia
+Gamma_bar_psi = (Gamma_psi.inv() + Omega_psi.inv()).inv()  # Updated covariance matrix
+psi_bar = Gamma_bar_psi * (Gamma_psi.inv() * psi_tilde + Omega_psi.inv() * v_psi)
+
+st.write(r"""The posterior factor risk premia are given by:""")
+st.latex(rf"\bar{{\psi}} = {sp.latex(psi_bar)}")
+
+st.write(r"""The posterior covariance matrix of factor risk premia is given by:""")
+st.latex(rf"\bar{{\Gamma}}_\psi = {sp.latex(Gamma_bar_psi)}")
+
+from scipy.optimize import minimize
+
+# Convert sympy matrices to numpy arrays for further calculations
+psi_bar_np = np.array(psi_bar).astype(float).flatten()
+Gamma_bar_psi_np = np.array(Gamma_bar_psi).astype(float)
+
+# Define the risk tolerance coefficient gamma for the mean-variance optimization
+gamma = 0.5  # example value
+
+# Define the objective function for the mean-variance optimization problem
+def objective_factors(y):
+    # y represents the factor allocations
+    return 0.5 * y.T @ Gamma_bar_psi_np @ y - gamma * y.T @ psi_bar_np
+
+# Constraints: weights sum to 1 (fully invested in one of the factors), weights are non-negative (long-only constraint)
+constraints_factors = [
+    {'type': 'eq', 'fun': lambda y: np.sum(y) - 1},  # sum of weights == 1 (fully invested in one factor)
+    {'type': 'ineq', 'fun': lambda y: y}  # y >= 0 (long-only constraint)
+]
+
+
+# Initial guess for the factor weights (equal allocation across factors)
+initial_weights_factors = np.ones(len(psi_bar_np)) / len(psi_bar_np)
+
+# Perform optimization to find the optimal factor allocation
+result_factors = minimize(objective_factors, initial_weights_factors, constraints=constraints_factors, method='SLSQP')
+
+# Output the optimized factor allocations
+st.write("The optimized factor allocations are:")
+
+y_bar = (B_x * sp.Matrix(result_factors.x))
+
+st.latex(rf"\bar{{y}} = {sp.latex(y_bar)}")
