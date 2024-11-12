@@ -957,7 +957,7 @@ st.write(r'''
          ''')
 
 
-st.subheader('Beta Estimation')
+st.subheader('Multivariate Time Series Regression')
 
 st.write(r'''
 We are going to use `statsmodels` (Seabold and Perktold, 2010) 
@@ -1028,3 +1028,111 @@ The model’s R-squared of 0.263 suggests that about 26.3% of the variation in
 - $\hat{\beta}_{5}$ (cma) is marginally significant (p = 0.072) and negative (-0.9168), indicating that conservative investment strategies may be slightly negatively associated with ICLN’s active returns.
 - $\hat{\beta}_{6}$ (tri_innovation_monthly) is marginally significant (p = 0.064) and positive (33.722), suggesting that innovations in the transition risk index may positively impact ICLN’s returns, although this result is not conclusively significant.
          ''')
+
+st.write(r'''
+We now scale the estimation of the model to all ETFs in the dataset, 
+         and performing rolling-window estimation.
+         As in Apel et al. (2023), we use a window length of 60 months.
+         We require a minimimum of 48 months of data to estimate the model.
+The following function implements the regression.
+                     ''')
+
+from statsmodels.regression.rolling import RollingOLS
+
+window_size = 60
+min_obs = 48
+# Function to estimate rolling t-statistics
+def roll_tstat_estimation(data, window_size, min_obs):
+    data = data.sort_values("date")
+
+    # Fit Rolling OLS and extract t-stats for tri_innovation_monthly
+    result = (RollingOLS.from_formula(
+        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly",
+        data=data,
+        window=window_size,
+        min_nobs=min_obs,
+        missing="drop")
+        .fit()
+        .tvalues.get("tri_innovation_monthly")  # Get t-statistics instead of beta
+    )
+
+    result.index = data.index
+    return result
+
+# Calculate rolling t-stats
+rolling_tstat = (
+    data_for_reg
+    .groupby("symbol")
+    .apply(lambda x: x.assign(
+        tstat=roll_tstat_estimation(x, window_size, min_obs)
+    ))
+    .reset_index(drop=True)
+    .dropna()
+)
+
+st.write(rolling_tstat.head())
+
+# Define significance thresholds for t-values
+t_thresholds = {
+    "10%": 1.28,
+    "5%": 1.645,
+    "1%": 2.33
+}
+
+# Plot the rolling t-statistics with dashed lines for significance levels
+figures_tstats = (
+    ggplot(rolling_tstat, aes(x="date", y="tstat", color="symbol")) +
+    geom_line() +
+    geom_hline(yintercept=t_thresholds["10%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=-t_thresholds["10%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=t_thresholds["5%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=-t_thresholds["5%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=t_thresholds["1%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=-t_thresholds["1%"], linetype="dashed", color="red") +
+    labs(x="Date", y="t-value", color="Index",
+         title="Rolling 5-Year Regression T-values for TRI Innovation Coefficient") +
+    scale_x_datetime(date_breaks="1 year", date_labels="%Y")
+)
+
+st.pyplot(figures_tstats.draw())
+
+
+st.write(r'''
+This chart shows the rolling 5-year regression t-values.
+
+T-values measure the statistical significance of 
+         the relationship between the TRI 
+         (Transition Risk Innovation) coefficient 
+         and the active returns of each ETF.
+Positive t-values suggest a positive relationship 
+         between the TRI coefficient and the ETF returns, 
+         while negative t-values indicate an inverse relationship.
+
+The red dashed lines represent different significance levels 
+         for the t-values:
+±1.28 for 10% significance.
+±1.645 for 5% significance.
+±2.33 for 1% significance.
+When t-values cross above these thresholds, it implies 
+         a statistically significant relationship 
+         between TRI and the ETF’s returns at that level. 
+         For instance:
+- T-values above +1.645 or below -1.645 suggest 
+         significance at the 5% level.
+- T-values above +2.33 or below -2.33 indicate 
+         strong significance at the 1% level.
+
+Our results show:
+- FAN (in red): Shows a strong positive relationship with TRI initially, with t-values above 3, suggesting a highly significant effect. However, this relationship declines over time and eventually falls below the 1% significance line.
+- ICLN (in green): Initially significant at the 5% level, ICLN’s relationship with TRI gradually becomes less significant but remains close to the 1.28 threshold.
+- PBW (in pink): Exhibits relatively high t-values early on, but the significance decreases over time, staying near the 10% threshold.
+- QCLN (in blue): Shows a less consistent relationship with TRI, with t-values generally remaining below the significance thresholds.
+- TAN (in purple): Similar to QCLN, TAN shows low t-values throughout the period, indicating a weak or non-significant relationship with TRI.
+Overall Trends:
+
+There is a general downward trend in t-values for most ETFs, indicating that the strength of the relationship between TRI and active returns has weakened over time.
+By the end of the period (around 2020–2021), most ETFs have t-values below the 5% significance threshold, suggesting that TRI’s impact on these ETFs has become less statistically significant.
+
+As green investment portfolios, ETFs like FAN and ICLN showed a stronger and more significant relationship with TRI earlier in the period. However, this effect seems to diminish over time.
+The reduced significance of TRI on these ETFs by 2021 suggests that the sensitivity of these ETFs to transition risk may have lessened.
+            ''')
