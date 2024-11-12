@@ -1148,44 +1148,29 @@ figures_pvalues = (
 )
 
 st.pyplot(figures_pvalues.draw())
-
-
 st.write(r'''
-This chart shows the rolling 5-year regression t-values.
+This chart shows the rolling 5-year regression p-values for the TRI Innovation Coefficient.
 
-T-values measure the statistical significance of 
-         the relationship between the TRI 
-         (Transition Risk Innovation) coefficient 
-         and the active returns of each ETF.
-Positive t-values suggest a positive relationship 
-         between the TRI coefficient and the ETF returns, 
-         while negative t-values indicate an inverse relationship.
+P-values measure the statistical significance of the relationship between the TRI (Transition Risk Innovation) coefficient and the active returns of each ETF. Lower p-values indicate a more statistically significant relationship, while higher p-values suggest weaker evidence of a relationship.
 
-The red dashed lines represent different significance levels 
-         for the t-values:
-±1.28 for 10% significance.
-±1.645 for 5% significance.
-±2.33 for 1% significance.
-When t-values cross above these thresholds, it implies 
-         a statistically significant relationship 
-         between TRI and the ETF’s returns at that level. 
-         For instance:
-- T-values above +1.645 or below -1.645 suggest 
-         significance at the 5% level.
-- T-values above +2.33 or below -2.33 indicate 
-         strong significance at the 1% level.
+The red dashed lines represent different significance levels for the p-values:
+- 0.1 for 10% significance.
+- 0.05 for 5% significance.
+- 0.01 for 1% significance.
+
+When p-values fall below these thresholds, it implies a statistically significant relationship between TRI and the ETF’s returns at the respective level. For instance:
+- P-values below 0.05 indicate significance at the 5% level.
+- P-values below 0.01 indicate strong significance at the 1% level.
 
 Our results show:
-- FAN (in red): Shows a strong positive relationship with TRI initially, with t-values above 3, suggesting a highly significant effect. However, this relationship declines over time and eventually falls below the 1% significance line.
-- ICLN (in green): Initially significant at the 5% level, ICLN’s relationship with TRI gradually becomes less significant but remains close to the 1.28 threshold.
-- PBW (in pink): Exhibits relatively high t-values early on, but the significance decreases over time, staying near the 10% threshold.
-- QCLN (in blue): Shows a less consistent relationship with TRI, with t-values generally remaining below the significance thresholds.
-- TAN (in purple): Similar to QCLN, TAN shows low t-values throughout the period, indicating a weak or non-significant relationship with TRI.
-Overall Trends:
+- **FAN** (in red): Initially shows a very significant relationship with TRI, with p-values below 0.01, indicating strong statistical significance. However, this significance diminishes over time, with p-values rising above the 0.1 threshold, suggesting a loss of significance.
+- **ICLN** (in green): Starts with a statistically significant relationship with TRI, but p-values gradually rise, approaching the 0.1 threshold, indicating a weakening significance.
+- **PBW** (in pink): Has p-values that start relatively low but increase over time, staying around the 10% threshold, indicating marginal significance.
+- **QCLN** (in blue): Generally shows higher p-values, mostly above the significance thresholds, indicating a weaker or non-significant relationship with TRI.
+- **TAN** (in purple): Similar to QCLN, with p-values largely above the significance thresholds throughout the period, suggesting a weak or non-significant relationship with TRI.
 
-There is a general downward trend in t-values for most ETFs, indicating that the strength of the relationship between TRI and active returns has weakened over time.
-By the end of the period (around 2020–2021), most ETFs have t-values below the 5% significance threshold, suggesting that TRI’s impact on these ETFs has become less statistically significant.
+- There is a general upward trend in p-values for most ETFs, indicating that the significance of the relationship between TRI and active returns has weakened over time.
+- By the end of the period (around 2020–2021), most ETFs have p-values above the 5% and 10% significance thresholds, suggesting that TRI’s impact on these ETFs has become less statistically significant.
 
-As green investment portfolios, ETFs like FAN and ICLN showed a stronger and more significant relationship with TRI earlier in the period. However, this effect seems to diminish over time.
-The reduced significance of TRI on these ETFs by 2021 suggests that the sensitivity of these ETFs to transition risk may have lessened.
-            ''')
+In summary, as green investment portfolios, ETFs like FAN and ICLN initially showed a stronger and more significant relationship with TRI. However, this effect seems to diminish over time, and by 2021, the sensitivity of these ETFs to transition risk appears to have lessened.
+''')
