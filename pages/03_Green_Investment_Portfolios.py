@@ -906,7 +906,7 @@ cum_tri = (
     tri
     .set_index("date")
     .apply(
-        lambda x: (1 + x).cumprod() - 1
+        lambda x: x.cumsum()
     )
     .reset_index()
 )
@@ -927,7 +927,8 @@ cum_tri = (
     tri
     .set_index("date")
     .apply(
-        lambda x: (1 + x).cumprod() - 1
+        # cumulative sum of the innovation
+        lambda x: x.cumsum()
     )
     .reset_index()
 )
@@ -1037,6 +1038,7 @@ We now scale the estimation of the model to all ETFs in the dataset,
 The following function implements the regression.
                      ''')
 
+st.code(r'''
 from statsmodels.regression.rolling import RollingOLS
 
 window_size = 60
@@ -1059,34 +1061,93 @@ def roll_pvalue_estimation(data, window_size, min_obs):
     result.index = data.index
     return result
 
-# Calculate rolling t-stats
-rolling_tstat = (
+# Calculate rolling p-values
+rolling_pvalues = (
     data_for_reg
     .groupby("symbol")
     .apply(lambda x: x.assign(
-        tstat=roll_pvalue_estimation(x, window_size, min_obs)
+        pvalue=roll_pvalue_estimation(x, window_size, min_obs)
+    ))
+    .reset_index(drop=True)
+    .dropna()
+)
+        ''')        
+
+from statsmodels.regression.rolling import RollingOLS
+
+window_size = 60
+min_obs = 48
+# Function to estimate rolling t-statistics
+def roll_pvalue_estimation(data, window_size, min_obs):
+    data = data.sort_values("date")
+
+    # Fit Rolling OLS and extract t-stats for tri_innovation_monthly
+    result = pd.Series((RollingOLS.from_formula(
+        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly",
+        data=data,
+        window=window_size,
+        min_nobs=min_obs,
+        missing="drop")
+        .fit()
+         # Get t-statistics instead of beta
+    ).pvalues[:, -1])
+
+    result.index = data.index
+    return result
+
+# Calculate rolling p-values
+rolling_pvalues = (
+    data_for_reg
+    .groupby("symbol")
+    .apply(lambda x: x.assign(
+        pvalue=roll_pvalue_estimation(x, window_size, min_obs)
     ))
     .reset_index(drop=True)
     .dropna()
 )
 
-st.write(rolling_tstat.head())
 
+st.write(r'''
+         In the above function, we retrieve the p-values of the
+            regression coefficient of the TRI innovation.
+         We do it in the spirit of Apel et al. (2023) with a window size of 60 months.
+         We want to know, among our ETFs, which ones has the most significant relationship with the TRI innovation.
+         ''')
 
+st.write(r'''
+         We can visualize the rolling p-values of the regression coefficient of the TRI innovation.
+         We have added dashed lines for the 10%, 5%, and 1% significance levels.
+            ''')
 
+st.code(r'''
 # Plot the rolling t-statistics with dashed lines for significance levels
-figures_tstats = (
-    ggplot(rolling_tstat, aes(x="date", y="tstat", color="symbol")) +
+figures_pvalues = (
+    ggplot(rolling_pvalues, aes(x="date", y="pvalue", color="symbol")) +
     geom_line() +
     geom_hline(yintercept=0.1, linetype="dashed", color="red") +
     geom_hline(yintercept=0.05, linetype="dashed", color="red") +
     geom_hline(yintercept=0.01, linetype="dashed", color="red") +
-    labs(x="Date", y="t-value", color="Index",
-         title="Rolling 5-Year Regression T-values for TRI Innovation Coefficient") +
+    labs(x="Date", y="p-value", color="Index",
+         title="Rolling 5-Year Regression p-values for TRI Innovation Coefficient") +
     scale_x_datetime(date_breaks="1 year", date_labels="%Y")
 )
 
-st.pyplot(figures_tstats.draw())
+figures_pvalues.draw()
+        ''')
+
+# Plot the rolling t-statistics with dashed lines for significance levels
+figures_pvalues = (
+    ggplot(rolling_pvalues, aes(x="date", y="pvalue", color="symbol")) +
+    geom_line() +
+    geom_hline(yintercept=0.1, linetype="dashed", color="red") +
+    geom_hline(yintercept=0.05, linetype="dashed", color="red") +
+    geom_hline(yintercept=0.01, linetype="dashed", color="red") +
+    labs(x="Date", y="p-value", color="Index",
+         title="Rolling 5-Year Regression p-values for TRI Innovation Coefficient") +
+    scale_x_datetime(date_breaks="1 year", date_labels="%Y")
+)
+
+st.pyplot(figures_pvalues.draw())
 
 
 st.write(r'''
