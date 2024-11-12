@@ -745,6 +745,15 @@ cum_active_returns_figure = (
 
 st.pyplot(cum_active_returns_figure.draw())
 
+st.write(r'''
+Obviously, the active returns of the benchmark 
+         are zero.
+         Over the period, 
+         the active returns of the green ETFs are
+         nill or negative. This is in line with the 
+         negative expected returns for the green 
+         factor from Pastor et al. (2021, 2022). 
+         ''')
 
 st.subheader('Risk Factors and TRI')
 
