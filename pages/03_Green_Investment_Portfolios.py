@@ -1042,19 +1042,19 @@ from statsmodels.regression.rolling import RollingOLS
 window_size = 60
 min_obs = 48
 # Function to estimate rolling t-statistics
-def roll_tstat_estimation(data, window_size, min_obs):
+def roll_pvalue_estimation(data, window_size, min_obs):
     data = data.sort_values("date")
 
     # Fit Rolling OLS and extract t-stats for tri_innovation_monthly
-    result = (RollingOLS.from_formula(
+    result = pd.Series((RollingOLS.from_formula(
         formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly",
         data=data,
         window=window_size,
         min_nobs=min_obs,
         missing="drop")
         .fit()
-        .tvalues.get("tri_innovation_monthly")  # Get t-statistics instead of beta
-    )
+         # Get t-statistics instead of beta
+    ).pvalues[:, -1])
 
     result.index = data.index
     return result
@@ -1064,7 +1064,7 @@ rolling_tstat = (
     data_for_reg
     .groupby("symbol")
     .apply(lambda x: x.assign(
-        tstat=roll_tstat_estimation(x, window_size, min_obs)
+        tstat=roll_pvalue_estimation(x, window_size, min_obs)
     ))
     .reset_index(drop=True)
     .dropna()
@@ -1072,23 +1072,15 @@ rolling_tstat = (
 
 st.write(rolling_tstat.head())
 
-# Define significance thresholds for t-values
-t_thresholds = {
-    "10%": 1.28,
-    "5%": 1.645,
-    "1%": 2.33
-}
+
 
 # Plot the rolling t-statistics with dashed lines for significance levels
 figures_tstats = (
     ggplot(rolling_tstat, aes(x="date", y="tstat", color="symbol")) +
     geom_line() +
-    geom_hline(yintercept=t_thresholds["10%"], linetype="dashed", color="red") +
-    geom_hline(yintercept=-t_thresholds["10%"], linetype="dashed", color="red") +
-    geom_hline(yintercept=t_thresholds["5%"], linetype="dashed", color="red") +
-    geom_hline(yintercept=-t_thresholds["5%"], linetype="dashed", color="red") +
-    geom_hline(yintercept=t_thresholds["1%"], linetype="dashed", color="red") +
-    geom_hline(yintercept=-t_thresholds["1%"], linetype="dashed", color="red") +
+    geom_hline(yintercept=0.1, linetype="dashed", color="red") +
+    geom_hline(yintercept=0.05, linetype="dashed", color="red") +
+    geom_hline(yintercept=0.01, linetype="dashed", color="red") +
     labs(x="Date", y="t-value", color="Index",
          title="Rolling 5-Year Regression T-values for TRI Innovation Coefficient") +
     scale_x_datetime(date_breaks="1 year", date_labels="%Y")
