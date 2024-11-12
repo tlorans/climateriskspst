@@ -119,7 +119,7 @@ Apel et al. (2023) propose to analyze the return sensitivity of commonly
 st.write(r'''
 The authors analyze the contemporaneous relationship between innovations 
          (changes unexpected by investors) in a transition risk sentimient index (thereafter TRI)
-         and weekly active returns (i.e., returns net of the benchmark) of the green investment
+         and monthly active returns (i.e., returns net of the benchmark) of the green investment
          portfolios. They consider a multivariate time series regression to 
          control for other factors potentially driving active index returns. 
          Therefore, the authors regress the active returns $r_{i,t}$ of the green investment
@@ -512,11 +512,11 @@ st.subheader('Resampling and Active Returns')
 st.write(r'''
 We now want to prepare the data for the multivariate time series regression, 
 as in Apel et al. (2023). 
-We first need to resample the daily returns to weekly returns.
+We first need to resample the daily returns to monthly returns.
 We also need to calculate the active returns of the ETFs, 
 that is, the returns net of the benchmark.
          
-We can resample the daily returns to weekly returns
+We can resample the daily returns to monthly returns
 by using the `resample()` method from pandas on the price data.
 Note that we have added the MSCi World ETF (IWRD.L) to the list of ETFs,
 which we use as a benchmark.         
@@ -526,7 +526,7 @@ st.code(r'''
 list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 
 # Download and process data
-prices_weekly = (
+prices_monthly = (
     yf.download(
         tickers=list_ETFs, 
         progress=False
@@ -545,11 +545,11 @@ prices_weekly = (
     })
     .set_index("date")
     .groupby("symbol")["adjusted"]  # Only resample the adjusted price
-    .resample("W")
+    .resample("M")
     .last()
 )
 
-returns_weekly = (prices_weekly
+returns_monthly = (prices_monthly
                   .reset_index()
     .assign(
         ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
@@ -564,7 +564,7 @@ list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 # Download and process data
 # Function to download and process data with caching
 @st.cache_data
-def get_weekly_prices():
+def get_monthly_prices():
     prices = (
         yf.download(
             tickers=list_ETFs, 
@@ -584,13 +584,13 @@ def get_weekly_prices():
         })
         .set_index("date")
         .groupby("symbol")["adjusted"]  # Only resample the adjusted price
-        .resample("W")
+        .resample("M")
         .last()
     )
     return prices
 
 
-returns_weekly = (get_weekly_prices()
+returns_monthly = (get_monthly_prices()
                   .reset_index()
     .assign(
         ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
@@ -599,16 +599,16 @@ returns_weekly = (get_weekly_prices()
     .dropna(subset="ret")
 )
 
-returns_weekly
+returns_monthly
 
 st.write(r'''
-The above code downloads the weekly prices for the ETFs and the benchmark.
-We then calculate the weekly returns and drop the missing values.''')
+The above code downloads the monthly prices for the ETFs and the benchmark.
+We then calculate the monthly returns and drop the missing values.''')
 
 
 st.write(r'''
          An easy way to calculate the active returns is to 
-         pivot the weekly returns such that we can 
+         pivot the monthly returns such that we can 
          subtract the benchmark returns column from each ETF column.
          We then use the `melt()` method from pandas to transform the
             data back to a tidy format.
@@ -616,7 +616,7 @@ st.write(r'''
 
 st.code(r'''
 active_returns = (
-    returns_weekly
+    returns_monthly
     .pivot(index="date", columns="symbol", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
@@ -626,7 +626,7 @@ active_returns = (
         ''')
 
 active_returns = (
-    returns_weekly
+    returns_monthly
     .pivot(index="date", columns="symbol", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
@@ -645,7 +645,7 @@ st.write(r'''
 
 st.code(r'''
  cum_absolute_returns = (
-    returns_weekly
+    returns_monthly
     .pivot(index="date", columns="symbol", values="ret")
     .dropna()
     .apply(
@@ -671,7 +671,7 @@ cum_absolute_returns_figure.draw()
         ''')
 
 cum_absolute_returns = (
-    returns_weekly
+    returns_monthly
     .pivot(index="date", columns="symbol", values="ret")
     .dropna()
     .apply(
@@ -756,6 +756,202 @@ Obviously, the active returns of the benchmark
          ''')
 
 st.subheader('Risk Factors and TRI')
+
+st.write(r'''
+         We start by downloading some famous Fama-French factors (Fama and French, 1993, 2015).
+         We use the `pandas_datareader` package that provides a simple interface to 
+         read data from Kenneth French's website.
+         We use the `pd.DataReader()` function of the package to download monthly Fama-French factors.
+         ''')
+
+
+st.code(r'''
+import pandas_datareader as pdr
+# min date in active returns df as start date
+start_date = active_returns["date"].min()
+# max date in active returns df as end date
+end_date = active_returns["date"].max()
+
+factors_ff5_monthly_raw = pdr.DataReader(
+  name="F-F_Research_Data_5_Factors_2x3",
+  data_source="famafrench", 
+  start=start_date, 
+  end=end_date)[0]
+
+factors_ff5_monthly = (factors_ff5_monthly_raw
+  .divide(100)
+  .reset_index(names="date")
+  .assign(
+        date=lambda x: pd.to_datetime(x["date"].astype(str)) + pd.offsets.MonthEnd(0)
+      )  
+   .rename(str.lower, axis="columns")
+  .rename(columns={"mkt-rf": "mkt_excess"})
+)
+        ''')
+import pandas_datareader as pdr
+# min date in active returns df as start date
+start_date = active_returns["date"].min()
+# max date in active returns df as end date
+end_date = active_returns["date"].max()
+
+factors_ff5_monthly_raw = pdr.DataReader(
+  name="F-F_Research_Data_5_Factors_2x3",
+  data_source="famafrench", 
+  start=start_date, 
+  end=end_date)[0]
+
+factors_ff5_monthly = (factors_ff5_monthly_raw
+  .divide(100)
+  .reset_index(names="date")
+  # to date time and end of month
+  .assign(
+        date=lambda x: pd.to_datetime(x["date"].astype(str)) + pd.offsets.MonthEnd(0)
+      )
+  .rename(str.lower, axis="columns")
+  .rename(columns={"mkt-rf": "mkt_excess"})
+)
+
+st.dataframe(factors_ff5_monthly.head().round(3))
+
+
+st.write(r'''
+         We can now visualize the cumulative returns of the Fama-French factors.
+         ''')
+
+st.code(r'''
+cum_returns_factors = (
+    factors_ff5_monthly 
+    .set_index("date")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="factor", value_name="cum_ret")
+)
+
+cum_returns_factors_figure = (
+    ggplot(cum_returns_factors.query('factor != "rf" & factor != "mkt_excess"'), 
+         aes(y="cum_ret", x="date", color="factor")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative returns of Fama-French factors") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+cum_returns_factors_figure.draw()
+        ''')        
+
+cum_returns_factors = (
+    factors_ff5_monthly 
+    .set_index("date")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="factor", value_name="cum_ret")
+)
+
+cum_returns_factors_figure = (
+    ggplot(cum_returns_factors.query('factor != "rf" & factor != "mkt_excess"'), 
+         aes(y="cum_ret", x="date", color="factor")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative returns of Fama-French factors") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+st.pyplot(cum_returns_factors_figure.draw())
+
+st.write(r'''
+Interestingly, except the rmw (robust minus weak) factor,
+         all factors have close to zero or negative cumulative returns. It has 
+         been a bad decade for the Fama-French factors.
+         ''')
+
+st.write(r'''
+         We now turn to the TRI data. We have downloaded the TRI data as 
+         a supplementary material from Apel et al. (2023). We 
+         use `read_excel()` from pandas to read the data. We select the 
+         innovation in the TRI.
+         ''')
+
+st.code(r'''
+tri = (pd.read_excel('data/tri.xlsx', sheet_name='monthly')
+      .rename(str.lower, axis="columns")
+      .get(['date','tri_innovation_monthly'])
+)
+        ''')
+tri = (pd.read_excel('data/tri.xlsx', sheet_name='monthly')
+      .rename(str.lower, axis="columns")
+      .get(['date','tri_innovation_monthly'])
+)
+
+st.write(r'''
+We plot the cumulative innovation to see if there exists any 
+         patterns in the transition risk sentiment.
+         ''')
+
+
+st.code(r'''
+cum_tri = (
+    tri
+    .set_index("date")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+)
+
+cum_tri_figure = (
+    ggplot(cum_tri, aes(y="tri_innovation_monthly", x="date")) +
+    geom_line() +
+    geom_hline(yintercept=0, linetype="dashed") +
+    labs(x="", y="",
+         title="Cumulative TRI innovations") +
+    scale_x_datetime(date_breaks="5 years", date_labels="%Y")
+)
+
+cum_tri_figure.draw()
+        ''')      
+
+cum_tri = (
+    tri
+    .set_index("date")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+)
+
+cum_tri_figure = (
+    ggplot(cum_tri, aes(y="tri_innovation_monthly", x="date")) +
+    geom_line() +
+    geom_hline(yintercept=0, linetype="dashed") +
+    # add an horizontal line in 2007 and another one in 2015
+    geom_vline(xintercept=pd.to_datetime("2004-09-01"), linetype="dashed") +
+    geom_vline(xintercept=pd.to_datetime("2009-12-01"), linetype="dashed") +
+    geom_vline(xintercept=pd.to_datetime("2015-12-01"), linetype="dashed") +
+    geom_vline(xintercept=pd.to_datetime("2017-06-01"), linetype="dashed") +
+    labs(x="", y="",
+         title="Cumulative TRI innovations") +
+    scale_x_datetime(date_breaks="2 years", date_labels="%Y")
+)
+
+st.pyplot(cum_tri_figure.draw())
+
+st.write(r'''
+         We see interesting patterns corresponding to:
+         - The intention of Russia to join the Kyoto Protocol in 2004: we see a substantial increase in the TRI for the subsequent years.
+         - The 2009 United Nations Climate Change Conference, commonly known as COP15 in Copenhagen in December 2009 is followed by a substantial decrease in unexpected changes in transition concenrs.
+         - The Paris Agreement in 2015: we see a substantial increase in the TRI for the subsequent years.
+        - The US withdrawal from the Paris Agreement in 2017: we see a substantial decrease in the TRI for the subsequent years.
+         ''')
 
 
 st.subheader('Multivariate Time Series Regression')
