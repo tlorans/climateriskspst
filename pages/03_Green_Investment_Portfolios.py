@@ -473,12 +473,139 @@ prices_daily_figure = (
 )
 st.pyplot(prices_daily_figure.draw())
 
+st.write(r'''
+This is also easy to now compute the daily returns for the ETFs.
+         ''')
 
-st.subheader('Active Returns')
+st.code(r'''
+   returns_daily = (prices_daily
+  .assign(ret=lambda x: x.groupby("symbol")["adjusted"].pct_change())
+  .get(["symbol", "date", "ret"])
+  .dropna(subset="ret")
+)
 
+(returns_daily
+  .groupby("symbol")["ret"]
+  .describe()
+  .round(3)
+)
+        ''')
+     
+
+returns_daily = (prices_daily
+  .assign(ret=lambda x: x.groupby("symbol")["adjusted"].pct_change())
+  .get(["symbol", "date", "ret"])
+  .dropna(subset="ret")
+)
+
+desc = (returns_daily
+  .groupby("symbol")["ret"]
+  .describe()
+  .round(3)
+)
+
+st.dataframe(desc)
+
+
+st.subheader('Resampling and Active Returns')
+
+st.write(r'''
+We now want to prepare the data for the multivariate time series regression, 
+as in Apel et al. (2023). 
+We first need to resample the daily returns to weekly returns.
+We also need to calculate the active returns of the ETFs, 
+that is, the returns net of the benchmark.
+         
+We can resample the daily returns to weekly returns
+by using the `resample()` method from pandas on the price data.
+Note that we have added the MSCi World ETF (IWRD.L) to the list of ETFs,
+which we use as a benchmark.         
+         ''')
+
+st.code(r'''
+list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
+
+# Download and process data
+prices_weekly = (
+    yf.download(
+        tickers=list_ETFs, 
+        progress=False
+    )
+    .stack()
+    .reset_index()
+    .rename(columns={
+        "Date": "date",
+        "Ticker": "symbol",
+        "Open": "open",
+        "High": "high",
+        "Low": "low",
+        "Close": "close",
+        "Adj Close": "adjusted",
+        "Volume": "volume"
+    })
+    .set_index("date")
+    .groupby("symbol")["adjusted"]  # Only resample the adjusted price
+    .resample("W")
+    .last()
+)
+
+returns_weekly = (prices_weekly
+    .pct_change()
+    .dropna()
+    .reset_index()
+    .rename(columns={"adjusted": "ret"})
+)
+
+returns_weekly
+        ''')        
+
+list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
+
+# Download and process data
+prices_weekly = (
+    yf.download(
+        tickers=list_ETFs, 
+        progress=False
+    )
+    .stack()
+    .reset_index()
+    .rename(columns={
+        "Date": "date",
+        "Ticker": "symbol",
+        "Open": "open",
+        "High": "high",
+        "Low": "low",
+        "Close": "close",
+        "Adj Close": "adjusted",
+        "Volume": "volume"
+    })
+    .set_index("date")
+    .groupby("symbol")["adjusted"]  # Only resample the adjusted price
+    .resample("W")
+    .last()
+)
+
+returns_weekly = (prices_weekly
+    .pct_change()
+    .dropna()
+    .reset_index()
+    .rename(columns={"adjusted": "ret"})
+)
+
+returns_weekly
+
+active_returns = (
+    returns_weekly
+    .pivot(index="date", columns="symbol", values="ret")
+    .apply(lambda x: x- x["IWRD.L"], axis=1)
+    .dropna()
+)
+
+active_returns
+
+st.write(active_returns.columns)
 
 st.subheader('Risk Factors and TRI')
-
 
 
 st.subheader('Multivariate Time Series Regression')
