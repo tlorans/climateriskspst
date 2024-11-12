@@ -794,13 +794,16 @@ start_date = active_returns["date"].min()
 # max date in active returns df as end date
 end_date = active_returns["date"].max()
 
-factors_ff5_monthly_raw = pdr.DataReader(
-  name="F-F_Research_Data_5_Factors_2x3",
-  data_source="famafrench", 
-  start=start_date, 
-  end=end_date)[0]
+@st.cache_data
+def get_ff_monthly() -> pd.DataFrame:
+    return pdr.DataReader(
+    name="F-F_Research_Data_5_Factors_2x3",
+    data_source="famafrench", 
+    start=start_date, 
+    end=end_date)[0]
 
-factors_ff5_monthly = (factors_ff5_monthly_raw
+
+factors_ff5_monthly = (get_ff_monthly()
   .divide(100)
   .reset_index(names="date")
   # to date time and end of month
@@ -954,4 +957,54 @@ st.write(r'''
          ''')
 
 
-st.subheader('Multivariate Time Series Regression')
+st.subheader('Beta Estimation')
+
+st.write(r'''
+We are going to use `statsmodels` (Seabold and Perktold, 2010) 
+         to estimate the multivariate time series regression model.
+         We estimate the same model than Apel et al. (2023) but
+         without the momentum factor (and with monthly instead of weekly returns). 
+
+The estimation procedure is based on a rolling-window estimation, where we can use 
+different window lenghts. Python provides a simple solution to estimate 
+regression models with the function `sm.ols()` from the `statsmodels` package.
+         
+The function requires a formula as input that is specified in a compact symbolic form. 
+An expression of the form `y ~ x1 + x2 + ...` is interpreted as a specification that the
+response variable `y` is linearly dependent on the variables `x1`, `x2`, etc.
+                  ''')
+
+import statsmodels.formula.api as smf
+
+data_for_reg = (
+    active_returns
+    .merge(factors_ff5_monthly, on="date", how = "inner")
+    .merge(tri, on="date", how = "inner")
+)
+
+icln = data_for_reg.query('symbol == "ICLN"')
+
+model_beta = (
+    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly", data=icln)
+    .fit()
+)
+
+st.write(model_beta.summary())
+
+st.write(r'''
+`sm.ols()` returns a `RegressionResults` object that 
+         contains the estimated coefficients,
+            standard errors, t-values, and p-values.
+         
+The R-squared at 0.263 indicates that approximately 26.3% of 
+the variation in ICLN active returns is explained by the model. 
+
+$\hat{\alpha}$ is not statistically significant (p = 0.390).
+$\hat{\beta}_{1}$ (mkt_excess) is statistically significant (p = 0.001) 
+and is positive (0.613).
+$\hat{\beta}_{2}$ (smb) is not statistically significant (p = 0.512).
+$\hat{\beta}_{3}$ (hml) is not statistically significant (p = 0.860).
+$\hat{\beta}_{4}$ (rmw) is not statistically significant (p = 0.574).
+$\hat{\beta}_{5}$ (cma) is marginally significant (p = 0.072) and is negative (-0.9168).
+$\hat{\beta}_{6}$ (tri_innovation_monthly) is marginally significant (p = 0.064) and is positive (33.722).
+         ''')
