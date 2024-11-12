@@ -550,60 +550,201 @@ prices_weekly = (
 )
 
 returns_weekly = (prices_weekly
-    .pct_change()
-    .dropna()
-    .reset_index()
-    .rename(columns={"adjusted": "ret"})
+                  .reset_index()
+    .assign(
+        ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
+    )
+    .get(["symbol", "date", "ret"])
+    .dropna(subset="ret")
 )
-
-returns_weekly
         ''')        
 
 list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 
 # Download and process data
-prices_weekly = (
-    yf.download(
-        tickers=list_ETFs, 
-        progress=False
+# Function to download and process data with caching
+@st.cache_data
+def get_weekly_prices():
+    prices = (
+        yf.download(
+            tickers=list_ETFs, 
+            progress=False
+        )
+        .stack()
+        .reset_index()
+        .rename(columns={
+            "Date": "date",
+            "Ticker": "symbol",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Adj Close": "adjusted",
+            "Volume": "volume"
+        })
+        .set_index("date")
+        .groupby("symbol")["adjusted"]  # Only resample the adjusted price
+        .resample("W")
+        .last()
     )
-    .stack()
-    .reset_index()
-    .rename(columns={
-        "Date": "date",
-        "Ticker": "symbol",
-        "Open": "open",
-        "High": "high",
-        "Low": "low",
-        "Close": "close",
-        "Adj Close": "adjusted",
-        "Volume": "volume"
-    })
-    .set_index("date")
-    .groupby("symbol")["adjusted"]  # Only resample the adjusted price
-    .resample("W")
-    .last()
-)
+    return prices
 
-returns_weekly = (prices_weekly
-    .pct_change()
-    .dropna()
-    .reset_index()
-    .rename(columns={"adjusted": "ret"})
+
+returns_weekly = (get_weekly_prices()
+                  .reset_index()
+    .assign(
+        ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
+    )
+    .get(["symbol", "date", "ret"])
+    .dropna(subset="ret")
 )
 
 returns_weekly
+
+st.write(r'''
+The above code downloads the weekly prices for the ETFs and the benchmark.
+We then calculate the weekly returns and drop the missing values.''')
+
+
+st.write(r'''
+         An easy way to calculate the active returns is to 
+         pivot the weekly returns such that we can 
+         subtract the benchmark returns column from each ETF column.
+         We then use the `melt()` method from pandas to transform the
+            data back to a tidy format.
+         ''')
+
+st.code(r'''
+active_returns = (
+    returns_weekly
+    .pivot(index="date", columns="symbol", values="ret")
+    .apply(lambda x: x- x["IWRD.L"], axis=1)
+    .dropna()
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name="active_ret")
+)
+        ''')
 
 active_returns = (
     returns_weekly
     .pivot(index="date", columns="symbol", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name="active_ret")
 )
 
 active_returns
 
-st.write(active_returns.columns)
+st.write(r'''
+         It may be interesting to visualize the difference between the 
+         absolute returns and the active returns. 
+         We make use again of the `pivot()` and 
+            `melt()` methods from pandas.         ''')
+
+
+st.code(r'''
+ cum_absolute_returns = (
+    returns_weekly
+    .pivot(index="date", columns="symbol", values="ret")
+    .dropna()
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name="cum_ret")
+)       
+
+cum_absolute_returns_figure = (
+    ggplot(cum_absolute_returns, 
+         aes(y="cum_ret", x="date", color="symbol")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative absolute returns") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+cum_absolute_returns_figure.draw()
+        ''')
+
+cum_absolute_returns = (
+    returns_weekly
+    .pivot(index="date", columns="symbol", values="ret")
+    .dropna()
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name="cum_ret")
+)
+
+cum_absolute_returns_figure = (
+    ggplot(cum_absolute_returns, 
+         aes(y="cum_ret", x="date", color="symbol")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative absolute returns") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+st.pyplot(cum_absolute_returns_figure.draw())
+
+st.code(r'''
+cum_active_returns = (
+    active_returns
+    .pivot(index="date", columns="symbol", values="active_ret")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name = "cum_ret")
+)
+
+cum_active_returns_figure = (
+    ggplot(cum_active_returns, 
+         aes(y="cum_ret", x="date", color="symbol")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative active returns") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+cum_active_returns_figure.draw()
+        ''')
+
+cum_active_returns = (
+    active_returns
+    .pivot(index="date", columns="symbol", values="active_ret")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="symbol", value_name = "cum_ret")
+)
+
+cum_active_returns_figure = (
+    ggplot(cum_active_returns, 
+         aes(y="cum_ret", x="date", color="symbol")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title="Cumulative active returns") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+
+st.pyplot(cum_active_returns_figure.draw())
+
 
 st.subheader('Risk Factors and TRI')
 
