@@ -143,7 +143,7 @@ where $r_{i,t}$ is the active return of the green investment portfolio $i$ in we
          $MOM_t$ is the momentum factor, and $\varepsilon_{t}^{TRI}$ is the innovation in the TRI.
 ''')
 
-st.subheader('ETF Market Data')
+st.subheader('ETF Data')
 
 st.write(r'''
 We are going to try to replicate the analysis. We first download daily 
@@ -374,7 +374,108 @@ yearly = (returns
 
 st.dataframe(yearly)
 
+st.write(r'''
+         We now generalize the above code 
+         such that the computations can handle 
+         multiple ETFs. 
+         Tidy data makes it easy to generalize the 
+         computations to multiple ETFs.
+         I have first defined a list of pure play ETFs.
+         Next, we can use `yfinance` to download the daily
+            prices for the ETFs in the list. We then 
+         transform the data into a tidy format.
+            ''')
+
+
+st.code(r'''
+list_pure_play_ETFs = ['ICLN','QCLN','PBW','TAN','FAN']
+
+prices_daily = (
+    yf.download(
+        tickers=list_pure_play_ETFs, 
+        progress=False
+    )
+)
+
+prices_daily = (prices_daily
+  .stack()
+  .reset_index()
+  .rename(columns={
+    "Date": "date",
+    "Ticker": "symbol",
+    "Open": "open",
+    "High": "high",
+    "Low": "low",
+    "Close": "close",
+    "Adj Close": "adjusted",
+    "Volume": "volume"}
+  )
+)
+        ''')
+        
+list_pure_play_ETFs = ['ICLN','QCLN','PBW','TAN','FAN']
+
+prices_daily = (
+    yf.download(
+        tickers=list_pure_play_ETFs, 
+        progress=False
+    )
+)
+
+prices_daily = (prices_daily
+  .stack()
+  .reset_index()
+  .rename(columns={
+    "Date": "date",
+    "Ticker": "symbol",
+    "Open": "open",
+    "High": "high",
+    "Low": "low",
+    "Close": "close",
+    "Adj Close": "adjusted",
+    "Volume": "volume"}
+  )
+)
+
+st.dataframe(prices_daily.head().round(3))
+
+st.write(r'''
+         We again use the `mizani` package but this time to format 
+         date to get nicer labels on the x-axis.
+            ''')
+
+st.code(r'''
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+prices_daily_figure = (
+  ggplot(prices_daily, 
+         aes(y="adjusted", x="date", color="symbol")) +
+ geom_line() +
+ labs(x="", y="", color="",
+      title="ETF prices") +
+ scale_x_datetime(date_breaks="5 years", date_labels="%Y")
+)
+        
+prices_daily_figure.draw()
+        ''')
+
+from mizani.breaks import date_breaks
+from mizani.formatters import date_format
+
+prices_daily_figure = (
+  ggplot(prices_daily, 
+         aes(y="adjusted", x="date", color="symbol")) +
+ geom_line() +
+ labs(x="", y="", color="",
+      title="ETF prices") +
+ scale_x_datetime(date_breaks="5 years", date_labels="%Y")
+)
+st.pyplot(prices_daily_figure.draw())
+
+
 st.subheader('Active Returns')
+
 
 st.subheader('Risk Factors and TRI')
 
