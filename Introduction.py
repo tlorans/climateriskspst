@@ -2,7 +2,6 @@ import streamlit as st
 import sympy as sp
 import numpy as np
 
-st.set_page_config(page_title="Climate Risks")
 
 st.title('Multi-factor model and Portfolio Implied Risk Premia')
 
