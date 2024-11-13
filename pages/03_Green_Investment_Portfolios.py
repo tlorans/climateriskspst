@@ -119,7 +119,7 @@ Apel et al. (2023) propose to analyze the return sensitivity of commonly
 st.write(r'''
 The authors analyze the contemporaneous relationship between innovations 
          (changes unexpected by investors) in a transition risk sentimient index (thereafter TRI)
-         and monthly active returns (i.e., returns net of the benchmark) of the green investment
+         and weekly active returns (i.e., returns net of the benchmark) of the green investment
          portfolios. They consider a multivariate time series regression to 
          control for other factors potentially driving active index returns. 
          Therefore, the authors regress the active returns $r_{i,t}$ of the green investment
@@ -512,11 +512,11 @@ st.subheader('Resampling and Active Returns')
 st.write(r'''
 We now want to prepare the data for the multivariate time series regression, 
 as in Apel et al. (2023). 
-We first need to resample the daily returns to monthly returns.
+We first need to resample the daily returns to weekly returns.
 We also need to calculate the active returns of the ETFs, 
 that is, the returns net of the benchmark.
          
-We can resample the daily returns to monthly returns
+We can resample the daily returns to weekly returns
 by using the `resample()` method from pandas on the price data.
 Note that we have added the MSCi World ETF (IWRD.L) to the list of ETFs,
 which we use as a benchmark.         
@@ -526,30 +526,30 @@ st.code(r'''
 list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 
 # Download and process data
-prices_monthly = (
-    yf.download(
-        tickers=list_ETFs, 
-        progress=False
+prices_weekly = (
+        yf.download(
+            tickers=list_ETFs, 
+            progress=False
+        )
+        .stack()
+        .reset_index()
+        .rename(columns={
+            "Date": "date",
+            "Ticker": "symbol",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Adj Close": "adjusted",
+            "Volume": "volume"
+        })
+        .set_index("date")
+        .groupby("symbol")["adjusted"] 
+        .resample("W-FRI")
+        .last()
     )
-    .stack()
-    .reset_index()
-    .rename(columns={
-        "Date": "date",
-        "Ticker": "symbol",
-        "Open": "open",
-        "High": "high",
-        "Low": "low",
-        "Close": "close",
-        "Adj Close": "adjusted",
-        "Volume": "volume"
-    })
-    .set_index("date")
-    .groupby("symbol")["adjusted"]  # Only resample the adjusted price
-    .resample("M")
-    .last()
-)
 
-returns_monthly = (prices_monthly
+returns_weekly = (prices_weekly
                   .reset_index()
     .assign(
         ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
@@ -564,7 +564,7 @@ list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 # Download and process data
 # Function to download and process data with caching
 @st.cache_data
-def get_monthly_prices():
+def get_weekly_prices():
     prices = (
         yf.download(
             tickers=list_ETFs, 
@@ -584,13 +584,13 @@ def get_monthly_prices():
         })
         .set_index("date")
         .groupby("symbol")["adjusted"]  # Only resample the adjusted price
-        .resample("M")
+        .resample("W-FRI")
         .last()
     )
     return prices
 
 
-returns_monthly = (get_monthly_prices()
+returns_weekly = (get_weekly_prices()
                   .reset_index()
     .assign(
         ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
@@ -599,16 +599,16 @@ returns_monthly = (get_monthly_prices()
     .dropna(subset="ret")
 )
 
-returns_monthly
+returns_weekly
 
 st.write(r'''
-The above code downloads the monthly prices for the ETFs and the benchmark.
-We then calculate the monthly returns and drop the missing values.''')
+The above code downloads the daily prices for the ETFs and the benchmark.
+We then calculate the weekly returns and drop the missing values.''')
 
 
 st.write(r'''
          An easy way to calculate the active returns is to 
-         pivot the monthly returns such that we can 
+         pivot the weekly returns such that we can 
          subtract the benchmark returns column from each ETF column.
          We then use the `melt()` method from pandas to transform the
             data back to a tidy format.
@@ -616,7 +616,7 @@ st.write(r'''
 
 st.code(r'''
 active_returns = (
-    returns_monthly
+    returns_weekly
     .pivot(index="date", columns="symbol", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
@@ -626,7 +626,7 @@ active_returns = (
         ''')
 
 active_returns = (
-    returns_monthly
+    returns_weekly
     .pivot(index="date", columns="symbol", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
@@ -645,7 +645,7 @@ st.write(r'''
 
 st.code(r'''
  cum_absolute_returns = (
-    returns_monthly
+    returns_weekly
     .pivot(index="date", columns="symbol", values="ret")
     .dropna()
     .apply(
@@ -671,7 +671,7 @@ cum_absolute_returns_figure.draw()
         ''')
 
 cum_absolute_returns = (
-    returns_monthly
+    returns_weekly
     .pivot(index="date", columns="symbol", values="ret")
     .dropna()
     .apply(
@@ -758,10 +758,11 @@ Obviously, the active returns of the benchmark
 st.subheader('Risk Factors and TRI')
 
 st.write(r'''
-         We start by downloading some famous Fama-French factors (Fama and French, 1993, 2015).
+         We start by downloading Fama-French factors (Fama and French, 1993, 2015).
          We use the `pandas_datareader` package that provides a simple interface to 
          read data from Kenneth French's website.
-         We use the `pd.DataReader()` function of the package to download monthly Fama-French factors.
+         We use the `pd.DataReader()` function of the package to download daily Fama-French factors,
+            which we then resample to weekly frequency.
          ''')
 
 
@@ -772,19 +773,21 @@ start_date = active_returns["date"].min()
 # max date in active returns df as end date
 end_date = active_returns["date"].max()
 
-factors_ff5_monthly_raw = pdr.DataReader(
+factors_ff5_dailt_raw = pdr.DataReader(
   name="F-F_Research_Data_5_Factors_2x3",
   data_source="famafrench", 
   start=start_date, 
   end=end_date)[0]
 
-factors_ff5_monthly = (factors_ff5_monthly_raw
+factors_ff5_weekly = (factors_ff5_dailt_raw
   .divide(100)
+  .resample('W-FRI')
+  .apply(lambda x: (1 + x).prod() - 1)
   .reset_index(names="date")
   .assign(
-        date=lambda x: pd.to_datetime(x["date"].astype(str)) + pd.offsets.MonthEnd(0)
-      )  
-   .rename(str.lower, axis="columns")
+        date=lambda x: pd.to_datetime(x["date"].astype(str))
+      )
+  .rename(str.lower, axis="columns")
   .rename(columns={"mkt-rf": "mkt_excess"})
 )
         ''')
@@ -795,26 +798,28 @@ start_date = active_returns["date"].min()
 end_date = active_returns["date"].max()
 
 @st.cache_data
-def get_ff_monthly() -> pd.DataFrame:
+def get_ff_daily() -> pd.DataFrame:
     return pdr.DataReader(
-    name="F-F_Research_Data_5_Factors_2x3",
+    name="F-F_Research_Data_5_Factors_2x3_daily",
     data_source="famafrench", 
     start=start_date, 
     end=end_date)[0]
 
 
-factors_ff5_monthly = (get_ff_monthly()
+factors_ff5_weekly = (get_ff_daily()
   .divide(100)
+  .resample('W-FRI')
+  .apply(lambda x: (1 + x).prod() - 1)
   .reset_index(names="date")
   # to date time and end of month
   .assign(
-        date=lambda x: pd.to_datetime(x["date"].astype(str)) + pd.offsets.MonthEnd(0)
+        date=lambda x: pd.to_datetime(x["date"].astype(str))
       )
   .rename(str.lower, axis="columns")
   .rename(columns={"mkt-rf": "mkt_excess"})
 )
 
-st.dataframe(factors_ff5_monthly.head().round(3))
+st.dataframe(factors_ff5_weekly.head().round(3))
 
 
 st.write(r'''
@@ -823,7 +828,7 @@ st.write(r'''
 
 st.code(r'''
 cum_returns_factors = (
-    factors_ff5_monthly 
+    factors_ff5_weekly 
     .set_index("date")
     .apply(
         lambda x: (1 + x).cumprod() - 1
@@ -848,7 +853,7 @@ cum_returns_factors_figure.draw()
         ''')        
 
 cum_returns_factors = (
-    factors_ff5_monthly 
+    factors_ff5_weekly 
     .set_index("date")
     .apply(
         lambda x: (1 + x).cumprod() - 1
@@ -885,14 +890,14 @@ st.write(r'''
          ''')
 
 st.code(r'''
-tri = (pd.read_excel('data/tri.xlsx', sheet_name='monthly')
+tri = (pd.read_excel('data/tri.xlsx', sheet_name='weekly')
       .rename(str.lower, axis="columns")
-      .get(['date','tri_innovation_monthly'])
+      .get(['date','tri_innovation_weekly'])
 )
         ''')
-tri = (pd.read_excel('data/tri.xlsx', sheet_name='monthly')
+tri = (pd.read_excel('data/tri.xlsx', sheet_name='weekly')
       .rename(str.lower, axis="columns")
-      .get(['date','tri_innovation_monthly'])
+      .get(['date','tri_innovation_weekly'])
 )
 
 st.write(r'''
@@ -912,7 +917,7 @@ cum_tri = (
 )
 
 cum_tri_figure = (
-    ggplot(cum_tri, aes(y="tri_innovation_monthly", x="date")) +
+    ggplot(cum_tri, aes(y="tri_innovation_weekly", x="date")) +
     geom_line() +
     geom_hline(yintercept=0, linetype="dashed") +
     labs(x="", y="",
@@ -934,7 +939,7 @@ cum_tri = (
 )
 
 cum_tri_figure = (
-    ggplot(cum_tri, aes(y="tri_innovation_monthly", x="date")) +
+    ggplot(cum_tri, aes(y="tri_innovation_weekly", x="date")) +
     geom_line() +
     geom_hline(yintercept=0, linetype="dashed") +
     # add an horizontal line in 2007 and another one in 2015
@@ -964,7 +969,7 @@ st.write(r'''
 We are going to use `statsmodels` (Seabold and Perktold, 2010) 
          to estimate the multivariate time series regression model.
          We estimate the same model than Apel et al. (2023) but
-         without the momentum factor (and with monthly instead of weekly returns). 
+         without the momentum factor. 
 
 The estimation procedure is based on a rolling-window estimation, where we can use 
 different window lenghts. Python provides a simple solution to estimate 
@@ -980,14 +985,14 @@ import statsmodels.formula.api as smf
 
 data_for_reg = (
     active_returns
-    .merge(factors_ff5_monthly, on="date", how = "inner")
+    .merge(factors_ff5_weekly, on="date", how = "inner")
     .merge(tri, on="date", how = "inner")
 )
 
 icln = data_for_reg.query('symbol == "ICLN"')
 
 model_beta = (
-    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly", data=icln)
+    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", data=icln)
     .fit()
 )
 
@@ -997,14 +1002,14 @@ import statsmodels.formula.api as smf
 
 data_for_reg = (
     active_returns
-    .merge(factors_ff5_monthly, on="date", how = "inner")
+    .merge(factors_ff5_weekly, on="date", how = "inner")
     .merge(tri, on="date", how = "inner")
 )
 
 icln = data_for_reg.query('symbol == "ICLN"')
 
 model_beta = (
-    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly", data=icln)
+    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", data=icln)
     .fit()
 )
 
@@ -1014,42 +1019,38 @@ st.write(r'''
 `sm.ols()` returns a `RegressionResults` object that 
          contains the estimated coefficients,
             standard errors, t-values, and p-values.
-         
-The model’s R-squared of 0.263 suggests that about 26.3% of the variation in 
-         ICLN’s active returns is explained by the included factors. 
-         The intercept, $\hat{\alpha}$, 
-         is not statistically significant (p = 0.390), 
-         indicating it has little influence when 
-         other variables are considered. Among the factors:
 
-- $\hat{\beta}_{1}$ (mkt_excess) is significant (p = 0.001) with a positive effect (0.613), indicating that higher market excess returns are associated with an increase in ICLN’s active returns.
-- $\hat{\beta}_{2}$ (smb) is not significant (p = 0.512), suggesting the size factor has minimal impact.
-- $\hat{\beta}_{3}$ (hml) is also not significant (p = 0.860), showing no meaningful relationship between the value factor and ICLN’s active returns.
-- $\hat{\beta}_{4}$ (rmw) lacks significance (p = 0.574), implying the profitability factor does not explain variation in ICLN’s returns.
-- $\hat{\beta}_{5}$ (cma) is marginally significant (p = 0.072) and negative (-0.9168), indicating that conservative investment strategies may be slightly negatively associated with ICLN’s active returns.
-- $\hat{\beta}_{6}$ (tri_innovation_monthly) is marginally significant (p = 0.064) and positive (33.722), suggesting that innovations in the transition risk index may positively impact ICLN’s returns, although this result is not conclusively significant.
-         ''')
+We are mostly interested by:
+- the sign of the coefficient of the TRI innovation, which indicates the direction of the relationship between the TRI innovation and the active returns.
+- the p-value of the coefficient of the TRI innovation, which indicates the statistical significance of the relationship between the TRI innovation and the active returns.
+
+In the case of the ICLN ETF, the coefficient of the TRI innovation is positive,
+incicating that when concerns about transition risks increase, the active returns of the ICLN ETF increase. This is in line with green stocks 
+outperforming in Pastors et al. (2021, 2022) when climate concerns increase.
+
+The p-value of the coefficient of the TRI innovation is 0.000, which is below the 1% significance level. 
+This indicates a strong statistical relationship between the TRI innovation and the active returns of the ICLN ETF.
+''')
 
 st.write(r'''
 We now scale the estimation of the model to all ETFs in the dataset, 
          and performing rolling-window estimation.
-         As in Apel et al. (2023), we use a window length of 60 months.
-         We require a minimimum of 48 months of data to estimate the model.
+         As in Apel et al. (2023), we use a window length of 5 years.
 The following function implements the regression.
                      ''')
 
 st.code(r'''
 from statsmodels.regression.rolling import RollingOLS
 
-window_size = 60
-min_obs = 48
+window_size = 5 * 52
+min_obs =  5 * 50
 # Function to estimate rolling t-statistics
 def roll_pvalue_estimation(data, window_size, min_obs):
     data = data.sort_values("date")
 
-    # Fit Rolling OLS and extract t-stats for tri_innovation_monthly
+    # Fit Rolling OLS and extract t-stats for tri_innovation_weekly
     result = pd.Series((RollingOLS.from_formula(
-        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly",
+        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly",
         data=data,
         window=window_size,
         min_nobs=min_obs,
@@ -1075,15 +1076,15 @@ rolling_pvalues = (
 
 from statsmodels.regression.rolling import RollingOLS
 
-window_size = 60
-min_obs = 48
+window_size = 5 * 52
+min_obs = 5 * 50
 # Function to estimate rolling t-statistics
 def roll_pvalue_estimation(data, window_size, min_obs):
     data = data.sort_values("date")
 
-    # Fit Rolling OLS and extract t-stats for tri_innovation_monthly
+    # Fit Rolling OLS and extract t-stats for tri_innovation_weekly
     result = pd.Series((RollingOLS.from_formula(
-        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_monthly",
+        formula="active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly",
         data=data,
         window=window_size,
         min_nobs=min_obs,
@@ -1110,8 +1111,8 @@ rolling_pvalues = (
 st.write(r'''
          In the above function, we retrieve the p-values of the
             regression coefficient of the TRI innovation.
-         We do it in the spirit of Apel et al. (2023) with a window size of 60 months.
-         We want to know, among our ETFs, which ones has the most significant relationship with the TRI innovation.
+         We want to know, among our ETFs, which ones has the most significant relationship with the TRI innovation,
+         and if this relationship has changed over time.
          ''')
 
 st.write(r'''
@@ -1127,6 +1128,8 @@ figures_pvalues = (
     geom_hline(yintercept=0.1, linetype="dashed", color="red") +
     geom_hline(yintercept=0.05, linetype="dashed", color="red") +
     geom_hline(yintercept=0.01, linetype="dashed", color="red") +
+    geom_vline(xintercept=pd.to_datetime("2015-12-01"), linetype="dashed") +
+    geom_vline(xintercept=pd.to_datetime("2017-06-01"), linetype="dashed") +
     labs(x="Date", y="p-value", color="Index",
          title="Rolling 5-Year Regression p-values for TRI Innovation Coefficient") +
     scale_x_datetime(date_breaks="1 year", date_labels="%Y")
@@ -1142,7 +1145,9 @@ figures_pvalues = (
     geom_hline(yintercept=0.1, linetype="dashed", color="red") +
     geom_hline(yintercept=0.05, linetype="dashed", color="red") +
     geom_hline(yintercept=0.01, linetype="dashed", color="red") +
-    labs(x="Date", y="p-value", color="Index",
+    geom_vline(xintercept=pd.to_datetime("2015-12-01"), linetype="dashed") +
+    geom_vline(xintercept=pd.to_datetime("2017-06-01"), linetype="dashed") +
+    labs(x="Date", y="p-value", color="ETF",
          title="Rolling 5-Year Regression p-values for TRI Innovation Coefficient") +
     scale_x_datetime(date_breaks="1 year", date_labels="%Y")
 )
@@ -1162,15 +1167,39 @@ When p-values fall below these thresholds, it implies a statistically significan
 - P-values below 0.05 indicate significance at the 5% level.
 - P-values below 0.01 indicate strong significance at the 1% level.
 
-Our results show:
-- **FAN** (in red): Initially shows a very significant relationship with TRI, with p-values below 0.01, indicating strong statistical significance. However, this significance diminishes over time, with p-values rising above the 0.1 threshold, suggesting a loss of significance.
-- **ICLN** (in green): Starts with a statistically significant relationship with TRI, but p-values gradually rise, approaching the 0.1 threshold, indicating a weakening significance.
-- **PBW** (in pink): Has p-values that start relatively low but increase over time, staying around the 10% threshold, indicating marginal significance.
-- **QCLN** (in blue): Generally shows higher p-values, mostly above the significance thresholds, indicating a weaker or non-significant relationship with TRI.
-- **TAN** (in purple): Similar to QCLN, with p-values largely above the significance thresholds throughout the period, suggesting a weak or non-significant relationship with TRI.
+We have also added horizontal dashed lines 
+            for the Paris Agreement in 2015 and the US withdrawal from the Paris Agreement in 2017.
+Interestingly, the p-values of the TRI innovation coefficient
+loss significance after the US withdrawal from the Paris Agreement in 2017 for most 
+ETFs, indicating a weaker relationship between the TRI innovation and the active returns.
+It may be interpreted as a loss of interest in green investments after the US withdrawal from the Paris Agreement.
+''')
 
-- There is a general upward trend in p-values for most ETFs, indicating that the significance of the relationship between TRI and active returns has weakened over time.
-- By the end of the period (around 2020–2021), most ETFs have p-values above the 5% and 10% significance thresholds, suggesting that TRI’s impact on these ETFs has become less statistically significant.
 
-In summary, as green investment portfolios, ETFs like FAN and ICLN initially showed a stronger and more significant relationship with TRI. However, this effect seems to diminish over time, and by 2021, the sensitivity of these ETFs to transition risk appears to have lessened.
+st.subheader('Conclusion')
+
+st.write(r'''
+Following Pastor et al. (2021, 2022) findings, we were looking for 
+an investable portfolio such as ETFs that could serve as a proxy for the green factor.
+To do so, we have analyzed the relationship between unexpected changes in transition concerns
+and the active returns of green ETFs, in a similar vein than Apel et al. (2023).
+We have found that the relationship between the TRI innovation and the active returns of the green ETFs
+is statistically significant and positive. 
+Therefore, the green ETFs are an investable proxy for the green factor.
+''')
+
+st.subheader('Exercice')
+
+st.write(r'''
+
+We haven't completed the analysis of the ETFs yet. In the spirit 
+of Apel et al. (2023), we also want to compare decarbonized ETFs
+to the pure-play indices ETFs in terms of the relationship between the TRI innovation and the active returns.
+
+You can complete the following tasks:
+1. Find ETFs tracking the Decarbonized indices. Download the daily prices and calculate the weekly returns.
+2. Estimate the active returns of the Decarbonized ETFs.
+3. Estimate the relationship between the TRI innovation and the active returns of the Decarbonized ETFs.
+4. Make a bar plot of the p-values of the TRI innovation coefficient for the Decarbonized ETFs.
+5. Compute the average of p-values for the Decarbonized ETFs and compare it to the average of p-values for the pure-play indices ETFs.
 ''')
