@@ -177,12 +177,29 @@ import pandas as pd
 import yfinance as yf
 
 
+
+etfs = {
+    "IWRD.L": "iShares MSCI World UCITS ETF",
+    "ICLN": "iShares Global Clean Energy ETF",
+    "QCLN": "First Trust NASDAQ Clean Edge Green Energy Index Fund",
+    "PBW": "Invesco WilderHill Clean Energy ETF",
+    "TAN": "Invesco Solar ETF",
+    "FAN": "First Trust Global Wind Energy ETF"
+}
+
+list_tickers = list(etfs.values())[1:]
+
+name_etf = st.sidebar.selectbox('Select ETF', list_tickers)
+
+# find the corresponding key
+ticker = [key for key, value in etfs.items() if value == name_etf][0]
+
 prices = (yf.download(
-    tickers="ICLN", 
+    tickers=ticker, 
     progress=False
   )
   .reset_index()
-  .assign(symbol="ICLN")
+  .assign(name = lambda x: name_etf)
   .rename(columns={
       "Date": "date",
     "Open": "open",
@@ -230,7 +247,7 @@ prices_figure = (
     ggplot(prices, aes(x="date", y="adjusted")) +
     geom_line() +
     labs(
-        title="Adjusted Prices of ICLN",
+        title="Adjusted Prices",
         x="Date",
         y="Adjusted Price"
     )
@@ -276,7 +293,7 @@ returns = (
     .assign(
         ret = lambda x: x["adjusted"].pct_change()
     )
-    .get(["symbol","date","ret"])
+    .get(["name","date","ret"])
     .dropna()
 )
 st.dataframe(returns.head().round(3))
@@ -320,7 +337,7 @@ returns_figure = (
   geom_vline(aes(xintercept=quantile_05), 
                  linetype="dashed") +
   labs(x="", y="",
-       title="Distribution of daily ICLN ETF returns") +
+       title="Distribution of daily ETF returns") +
   scale_x_continuous(labels=percent_format())
 )
 st.pyplot(returns_figure.draw())
@@ -374,138 +391,6 @@ yearly = (returns
 
 st.dataframe(yearly)
 
-st.write(r'''
-         We now generalize the above code 
-         such that the computations can handle 
-         multiple ETFs. 
-         Tidy data makes it easy to generalize the 
-         computations to multiple ETFs.
-         I have first defined a list of pure play ETFs.
-         Next, we can use `yfinance` to download the daily
-            prices for the ETFs in the list. We then 
-         transform the data into a tidy format.
-            ''')
-
-
-st.code(r'''
-list_pure_play_ETFs = ['ICLN','QCLN','PBW','TAN','FAN']
-
-prices_daily = (
-    yf.download(
-        tickers=list_pure_play_ETFs, 
-        progress=False
-    )
-)
-
-prices_daily = (prices_daily
-  .stack()
-  .reset_index()
-  .rename(columns={
-    "Date": "date",
-    "Ticker": "symbol",
-    "Open": "open",
-    "High": "high",
-    "Low": "low",
-    "Close": "close",
-    "Adj Close": "adjusted",
-    "Volume": "volume"}
-  )
-)
-        ''')
-        
-list_pure_play_ETFs = ['ICLN','QCLN','PBW','TAN','FAN']
-
-prices_daily = (
-    yf.download(
-        tickers=list_pure_play_ETFs, 
-        progress=False
-    )
-)
-
-prices_daily = (prices_daily
-  .stack()
-  .reset_index()
-  .rename(columns={
-    "Date": "date",
-    "Ticker": "symbol",
-    "Open": "open",
-    "High": "high",
-    "Low": "low",
-    "Close": "close",
-    "Adj Close": "adjusted",
-    "Volume": "volume"}
-  )
-)
-
-st.dataframe(prices_daily.head().round(3))
-
-st.write(r'''
-         We again use the `mizani` package but this time to format 
-         date to get nicer labels on the x-axis.
-            ''')
-
-st.code(r'''
-from mizani.breaks import date_breaks
-from mizani.formatters import date_format
-
-prices_daily_figure = (
-  ggplot(prices_daily, 
-         aes(y="adjusted", x="date", color="symbol")) +
- geom_line() +
- labs(x="", y="", color="",
-      title="ETF prices") +
- scale_x_datetime(date_breaks="5 years", date_labels="%Y")
-)
-        
-prices_daily_figure.draw()
-        ''')
-
-from mizani.breaks import date_breaks
-from mizani.formatters import date_format
-
-prices_daily_figure = (
-  ggplot(prices_daily, 
-         aes(y="adjusted", x="date", color="symbol")) +
- geom_line() +
- labs(x="", y="", color="",
-      title="ETF prices") +
- scale_x_datetime(date_breaks="5 years", date_labels="%Y")
-)
-st.pyplot(prices_daily_figure.draw())
-
-st.write(r'''
-This is also easy to now compute the daily returns for the ETFs.
-         ''')
-
-st.code(r'''
-   returns_daily = (prices_daily
-  .assign(ret=lambda x: x.groupby("symbol")["adjusted"].pct_change())
-  .get(["symbol", "date", "ret"])
-  .dropna(subset="ret")
-)
-
-(returns_daily
-  .groupby("symbol")["ret"]
-  .describe()
-  .round(3)
-)
-        ''')
-     
-
-returns_daily = (prices_daily
-  .assign(ret=lambda x: x.groupby("symbol")["adjusted"].pct_change())
-  .get(["symbol", "date", "ret"])
-  .dropna(subset="ret")
-)
-
-desc = (returns_daily
-  .groupby("symbol")["ret"]
-  .describe()
-  .round(3)
-)
-
-st.dataframe(desc)
-
 
 st.subheader('Resampling and Active Returns')
 
@@ -513,7 +398,7 @@ st.write(r'''
 We now want to prepare the data for the multivariate time series regression, 
 as in Apel et al. (2023). 
 We first need to resample the daily returns to weekly returns.
-We also need to calculate the active returns of the ETFs, 
+We also need to calculate the active returns of the ETF, 
 that is, the returns net of the benchmark.
          
 We can resample the daily returns to weekly returns
@@ -559,15 +444,15 @@ returns_weekly = (prices_weekly
 )
         ''')        
 
-list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
+ETF_plus_bench = [ticker] + ['IWRD.L']
+
 
 # Download and process data
 # Function to download and process data with caching
-@st.cache_data
 def get_weekly_prices():
     prices = (
         yf.download(
-            tickers=list_ETFs, 
+            tickers=ETF_plus_bench, 
             progress=False
         )
         .stack()
@@ -589,35 +474,33 @@ def get_weekly_prices():
     )
     return prices
 
+prices_weekly = get_weekly_prices()
 
-returns_weekly = (get_weekly_prices()
+returns_weekly = (prices_weekly
                   .reset_index()
     .assign(
-        ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
+        name = lambda x: x["symbol"].map(etfs),
+        ret = lambda x: x.groupby("name")["adjusted"].pct_change()
     )
-    .get(["symbol", "date", "ret"])
+    .get(["name", "date", "ret"])
     .dropna(subset="ret")
 )
 
-returns_weekly
 
 st.write(r'''
 The above code downloads the daily prices for the ETFs and the benchmark.
-We then calculate the weekly returns and drop the missing values.''')
-
-
-st.write(r'''
-         An easy way to calculate the active returns is to 
-         pivot the weekly returns such that we can 
-         subtract the benchmark returns column from each ETF column.
-         We then use the `melt()` method from pandas to transform the
-            data back to a tidy format.
+We then calculate the weekly returns and drop the missing values.
+An easy way to calculate the active returns is to 
+pivot the weekly returns such that we can 
+subtract the benchmark returns column from each ETF column.
+We then use the `melt()` method from pandas to transform the
+data back to a tidy format.
          ''')
 
 st.code(r'''
 active_returns = (
     returns_weekly
-    .pivot(index="date", columns="symbol", values="ret")
+    .pivot(index="date", columns="name", values="ret")
     .apply(lambda x: x- x["IWRD.L"], axis=1)
     .dropna()
     .reset_index()
@@ -627,14 +510,13 @@ active_returns = (
 
 active_returns = (
     returns_weekly
-    .pivot(index="date", columns="symbol", values="ret")
-    .apply(lambda x: x- x["IWRD.L"], axis=1)
+    .pivot(index="date", columns="name", values="ret")
+    .apply(lambda x: x- x["iShares MSCI World UCITS ETF"], axis=1)
     .dropna()
     .reset_index()
-    .melt(id_vars="date", var_name="symbol", value_name="active_ret")
+    .melt(id_vars="date", var_name="name", value_name="active_ret")
 )
 
-active_returns
 
 st.write(r'''
          It may be interesting to visualize the difference between the 
@@ -672,18 +554,20 @@ cum_absolute_returns_figure.draw()
 
 cum_absolute_returns = (
     returns_weekly
-    .pivot(index="date", columns="symbol", values="ret")
+    .pivot(index="date", columns="name", values="ret")
     .dropna()
     .apply(
         lambda x: (1 + x).cumprod() - 1
     )
     .reset_index()
-    .melt(id_vars="date", var_name="symbol", value_name="cum_ret")
+    .melt(id_vars="date", var_name="name", value_name="cum_ret")
 )
+
+
 
 cum_absolute_returns_figure = (
     ggplot(cum_absolute_returns, 
-         aes(y="cum_ret", x="date", color="symbol")) +
+         aes(y="cum_ret", x="date", color = "name")) +
  geom_line() +
  # horizontal line at 0
     geom_hline(yintercept=0, linetype="dashed") +
@@ -723,17 +607,17 @@ cum_active_returns_figure.draw()
 
 cum_active_returns = (
     active_returns
-    .pivot(index="date", columns="symbol", values="active_ret")
+    .pivot(index="date", columns="name", values="active_ret")
     .apply(
         lambda x: (1 + x).cumprod() - 1
     )
     .reset_index()
-    .melt(id_vars="date", var_name="symbol", value_name = "cum_ret")
+    .melt(id_vars="date", var_name="name", value_name = "cum_ret")
 )
 
 cum_active_returns_figure = (
     ggplot(cum_active_returns, 
-         aes(y="cum_ret", x="date", color="symbol")) +
+         aes(y="cum_ret", x="date", color="name")) +
  geom_line() +
  # horizontal line at 0
     geom_hline(yintercept=0, linetype="dashed") +
