@@ -2,6 +2,14 @@ import streamlit as st
 
 st.title('Green Investment Portfolios')
 
+st.write(r'''
+While we may not know if climate risks in general and transition risks 
+in particular are or will be rewarded in the future (as the literature is inconclusive),
+we know from Pastor et al. (2021, 2022) that climate concerns may lead 
+to unexpected positive returns for the green factor. Our first stage 
+is to find an easily investable proxy for the green factor. To do so,
+we are going to look after green investment portfolios.
+         ''')
 
 st.write(r'''
 Apel et al. (2023) distinguish between two different construction approaches for available
@@ -107,7 +115,7 @@ st.write(r'''
 Apel et al. (2023) propose to analyze the return sensitivity of commonly 
          used portfolio approache towards climate transition risk, 
          without a priori assumptions about the "right" approach 
-         to determine the "gree credentials" of firm characteristics.
+         to determine the "green credentials" of firm characteristics.
          The objective is to seek clarification which type of climate 
          investment approaches provide exposure to the risk and opportunities 
          associated with the transition to a low-carbon economy.
@@ -153,24 +161,7 @@ from the `yfinance` package. Data from Yahoo Finance come as a pandas DataFrame 
 ''')
 
 
-st.code(r'''
-prices = (yf.download(
-    tickers="ICLN", 
-    progress=False
-  )
-  .reset_index()
-  .assign(symbol="ICLN")
-  .rename(columns={
-      "Date": "date",
-    "Open": "open",
-    "High": "high",
-    "Low": "low",
-    "Close": "close",
-    "Adj Close": "adjusted",
-    "Volume": "volume"
-  })
-  )
-        ''')   
+
 
 import numpy as np
 import pandas as pd
@@ -211,10 +202,30 @@ prices = (yf.download(
   })
   )
 
+st.code(f'''
+prices = (
+    yf.download(
+        tickers="{ticker}", 
+        progress=False
+    )
+    .reset_index()
+    .assign(symbol="{ticker}")
+    .rename(columns={{
+        "Date": "date",
+        "Open": "open",
+        "High": "high",
+        "Low": "low",
+        "Close": "close",
+        "Adj Close": "adjusted",
+        "Volume": "volume"
+    }})
+)
+''', language='python')
+
 st.dataframe(prices.head().round(3))
 
-st.write(r'''The above snippet of code returns a dataframe 
-            with daily prices for the iShares Global Clean Energy ETF (ICLN).
+st.write(f'''The above snippet of code returns a dataframe 
+            with daily prices for the {name_etf}.
          The open, high, low, close, and adjusted close prices are
             available for each trading day. The adjusted close price
             is the closing price adjusted for dividends and splits.
@@ -226,28 +237,29 @@ Next, we use the `plotnine` (Kibirige, 2023) package to visualize the time
          series of adjusted prices. 
          ''')
 
-st.code(r'''
+st.code(f'''
 from plotnine import *
 
 prices_figure = (
     ggplot(prices, aes(x="date", y="adjusted")) +
     geom_line() +
     labs(
-        title="Adjusted Prices of ICLN",
+        title="Adjusted Prices of {ticker}",
         x="Date",
         y="Adjusted Price"
     )
 )
         
 prices_figure.draw()
-''')
+''', language='python')
+
 from plotnine import *
 
 prices_figure = (
     ggplot(prices, aes(x="date", y="adjusted")) +
     geom_line() +
     labs(
-        title="Adjusted Prices",
+        title=f"Adjusted Prices of {ticker}",
         x="Date",
         y="Adjusted Price"
     )
@@ -282,7 +294,7 @@ returns = (
     .assign(
         ret = lambda x: x["adjusted"].pct_change()
     )
-    .get(["symbol","date","ret"])
+    .get(["name","date","ret"])
     .dropna()
 )
 ''')
@@ -296,7 +308,6 @@ returns = (
     .get(["name","date","ret"])
     .dropna()
 )
-st.dataframe(returns.head().round(3))
 
 st.write(r'''
          Next, we can visualize the 
@@ -310,7 +321,7 @@ st.write(r'''
          ''')
 
 
-st.code(r'''
+st.code(f'''
 from mizani.formatters import percent_format
 
 quantile_05 = returns["ret"].quantile(0.05)
@@ -321,11 +332,11 @@ returns_figure = (
   geom_vline(aes(xintercept=quantile_05), 
                  linetype="dashed") +
   labs(x="", y="",
-       title="Distribution of daily ICLN ETF returns") +
+       title="Distribution of daily {ticker} returns") +
   scale_x_continuous(labels=percent_format())
 )
 returns_figure.draw()
-''')
+''', language='python')
 
 from mizani.formatters import percent_format
 
@@ -337,7 +348,7 @@ returns_figure = (
   geom_vline(aes(xintercept=quantile_05), 
                  linetype="dashed") +
   labs(x="", y="",
-       title="Distribution of daily ETF returns") +
+       title=f"Distribution of daily {ticker} returns") +
   scale_x_continuous(labels=percent_format())
 )
 st.pyplot(returns_figure.draw())
@@ -360,11 +371,6 @@ A typical task before proceeding is to compute summary
 st.code(r'''
         pd.DataFrame(returns["ret"].describe().round(3)).T
 ''')
-
-st.write(r'''
-         We see that the maximum daily return was 17.4\%. The 
-         average daily return is 0\%.
-         ''')
 
 pd.DataFrame(returns["ret"].describe().round(3)).T
 
@@ -395,8 +401,8 @@ st.dataframe(yearly)
 st.subheader('Resampling and Active Returns')
 
 st.write(r'''
-We now want to prepare the data for the multivariate time series regression, 
-as in Apel et al. (2023). 
+We now want to prepare the data for the multivariate time series regression.
+
 We first need to resample the daily returns to weekly returns.
 We also need to calculate the active returns of the ETF, 
 that is, the returns net of the benchmark.
@@ -407,18 +413,19 @@ Note that we have added the MSCi World ETF (IWRD.L) to the list of ETFs,
 which we use as a benchmark.         
          ''')
 
-st.code(r'''
-list_ETFs = ['IWRD.L','ICLN','QCLN','PBW','TAN','FAN']
 
-# Download and process data
-prices_weekly = (
-        yf.download(
-            tickers=list_ETFs, 
-            progress=False
-        )
+
+st.code(f'''
+        
+ETF_plus_bench = ["{ticker}","IWRD.L"]
+prices = (
+    yf.download(
+        tickers=ETF_plus_bench, 
+        progress=False
+    )
         .stack()
         .reset_index()
-        .rename(columns={
+        .rename(columns={{
             "Date": "date",
             "Ticker": "symbol",
             "Open": "open",
@@ -427,9 +434,9 @@ prices_weekly = (
             "Close": "close",
             "Adj Close": "adjusted",
             "Volume": "volume"
-        })
+        }})
         .set_index("date")
-        .groupby("symbol")["adjusted"] 
+        .groupby("name")["adjusted"] 
         .resample("W-FRI")
         .last()
     )
@@ -437,20 +444,21 @@ prices_weekly = (
 returns_weekly = (prices_weekly
                   .reset_index()
     .assign(
-        ret = lambda x: x.groupby("symbol")["adjusted"].pct_change()
+        name = lambda x: x["symbol"].map(etfs),
+        ret = lambda x: x.groupby("name")["adjusted"].pct_change()
     )
-    .get(["symbol", "date", "ret"])
+    .get(["name", "date", "ret"])
     .dropna(subset="ret")
 )
-        ''')        
+''', language='python')
+
 
 ETF_plus_bench = [ticker] + ['IWRD.L']
 
 
 # Download and process data
 # Function to download and process data with caching
-def get_weekly_prices():
-    prices = (
+prices_weekly = (
         yf.download(
             tickers=ETF_plus_bench, 
             progress=False
@@ -472,9 +480,6 @@ def get_weekly_prices():
         .resample("W-FRI")
         .last()
     )
-    return prices
-
-prices_weekly = get_weekly_prices()
 
 returns_weekly = (prices_weekly
                   .reset_index()
@@ -488,7 +493,7 @@ returns_weekly = (prices_weekly
 
 
 st.write(r'''
-The above code downloads the daily prices for the ETFs and the benchmark.
+The above code downloads the daily prices for the ETF and the benchmark.
 We then calculate the weekly returns and drop the missing values.
 An easy way to calculate the active returns is to 
 pivot the weekly returns such that we can 
@@ -501,7 +506,7 @@ st.code(r'''
 active_returns = (
     returns_weekly
     .pivot(index="date", columns="name", values="ret")
-    .apply(lambda x: x- x["IWRD.L"], axis=1)
+    .apply(lambda x: x- x["iShares MSCI World UCITS ETF"], axis=1)
     .dropna()
     .reset_index()
     .melt(id_vars="date", var_name="symbol", value_name="active_ret")
@@ -518,95 +523,9 @@ active_returns = (
 )
 
 
-st.write(r'''
-         It may be interesting to visualize the difference between the 
-         absolute returns and the active returns. 
-         We make use again of the `pivot()` and 
-            `melt()` methods from pandas.         ''')
-
-
-st.code(r'''
- cum_absolute_returns = (
-    returns_weekly
-    .pivot(index="date", columns="symbol", values="ret")
-    .dropna()
-    .apply(
-        lambda x: (1 + x).cumprod() - 1
-    )
-    .reset_index()
-    .melt(id_vars="date", var_name="symbol", value_name="cum_ret")
-)       
-
-cum_absolute_returns_figure = (
-    ggplot(cum_absolute_returns, 
-         aes(y="cum_ret", x="date", color="symbol")) +
- geom_line() +
- # horizontal line at 0
-    geom_hline(yintercept=0, linetype="dashed") +
- labs(x="", y="", color="",
-      title="Cumulative absolute returns") +
- scale_x_datetime(date_breaks="5 years", date_labels
-                    ="%Y")
-)
-
-cum_absolute_returns_figure.draw()
-        ''')
-
-cum_absolute_returns = (
-    returns_weekly
-    .pivot(index="date", columns="name", values="ret")
-    .dropna()
-    .apply(
-        lambda x: (1 + x).cumprod() - 1
-    )
-    .reset_index()
-    .melt(id_vars="date", var_name="name", value_name="cum_ret")
-)
-
-
-
-cum_absolute_returns_figure = (
-    ggplot(cum_absolute_returns, 
-         aes(y="cum_ret", x="date", color = "name")) +
- geom_line() +
- # horizontal line at 0
-    geom_hline(yintercept=0, linetype="dashed") +
- labs(x="", y="", color="",
-      title="Cumulative absolute returns") +
- scale_x_datetime(date_breaks="5 years", date_labels
-                    ="%Y")
-)
-
-st.pyplot(cum_absolute_returns_figure.draw())
-
 st.code(r'''
 cum_active_returns = (
-    active_returns
-    .pivot(index="date", columns="symbol", values="active_ret")
-    .apply(
-        lambda x: (1 + x).cumprod() - 1
-    )
-    .reset_index()
-    .melt(id_vars="date", var_name="symbol", value_name = "cum_ret")
-)
-
-cum_active_returns_figure = (
-    ggplot(cum_active_returns, 
-         aes(y="cum_ret", x="date", color="symbol")) +
- geom_line() +
- # horizontal line at 0
-    geom_hline(yintercept=0, linetype="dashed") +
- labs(x="", y="", color="",
-      title="Cumulative active returns") +
- scale_x_datetime(date_breaks="5 years", date_labels
-                    ="%Y")
-)
-
-cum_active_returns_figure.draw()
-        ''')
-
-cum_active_returns = (
-    active_returns
+    active_returns.query('name != "iShares MSCI World UCITS ETF"')
     .pivot(index="date", columns="name", values="active_ret")
     .apply(
         lambda x: (1 + x).cumprod() - 1
@@ -617,12 +536,35 @@ cum_active_returns = (
 
 cum_active_returns_figure = (
     ggplot(cum_active_returns, 
-         aes(y="cum_ret", x="date", color="name")) +
+         aes(y="cum_ret", x="date")) +
  geom_line() +
  # horizontal line at 0
     geom_hline(yintercept=0, linetype="dashed") +
  labs(x="", y="", color="",
       title="Cumulative active returns") +
+ scale_x_datetime(date_breaks="5 years", date_labels
+                    ="%Y")
+)
+        ''')
+
+cum_active_returns = (
+    active_returns.query('name != "iShares MSCI World UCITS ETF"')
+    .pivot(index="date", columns="name", values="active_ret")
+    .apply(
+        lambda x: (1 + x).cumprod() - 1
+    )
+    .reset_index()
+    .melt(id_vars="date", var_name="name", value_name = "cum_ret")
+)
+
+cum_active_returns_figure = (
+    ggplot(cum_active_returns, 
+         aes(y="cum_ret", x="date")) +
+ geom_line() +
+ # horizontal line at 0
+    geom_hline(yintercept=0, linetype="dashed") +
+ labs(x="", y="", color="",
+      title=f"Cumulative active returns of {ticker}") +
  scale_x_datetime(date_breaks="5 years", date_labels
                     ="%Y")
 )
@@ -868,19 +810,17 @@ st.code(r'''
 import statsmodels.formula.api as smf
 
 data_for_reg = (
-    active_returns
+    active_returns.query('name != "iShares MSCI World UCITS ETF"')
     .merge(factors_ff5_weekly, on="date", how = "inner")
     .merge(tri, on="date", how = "inner")
 )
 
-icln = data_for_reg.query('symbol == "ICLN"')
 
 model_beta = (
-    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", data=icln)
+    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", 
+            data=data_for_reg)
     .fit()
 )
-
-model_beta.summary()
         ''')
 import statsmodels.formula.api as smf
 
@@ -952,7 +892,7 @@ def roll_pvalue_estimation(data, window_size, min_obs):
 # Calculate rolling p-values
 rolling_pvalues = (
     data_for_reg
-    .groupby("symbol")
+    .groupby("name")
     .apply(lambda x: x.assign(
         pvalue=roll_pvalue_estimation(x, window_size, min_obs)
     ))
@@ -985,7 +925,7 @@ def roll_pvalue_estimation(data, window_size, min_obs):
 
 # Calculate rolling p-values
 rolling_pvalues = (
-    data_for_reg.query('name != "iShares MSCI World UCITS ETF"')
+    data_for_reg
     .groupby("name")
     .apply(lambda x: x.assign(
         pvalue=roll_pvalue_estimation(x, window_size, min_obs)

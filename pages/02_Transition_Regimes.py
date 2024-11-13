@@ -488,8 +488,10 @@ jm.fit(X_train_processed, ret_ser, sort_by="cumret")
 
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
-# set the jump penalty
-jump_penalty=30.
+# sidebar to choose the jump penalty, slider from 0 to 100, move 
+# from 10 to 10
+jump_penalty = st.sidebar.slider("Jump Penalty", 0., 100., 30., 10.)
+
 # initlalize the JM instance
 jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
 

@@ -299,8 +299,12 @@ end_date = "2025-01-01"
 start_date = pd.to_datetime(start_date)
 end_date = pd.to_datetime(end_date)
 
+# side bar to choose the training period, from 1 to 10 years, move by 1 year
+training_period = st.sidebar.slider('Training Period', 1, 10, 5)
+
+
 # Initialize variables
-train_period = pd.DateOffset(years=4)
+train_period = pd.DateOffset(years=training_period)
 test_period = pd.DateOffset(years=1)
 current_train_start = start_date
 current_test_start = current_train_start + train_period
