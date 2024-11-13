@@ -885,15 +885,15 @@ model_beta.summary()
 import statsmodels.formula.api as smf
 
 data_for_reg = (
-    active_returns
+    active_returns.query('name != "iShares MSCI World UCITS ETF"')
     .merge(factors_ff5_weekly, on="date", how = "inner")
     .merge(tri, on="date", how = "inner")
 )
 
-icln = data_for_reg.query('symbol == "ICLN"')
 
 model_beta = (
-    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", data=icln)
+    smf.ols("active_ret ~ mkt_excess + smb + hml + rmw + cma + tri_innovation_weekly", 
+            data=data_for_reg)
     .fit()
 )
 
@@ -908,17 +908,20 @@ We are mostly interested by:
 - the sign of the coefficient of the TRI innovation, which indicates the direction of the relationship between the TRI innovation and the active returns.
 - the p-value of the coefficient of the TRI innovation, which indicates the statistical significance of the relationship between the TRI innovation and the active returns.
 
-In the case of the ICLN ETF, the coefficient of the TRI innovation is positive,
-incicating that when concerns about transition risks increase, the active returns of the ICLN ETF increase. This is in line with green stocks 
-outperforming in Pastors et al. (2021, 2022) when climate concerns increase.
+The coefficient of the TRI innovation is positive,
+incicating that when concerns about transition risks increase, 
+         the active returns of the ICLN ETF increase. 
+         This is in line with green stocks 
+outperforming in Pastor et al. (2021, 2022) when 
+         climate concerns increase.
 
-The p-value of the coefficient of the TRI innovation is 0.000, which is below the 1% significance level. 
-This indicates a strong statistical relationship between the TRI innovation and the active returns of the ICLN ETF.
+The p-value of the coefficient of the TRI innovation is low for most ETFs. 
+This indicates a strong statistical relationship between the TRI innovation and the active returns of the 
+green ETF.
 ''')
 
 st.write(r'''
-We now scale the estimation of the model to all ETFs in the dataset, 
-         and performing rolling-window estimation.
+We now scale the estimation of the model performing rolling-window estimation.
          As in Apel et al. (2023), we use a window length of 5 years.
 The following function implements the regression.
                      ''')
@@ -982,8 +985,8 @@ def roll_pvalue_estimation(data, window_size, min_obs):
 
 # Calculate rolling p-values
 rolling_pvalues = (
-    data_for_reg
-    .groupby("symbol")
+    data_for_reg.query('name != "iShares MSCI World UCITS ETF"')
+    .groupby("name")
     .apply(lambda x: x.assign(
         pvalue=roll_pvalue_estimation(x, window_size, min_obs)
     ))
@@ -1024,7 +1027,7 @@ figures_pvalues.draw()
 
 # Plot the rolling t-statistics with dashed lines for significance levels
 figures_pvalues = (
-    ggplot(rolling_pvalues, aes(x="date", y="pvalue", color="symbol")) +
+    ggplot(rolling_pvalues, aes(x="date", y="pvalue")) +
     geom_line() +
     geom_hline(yintercept=0.1, linetype="dashed", color="red") +
     geom_hline(yintercept=0.05, linetype="dashed", color="red") +
@@ -1047,11 +1050,7 @@ The red dashed lines represent different significance levels for the p-values:
 - 0.05 for 5% significance.
 - 0.01 for 1% significance.
 
-When p-values fall below these thresholds, it implies a statistically significant relationship between TRI and the ETF’s returns at the respective level. For instance:
-- P-values below 0.05 indicate significance at the 5% level.
-- P-values below 0.01 indicate strong significance at the 1% level.
-
-We have also added horizontal dashed lines 
+We have also added vertical dashed lines 
             for the Paris Agreement in 2015 and the US withdrawal from the Paris Agreement in 2017.
 Interestingly, the p-values of the TRI innovation coefficient
 loss significance after the US withdrawal from the Paris Agreement in 2017 for most 
