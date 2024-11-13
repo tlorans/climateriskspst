@@ -1011,7 +1011,7 @@ is statistically significant and positive.
 Therefore, the green ETFs are an investable proxy for the green factor.
 ''')
 
-st.subheader('Exercice')
+st.subheader('Exercices')
 
 st.write(r'''
 

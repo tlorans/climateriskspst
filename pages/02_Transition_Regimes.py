@@ -474,17 +474,7 @@ st.write(r'''
             Finally, we call the `.fit()` method to fit the Jump Model to the training data.
             ''')
 
-st.code(r'''
-from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
-# set the jump penalty
-jump_penalty=30.
-# initlalize the JM instance
-jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
-
-# call .fit()
-jm.fit(X_train_processed, ret_ser, sort_by="cumret")
-        ''')
 
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
@@ -498,6 +488,17 @@ jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
 # call .fit()
 jm.fit(X_train_processed, ret_ser, sort_by="cumret")
 
+st.code(f'''
+from jumpmodels.jump import JumpModel                 # class of JM & CJM
+
+# set the jump penalty
+jump_penalty={jump_penalty}
+# initlalize the JM instance
+jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
+
+# call .fit()
+jm.fit(X_train_processed, ret_ser, sort_by="cumret")
+        ''')
 
 st.write(r'''
 While scaled, the cluster centroids provide insights into the characteristics of the bull and bear markets.
@@ -762,10 +763,6 @@ p_test = (
 
 st.pyplot(ggplot.draw(p_test))
 
-st.write(r'''
-         The code above plots the regime transitions of the green factor in the testing data,
-         We observe that the Jump Model successfully identifies the persistent bull and bear markets of the green factor in the testing data.
-            ''')
 
 st.subheader('Conclusion')
 
