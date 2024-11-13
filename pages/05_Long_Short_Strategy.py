@@ -28,7 +28,7 @@ st.write(r'''
 We will define a buffer period and a backtest period for our strategy backtesting:
 
 1. **Buffer Period**: In our case, we 
-         use a two-year buffer period to train the Jump Model. 
+         use a four-year buffer period to train the Jump Model. 
 We make the (strong) hypothesis that the two-year period provides enough 
 historical data to reliably detect bull and bear regimes.
 
@@ -46,7 +46,7 @@ historical data to reliably detect bull and bear regimes.
 3. **Rolling Forward**: After each backtest year, 
          we roll the window forward by one year. 
          This means that the model is retrained 
-         using the most recent two years of data, 
+         using the most recent four years of data, 
          and the inferred regimes are then used for 
          the next one-year backtest period. 
 ''')
@@ -171,6 +171,42 @@ X = (ret_ser
     .dropna()
 )
 
+st.write(r'''
+To implement this, we first need to turn our code in the previous 
+section into a function that trains the Jump Model on the training period 
+and predicts the regimes on the test period.
+         ''')
+
+st.code(r'''
+from jumpmodels.preprocess import StandardScalerPD, DataClipperStd
+from jumpmodels.jump import JumpModel                 # class of JM & CJM
+
+def train_then_predict(X:pd.DataFrame, 
+                        ret_ser:pd.Series,
+                       train_start:str, 
+                       test_start:str, 
+                       test_end:str,
+                       jump_penalty:float):
+    X_train, X_test = X[train_start:test_start], X[test_start:test_end]
+
+    clipper = DataClipperStd(mul=3.) # clip the data at 3 std. dev.
+    scalar = StandardScalerPD() # standardize the data
+    # fit on training data
+    X_train_processed = (X_train 
+                        .pipe(clipper.fit_transform)
+                        .pipe(scalar.fit_transform)
+                            )
+    # transform the test data
+    X_test_processed = (
+        X_test
+        .pipe(clipper.transform)
+        .pipe(scalar.transform)
+    )
+    jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
+    jm.fit(X_train_processed, ret_ser, sort_by="cumret")
+    return jm.predict(X_test_processed)
+        ''')
+
 from jumpmodels.preprocess import StandardScalerPD, DataClipperStd
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
@@ -199,6 +235,59 @@ def train_then_predict(X:pd.DataFrame,
     jm.fit(X_train_processed, ret_ser, sort_by="cumret")
     return jm.predict(X_test_processed)
 
+st.write(r'''
+We then can implement the rolling backtest protocol with 
+a simple while loop that iterates over the training and testing periods.
+         ''')
+
+st.code(r'''
+import datetime as dt
+
+# Define start and end dates for your rolling backtest
+start_date = "2010-01-01"
+end_date = "2025-01-01"
+
+# Convert to datetime
+start_date = pd.to_datetime(start_date)
+end_date = pd.to_datetime(end_date)
+
+# Initialize variables
+train_period = pd.DateOffset(years=4)
+test_period = pd.DateOffset(years=1)
+current_train_start = start_date
+current_test_start = current_train_start + train_period
+current_test_end = current_test_start + test_period
+
+results = []
+
+# Rolling forward until we reach the end date
+while current_test_end <= end_date:
+    # Convert dates to strings for indexing
+    train_start_str = current_train_start.strftime('%Y-%m-%d')
+    test_start_str = current_test_start.strftime('%Y-%m-%d')
+    test_end_str = current_test_end.strftime('%Y-%m-%d')
+
+    st.write(f"Training from {train_start_str} to {test_start_str}, then testing from {test_start_str} to {test_end_str}")
+
+    # Train the model and predict
+    try:
+        predictions = train_then_predict(X, ret_ser, train_start_str, test_start_str, test_end_str, jump_penalty=30)
+        results.append(predictions)
+    except Exception as e:
+        st.write(f"An error occurred during training and prediction: {e}")
+
+    # Move the window forward by 1 year
+    current_train_start += test_period
+    current_test_start = current_train_start + train_period
+    current_test_end = current_test_start + test_period
+
+# Concatenate all the results into a single DataFrame
+final_results = pd.concat(results).reset_index().rename(columns={'index': 'date', 0: 'regime'})
+
+# Plotting the predictions
+final_results['date'] = pd.to_datetime(final_results['date'])
+
+        ''')
 
 import datetime as dt
 
@@ -246,6 +335,60 @@ final_results = pd.concat(results).reset_index().rename(columns={'index': 'date'
 # Plotting the predictions
 final_results['date'] = pd.to_datetime(final_results['date'])
 
+
+st.write(r'''
+Similarly than in the previous section, we can plot the results of the backtest.
+         ''')
+
+st.code(r'''
+# Calculate the 252-day rolling average of returns
+ret_ser_rolling = ret_ser.rolling(window=126).mean().reset_index()
+ret_ser_rolling.columns = ["date", "rolling_avg_return"]
+# restrict the rolling average
+start_date_for_rolling = final_results['date'].min()
+ret_ser_rolling = ret_ser_rolling.query('date >= @start_date_for_rolling')
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = ret_ser_rolling["rolling_avg_return"].min()
+ymax = ret_ser_rolling["rolling_avg_return"].max()
+std = ret_ser_rolling["rolling_avg_return"].std()
+
+# Prepare the regimes DataFrame to get the start and end dates of each regime period
+regimes = (
+    final_results
+    .assign(
+        label=lambda x: x["regime"].map({0: "Bull", 1: "Bear"})
+    )
+)
+
+# Define start and end dates for each regime type
+regime_highlights = (
+    regimes.groupby((regimes['label'] != regimes['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(ret_ser_rolling, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+ggplot.draw(p)
+        ''')
 
 # Calculate the 252-day rolling average of returns
 ret_ser_rolling = ret_ser.rolling(window=126).mean().reset_index()
@@ -295,8 +438,85 @@ p = (
 
 st.pyplot(ggplot.draw(p))
 
+st.write(r'''
+It looks quite good! Training the model over 4 years
+seem to be sufficient to capture the bull and bear regimes in the online phase.
+         ''')
 
 st.subheader('Turning Signals into Positions')  
+
+# long the etf when the model predicts a bull regime, short when it predicts a bear regime
+long_short = (
+    final_results
+    .merge(
+        ret_ser.reset_index(name="ICLN"),
+        on="date",
+        how = 'inner'
+    )
+    # we need to shift the signal (regime) by one day to avoid look-ahead bias
+    .assign(
+        regime=lambda x: x["regime"].shift(1)
+    )
+    .assign(
+        # - clean energy when regime == 1 (bear), clean energy when regime == 0 (bull)
+        long_short = lambda x: np.where(x["regime"] == 1, -x["ICLN"], x["ICLN"])
+    )
+)
+
+
+# rolling return of the long_short
+rolling_ls = (
+    long_short
+    .get(["date", "long_short"])
+    .set_index("date")
+    .rolling(window=126).mean().reset_index()
+    .dropna()
+    .rename(columns={"long_short": "rolling_avg_return"})
+)
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = rolling_ls["rolling_avg_return"].min()
+ymax = rolling_ls["rolling_avg_return"].max()
+std = rolling_ls["rolling_avg_return"].std()
+
+# Define start and end dates for each regime type
+regime_highlights = (
+    regimes.groupby((regimes['label'] != regimes['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p_signal = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(rolling_ls, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+st.pyplot(ggplot.draw(p_signal))
+
+
+# cum_ret = (
+#     long_short
+#     .get(["date", "long_short"])
+#     .set_index("date")
+#     .assign(
+#         long_short=lambda x: (1 + x["long_short"]).cumprod() - 1
+#     )
+#     .reset_index()
+# )
 
 
 st.subheader('Performance Metrics')
