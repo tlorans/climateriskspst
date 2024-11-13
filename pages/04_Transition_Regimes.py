@@ -9,9 +9,44 @@ import yfinance as yf
 
 st.title('Transition Regimes')
 
+st.write(r'''
+While the literature is inconclusive about 
+         the transition risks pricing,
+         theoretical and empirical evidences from Pastor et al. (2021, 2022)
+         suggest that there is period of green (brown) stocks outperformance (underperformance), 
+         conditional on unexpected changes in climate concerns. 
+         While individual unexpected changes in climate concerns are by definition unpredictable,
+         analysing the TRI pattern in the previous section have shown trends in 
+         the transition concerns.
 
+In this section, we explore the opportunities presented by 
+this cyclicality through the lens of regime analysis. 
+Regime switching has gained popularity primarly due to its interpretability, as identified
+regimes can be associated with real-world events. In finance, 
+a regime may be defined by relative homogeneous market behavior, while a regime shift 
+signals an abrupt change in market dynamics.
+This framework aligns well with the green factor cyclicality, with expected outperformance 
+in periods of increasing climate concerns and underperformance in periods of decreasing climate concerns.
+
+While unsupervised learning methods such as the k-means clustering algorithm has been used to identify market regimes (DiCiurcio et al., 2024),
+Jump Models (thereafter JM) are particularly well-suited to time series data 
+         due to their incorporation of temporal information through an explicit jump penalty for each transition.
+         This approach acknowledges the persistence in financial regimes and enhances the interpretability of 
+         the identified regimes, as we do not expect frequent regime shifts.
+
+In a similar vein as the work of Shu and Mulvey (2024) with traditional factors,
+we will explore the regime analysis of the green factor, using the ICLN ETF as a proxy,
+         and a Jump Model to identify the bull and bear markets of the green factor. 
+         ''')
 
 st.subheader('Green Stocks Bull and Bear Markets')
+
+st.write(r'''
+A first stage in our analysis 
+         is to see if the green factor exhibits regime-like behavior 
+         in terms of its returns.
+            We will use the ICLN ETF active returns as a proxy for the green factor.
+         ''')
 
 st.code('''
 
@@ -55,9 +90,9 @@ active_returns = (
     .melt(id_vars="date", var_name="symbol", value_name="active_ret")
 )
 
-# 252 day moving average
+# 126 day moving average
 
-# Compute the 252-day moving average of the active returns
+# Compute the 126-day moving average of the active returns
 returns_daily_ma = (
     active_returns
     .assign(
@@ -132,14 +167,14 @@ active_returns = (
     .melt(id_vars="date", var_name="symbol", value_name="active_ret")
 )
 
-# 252 day moving average
+# 126 day moving average
 
-# Compute the 252-day moving average of the active returns
+# Compute the 126-day moving average of the active returns
 returns_daily_ma = (
     active_returns
     .assign(
         active_ret_ma=lambda x: x.groupby("symbol")["active_ret"].transform(
-            lambda x: x.rolling(window=252).mean()
+            lambda x: x.rolling(window=126).mean()
         )
     )
     .dropna(subset=["active_ret_ma"])
@@ -151,8 +186,8 @@ returns_daily_ma = (
 plot_ma = (
     ggplot(returns_daily_ma.reset_index(), aes(x="date", y="ICLN"))
     + geom_line()
-    + geom_hline(yintercept=0, linetype="dashed")
-    + scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y"))
+    + geom_hline(yintercept=0, linetype="dashed") +
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y"))
     + labs(
         x="",
         y="126-day Moving Average",
@@ -163,8 +198,26 @@ plot_ma = (
 
 st.pyplot(ggplot.draw(plot_ma))
 
+st.write(r'''
+The code above proceeds similarly to the previous section,
+            downloading the daily prices of the ICLN ETF and calculating the active returns.
+         We then compute the 126-day moving average of the active returns,
+            which is plotted above. The moving average is used to smooth out the active returns
+            and highlight the medium-term trend in the green factor.
+         We observe upward and downward trends in the moving average. This 
+         is our target for regime analysis: to identify the periods of outperformance (bull markets)
+            and underperformance (bear markets) of the green factor.
+         ''')
 
 st.subheader('Features Engineering')
+
+st.write(r'''
+To perform regime analysis, we are going to use the 
+         `jumpmodels` package (Shu and Mulvey, 2024), which provides a
+            framework for regime analysis based on jump models.
+
+                  
+         ''')
 
 ret_ser = (
     active_returns
