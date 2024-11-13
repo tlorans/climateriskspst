@@ -345,3 +345,9 @@ p = (
 )
 
 st.pyplot(ggplot.draw(p))
+
+st.subheader('Online Inference')
+
+st.subheader('Conclusion')
+
+st.subheader('Exercices')
