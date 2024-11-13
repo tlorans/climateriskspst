@@ -216,9 +216,19 @@ To perform regime analysis, we are going to use the
          `jumpmodels` package (Shu and Mulvey, 2024), which provides a
             framework for regime analysis based on jump models.
 
-                  
+To apply the jump model, we need to engineer a set of features based 
+on the active returns. We first create 
+a `pd.Series` of the active returns of the ICLN ETF, which will be used as the input to the feature engineering function.
          ''')
 
+st.code(r'''
+ret_ser = (
+    active_returns
+    .pivot(index="date", columns="symbol", values="active_ret")
+    .dropna()
+    .ICLN
+)
+         ''')
 ret_ser = (
     active_returns
     .pivot(index="date", columns="symbol", values="active_ret")
@@ -226,7 +236,78 @@ ret_ser = (
     .ICLN
 )
 
-st.write(ret_ser.head())
+st.write(r'''
+We use the features provided in the example application of the `jumpmodels` package.
+The authors provide a feature engineering function that generates a set of features based on the input return series.
+The function generates three sets of features:
+1. The exponentially weighted moving average (EWM) of the return series with halflives of 5, 20, and 60 days.
+2. The logarithm of the exponentially weighted moving downside deviation (DD) of the return series with the same halflives.
+3. The EWM Sortino ratio, which is the ratio of the EWM return to the EWM DD.
+         ''')
+
+st.code(r'''
+def compute_ewm_DD(ret_ser: pd.Series, hl: float) -> pd.Series:
+    """
+    Compute the exponentially weighted moving downside deviation (DD) for a return series.
+
+    The downside deviation is calculated as the square root of the exponentially 
+    weighted second moment of negative returns.
+
+    Parameters
+    ----------
+    ret_ser : pd.Series
+        The input return series.
+
+    hl : float
+        The halflife parameter for the exponentially weighted moving average.
+
+    Returns
+    -------
+    pd.Series
+        The exponentially weighted moving downside deviation for the return series.
+    """
+    ret_ser_neg: pd.Series = np.minimum(ret_ser, 0.)
+    sq_mean = ret_ser_neg.pow(2).ewm(halflife=hl).mean()
+    return np.sqrt(sq_mean)
+
+def feature_engineer(ret_ser: pd.Series, ver: str = "v0") -> pd.DataFrame:
+    """
+    Engineer a set of features based on a return series.
+
+    This function customizes the feature set according to the specified version string.
+
+    Parameters
+    ----------
+    ret_ser : pd.Series
+        The input return series for feature engineering.
+
+    ver : str
+        The version of feature engineering to apply. Only supports "v0".
+    
+    Returns
+    -------
+    pd.DataFrame
+        The engineered feature set.
+    """
+    if ver == "v0":
+        feat_dict = {}
+        hls = [5, 20, 60]
+        for hl in hls:
+            # Feature 1: EWM-ret
+            feat_dict[f"ret_{hl}"] = ret_ser.ewm(halflife=hl).mean()
+            # Feature 2: log(EWM-DD)
+            DD = compute_ewm_DD(ret_ser, hl)
+            feat_dict[f"DD-log_{hl}"] = np.log(DD)
+            # Feature 3: EWM-Sortino-ratio = EWM-ret/EWM-DD 
+            feat_dict[f"sortino_{hl}"] = feat_dict[f"ret_{hl}"].div(DD)
+        return pd.DataFrame(feat_dict)
+
+    # try out your favorite feature sets
+    else:
+        raise NotImplementedError()
+        ''')
+        
+
 
 def compute_ewm_DD(ret_ser: pd.Series, hl: float) -> pd.Series:
     """
@@ -289,6 +370,14 @@ def feature_engineer(ret_ser: pd.Series, ver: str = "v0") -> pd.DataFrame:
         raise NotImplementedError()
     
 
+st.code(r'''
+X = (ret_ser
+     .pipe(feature_engineer, ver="v0")
+     # replace inf values with NaN and drop them
+    .replace([np.inf, -np.inf], np.nan)
+    .dropna()
+)
+        ''')
 # Apply the feature engineering function to the return series to generate the feature set
 X = (ret_ser
      .pipe(feature_engineer, ver="v0")
@@ -299,6 +388,20 @@ X = (ret_ser
 
 st.write(X.head())
 
+st.write(r'''
+         The code above applies the feature engineering function to the active return series of the ICLN ETF.
+The function returns a DataFrame of engineered features, which will be used as the input to the Jump Model.
+         ''')         
+
+st.code(r'''
+# Train vs. Test Split
+train_start, test_start = "2009-09-29", "2022-1-1"
+X_train, X_test = X[:test_start], X[test_start:]
+
+# print time split
+train_start, train_end = X_train.index[[0, -1]]
+test_start, test_end = X_test.index[[0, -1]]
+        ''')
 
 # Train vs. Test Split
 train_start, test_start = "2009-09-29", "2022-1-1"
@@ -308,9 +411,37 @@ X_train, X_test = X[:test_start], X[test_start:]
 train_start, train_end = X_train.index[[0, -1]]
 test_start, test_end = X_test.index[[0, -1]]
 
-st.write("Training starts at:", train_start, "and ends at:", train_end)
-st.write("Testing starts at:", test_start, "and ends at:", test_end)
+st.write(fr'''
+The code above splits the engineered features into training and testing sets.
+The training set spans from the beginning of the data to the start of the testing period,
+while the testing set spans from the start of the testing period to the end of the data.
+Training starts at: {train_start} and ends at: {train_end}  ''')
 
+
+st.write(r'''
+Before feeding the data into the Jump Model, we need to preprocess the data.
+The `jumpmodels` package provides a set of preprocessing functions to standardize and clip the data.
+We use the `StandardScalerPD` and `DataClipperStd` classes to standardize and clip the data at 3 standard deviations.
+         ''')
+
+st.code(r'''
+# Preprocessing
+from jumpmodels.preprocess import StandardScalerPD, DataClipperStd
+
+clipper = DataClipperStd(mul=3.) # clip the data at 3 std. dev.
+scalar = StandardScalerPD() # standardize the data
+# fit on training data
+X_train_processed = (X_train 
+                    .pipe(clipper.fit_transform)
+                    .pipe(scalar.fit_transform)
+                        )
+# transform the test data
+X_test_processed = (
+    X_test
+    .pipe(clipper.transform)
+    .pipe(scalar.transform)
+)
+        ''')
 # Preprocessing
 from jumpmodels.preprocess import StandardScalerPD, DataClipperStd
 
@@ -328,9 +459,32 @@ X_test_processed = (
     .pipe(scalar.transform)
 )
 
-st.write(X_train_processed.head())
+st.write(r'''
+The code above applies the preprocessing steps to the training and testing sets.   
+         ''')
 
 st.subheader('Jump Model')
+
+st.write(r'''
+         We can now initialize the Jump Model and fit it to the training data.
+            We set the number of components to 2, corresponding to the bull and bear markets of the green factor.
+            We also set the jump penalty to 50, which controls the penalty for transitioning between regimes. 
+            A higher jump penalty results in fewer transitions between regimes.
+            We set `cont=False` to enforce discrete regime transitions.
+            Finally, we call the `.fit()` method to fit the Jump Model to the training data.
+            ''')
+
+st.code(r'''
+from jumpmodels.jump import JumpModel                 # class of JM & CJM
+
+# set the jump penalty
+jump_penalty=50.
+# initlalize the JM instance
+jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
+
+# call .fit()
+jm.fit(X_train_processed, ret_ser, sort_by="cumret")
+        ''')
 
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
@@ -343,7 +497,88 @@ jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
 jm.fit(X_train_processed, ret_ser, sort_by="cumret")
 
 
-st.write("Scaled Cluster Centroids:", pd.DataFrame(jm.centers_, index=["Bull", "Bear"], columns=X_train.columns))
+st.write(r'''
+While scaled, the cluster centroids provide insights into the characteristics of the bull and bear markets.
+The centroids represent the average feature values of each regime.
+We can interpret the centroids as the "typical" feature values of the bull and bear markets.
+Because the values are scaled, you should focus on the relative differences between the bull and bear markets 
+rather than the absolute values.
+         ''')
+
+st.code(r'''
+scaled_centroids = pd.DataFrame(jm.centers_, index=["Bull", "Bear"], columns=X_train.columns)
+''')
+
+scaled_centroids = pd.DataFrame(jm.centers_, index=["Bull", "Bear"], columns=X_train.columns)
+
+scaled_centroids
+
+st.write(r'''The code above extracts the scaled centroids of the bull and bear markets from the Jump Model.
+The table displays the average feature values of the bull and bear markets.
+            ''')
+
+
+st.write(r'''
+         The Jump Model assigns each data point to a regime. 
+         We can extract the regime labels from the Jump Model and visualize the regime transitions.
+            The regime labels are stored in the `labels_` attribute of the Jump Model.
+            ''')
+
+st.code(r'''
+from plotnine import *
+import pandas as pd
+from mizani.formatters import date_format
+from mizani.breaks import date_breaks
+
+# Calculate the 252-day rolling average of returns
+ret_ser_rolling = ret_ser.rolling(window=126).mean().reset_index()
+ret_ser_rolling.columns = ["date", "rolling_avg_return"]
+# restrict the rolling average to the train period
+ret_ser_rolling = ret_ser_rolling.query(f'date < "{test_start}"')
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = ret_ser_rolling["rolling_avg_return"].min()
+ymax = ret_ser_rolling["rolling_avg_return"].max()
+std = ret_ser_rolling["rolling_avg_return"].std()
+
+# Prepare the regimes DataFrame to get the start and end dates of each regime period
+regimes = (
+    jm.labels_
+    .reset_index(name="regime")
+    .assign(
+        date=lambda x: pd.to_datetime(x["date"]),
+        label=lambda x: x["regime"].map({0: "Bull", 1: "Bear"})
+    )
+)
+
+# Define start and end dates for each regime type
+regime_highlights = (
+    regimes.groupby((regimes['label'] != regimes['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(ret_ser_rolling, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+ggplot.draw(p)
+        ''')
 
 from plotnine import *
 import pandas as pd
@@ -398,6 +633,14 @@ p = (
 )
 
 st.pyplot(ggplot.draw(p))
+
+st.write(r'''
+         The code above plots the regime transitions of the green factor,
+            with the rolling average of the active returns overlaid.
+            The shaded areas represent the bull and bear markets, with green indicating the bull market and red indicating the bear market.
+            The rolling average is used to highlight the medium-term trend in the green factor.
+            We observe that the Jump Model successfully identifies the bull and bear markets of the green factor.
+            ''')
 
 st.subheader('Online Inference')
 
