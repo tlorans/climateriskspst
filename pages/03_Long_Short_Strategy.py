@@ -336,11 +336,6 @@ final_results = pd.concat(results).reset_index().rename(columns={'index': 'date'
 final_results['date'] = pd.to_datetime(final_results['date'])
 
 
-st.write(r'''
-Similarly than in the previous section, we can plot the results of the backtest.
-         ''')
-
-st.code(r'''
 # Calculate the 252-day rolling average of returns
 ret_ser_rolling = ret_ser.rolling(window=126).mean().reset_index()
 ret_ser_rolling.columns = ["date", "rolling_avg_return"]
@@ -368,80 +363,6 @@ regime_highlights = (
     .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
 )
 
-# Plot regimes with rolling average line
-p = (
-    ggplot() +
-    # Regime shaded areas using geom_rect with dynamic ymin and ymax
-    geom_rect(regime_highlights, aes(
-        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
-    ), alpha=0.3) +
-    # Rolling average line plot
-    geom_line(ret_ser_rolling, aes(x='date', y='rolling_avg_return')) +
-    geom_hline(yintercept=0, linetype="dashed") + 
-    labs(y="Rolling Avg Return", x="") +
-    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
-    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
-    theme(
-        axis_text_x=element_text(angle=45, hjust=1),
-        legend_position="none"  # Hide legend if it distracts from the main plot
-    )
-)
-
-ggplot.draw(p)
-        ''')
-
-# Calculate the 252-day rolling average of returns
-ret_ser_rolling = ret_ser.rolling(window=126).mean().reset_index()
-ret_ser_rolling.columns = ["date", "rolling_avg_return"]
-# restrict the rolling average
-start_date_for_rolling = final_results['date'].min()
-ret_ser_rolling = ret_ser_rolling.query('date >= @start_date_for_rolling')
-
-# Calculate ymin and ymax based on rolling average returns data
-ymin = ret_ser_rolling["rolling_avg_return"].min()
-ymax = ret_ser_rolling["rolling_avg_return"].max()
-std = ret_ser_rolling["rolling_avg_return"].std()
-
-# Prepare the regimes DataFrame to get the start and end dates of each regime period
-regimes = (
-    final_results
-    .assign(
-        label=lambda x: x["regime"].map({0: "Bull", 1: "Bear"})
-    )
-)
-
-# Define start and end dates for each regime type
-regime_highlights = (
-    regimes.groupby((regimes['label'] != regimes['label'].shift()).cumsum())
-    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
-    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
-)
-
-# Plot regimes with rolling average line
-p = (
-    ggplot() +
-    # Regime shaded areas using geom_rect with dynamic ymin and ymax
-    geom_rect(regime_highlights, aes(
-        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
-    ), alpha=0.3) +
-    # Rolling average line plot
-    geom_line(ret_ser_rolling, aes(x='date', y='rolling_avg_return')) +
-    geom_hline(yintercept=0, linetype="dashed") + 
-    labs(y="Rolling Avg Return", x="") +
-    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
-    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
-    theme(
-        axis_text_x=element_text(angle=45, hjust=1),
-        legend_position="none"  # Hide legend if it distracts from the main plot
-    )
-)
-
-st.pyplot(ggplot.draw(p))
-
-st.write(r'''
-It looks quite good! Training the model over 4 years
-seem to be sufficient to capture the bull and bear regimes in the online phase.
-         ''')
 
 st.subheader('Turning Signals into Positions')  
 
