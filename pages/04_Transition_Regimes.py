@@ -468,7 +468,7 @@ st.subheader('Jump Model')
 st.write(r'''
          We can now initialize the Jump Model and fit it to the training data.
             We set the number of components to 2, corresponding to the bull and bear markets of the green factor.
-            We also set the jump penalty to 50, which controls the penalty for transitioning between regimes. 
+            We also set the jump penalty to 30, which controls the penalty for transitioning between regimes. 
             A higher jump penalty results in fewer transitions between regimes.
             We set `cont=False` to enforce discrete regime transitions.
             Finally, we call the `.fit()` method to fit the Jump Model to the training data.
@@ -478,7 +478,7 @@ st.code(r'''
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
 # set the jump penalty
-jump_penalty=50.
+jump_penalty=30.
 # initlalize the JM instance
 jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
 
@@ -489,7 +489,7 @@ jm.fit(X_train_processed, ret_ser, sort_by="cumret")
 from jumpmodels.jump import JumpModel                 # class of JM & CJM
 
 # set the jump penalty
-jump_penalty=50.
+jump_penalty=30.
 # initlalize the JM instance
 jm = JumpModel(n_components=2, jump_penalty=jump_penalty, cont=False, )
 
@@ -644,6 +644,144 @@ st.write(r'''
 
 st.subheader('Online Inference')
 
+
+st.write(r'''
+         We now let the Jump Model infer the regimes of the testing data.
+         We use the `.predict()` method of the Jump Model to infer the regimes of the testing data.
+In the prediction, we use the processed testing data `X_test_processed` as input,
+and the Jump Model assigns each data point to a regime, based 
+         on the previously learned regime characteristics.
+         ''')
+
+st.code(r'''
+labels_test_online = jm.predict(X_test_processed)
+
+# plot the online inferred data with rolling average returns of the ETF for the same dates
+
+# Calculate the 252-day rolling average of returns
+ret_ser_rolling_test = ret_ser.rolling(window=126).mean().reset_index()
+ret_ser_rolling_test.columns = ["date", "rolling_avg_return"]
+# restrict the rolling average to the train period
+ret_ser_rolling_test = ret_ser_rolling_test.query(f'date >= "{test_start}"')
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = ret_ser_rolling_test["rolling_avg_return"].min()
+ymax = ret_ser_rolling_test["rolling_avg_return"].max()
+std = ret_ser_rolling_test["rolling_avg_return"].std()
+
+# Prepare the regimes DataFrame to get the start and end dates of each regime period
+regimes_test = (
+    labels_test_online
+    .reset_index(name="regime")
+    .assign(
+        date=lambda x: pd.to_datetime(x["date"]),
+        label=lambda x: x["regime"].map({0: "Bull", 1: "Bear"})
+    )
+)
+
+# Define start and end dates for each regime type
+regime_highlights_test = (
+    regimes_test.groupby((regimes_test['label'] != regimes_test['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p_test = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights_test, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(ret_ser_rolling_test, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+ggplot.draw(p_test)
+        ''')
+labels_test_online = jm.predict(X_test_processed)
+
+# plot the online inferred data with rolling average returns of the ETF for the same dates
+
+# Calculate the 252-day rolling average of returns
+ret_ser_rolling_test = ret_ser.rolling(window=126).mean().reset_index()
+ret_ser_rolling_test.columns = ["date", "rolling_avg_return"]
+# restrict the rolling average to the train period
+ret_ser_rolling_test = ret_ser_rolling_test.query(f'date >= "{test_start}"')
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = ret_ser_rolling_test["rolling_avg_return"].min()
+ymax = ret_ser_rolling_test["rolling_avg_return"].max()
+std = ret_ser_rolling_test["rolling_avg_return"].std()
+
+# Prepare the regimes DataFrame to get the start and end dates of each regime period
+regimes_test = (
+    labels_test_online
+    .reset_index(name="regime")
+    .assign(
+        date=lambda x: pd.to_datetime(x["date"]),
+        label=lambda x: x["regime"].map({0: "Bull", 1: "Bear"})
+    )
+)
+
+# Define start and end dates for each regime type
+regime_highlights_test = (
+    regimes_test.groupby((regimes_test['label'] != regimes_test['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p_test = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights_test, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(ret_ser_rolling_test, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+st.pyplot(ggplot.draw(p_test))
+
+st.write(r'''
+         The code above plots the regime transitions of the green factor in the testing data,
+         We observe that the Jump Model successfully identifies the persistent bull and bear markets of the green factor in the testing data.
+            ''')
+
 st.subheader('Conclusion')
 
+st.write(r'''
+In this section, we explored the regime analysis of the green factor using the Jump Model.
+We engineered a set of features based on the active returns of the ICLN ETF and trained the Jump Model on a subset of the data.
+The Jump Model successfully identified the bull and bear markets of the green factor.
+We visualized the regime transitions of the green factor in the training and testing data, highlighting the persistent bull and bear markets.
+        
+Therefore, while individual unexpected changes in climate concerns are unpredictable,
+we may still be able to identify trends in the transition concerns and exploit the cyclicality of the green factor,
+            as evidenced by the Jump Model's successful identification of the bull and bear markets.
+          ''')
+
 st.subheader('Exercices')
+
+st.write(r'''
+1. Experiment with different feature engineering functions in the `feature_engineer` function.
+2. Try different value for the jump penalty in the Jump Model. How does the penalty affect the regime transitions?
+3. Explore the regime transitions of other ETFs using the Jump Model.
+         ''')
