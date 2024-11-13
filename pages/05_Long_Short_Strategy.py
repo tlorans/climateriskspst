@@ -29,7 +29,7 @@ We will define a buffer period and a backtest period for our strategy backtestin
 
 1. **Buffer Period**: In our case, we 
          use a four-year buffer period to train the Jump Model. 
-We make the (strong) hypothesis that the two-year period provides enough 
+We make the (strong) hypothesis that the four-year period provides enough 
 historical data to reliably detect bull and bear regimes.
 
 2. **Backtest Period**: After the buffer period, 
@@ -445,6 +445,43 @@ seem to be sufficient to capture the bull and bear regimes in the online phase.
 
 st.subheader('Turning Signals into Positions')  
 
+st.write(r'''
+We now have a signal indicating the bull and bear regimes for the 
+         green factor. 
+We can use this signal to construct a long-short strategy:
+         ''')
+
+st.latex(r'''
+  \begin{equation}
+    r_{ls,t} =
+    \begin{cases}
+      r_{green, t},  & \text{if in bull regime in } t-1 \\
+      -r_{green, t}, & \text{if in bear regime in } t-1
+    \end{cases}
+  \end{equation}
+''')
+
+st.code(r'''
+# long the etf when the model predicts a bull regime, short when it predicts a bear regime
+long_short = (
+    final_results
+    .merge(
+        ret_ser.reset_index(name="ICLN"),
+        on="date",
+        how = 'inner'
+    )
+    # we need to shift the signal (regime) by one day to avoid look-ahead bias
+    .assign(
+        regime=lambda x: x["regime"].shift(1)
+    )
+    .assign(
+        # - clean energy when regime == 1 (bear), clean energy when regime == 0 (bull)
+        long_short = lambda x: np.where(x["regime"] == 1, -x["ICLN"], x["ICLN"])
+    )
+)
+        ''')
+        
+
 # long the etf when the model predicts a bull regime, short when it predicts a bear regime
 long_short = (
     final_results
@@ -463,6 +500,61 @@ long_short = (
     )
 )
 
+st.write(r'''
+         The code above creates a DataFrame 
+         with the long-short strategy returns, 
+         which are based on the signal from the Jump Model.
+         We take care 
+         to shift the signal by one day to avoid look-ahead bias.
+         Similarly to the previous section, we can plot the
+            performance of the long-short strategy.
+         ''')
+
+st.code(r'''
+
+# rolling return of the long_short
+rolling_ls = (
+    long_short
+    .get(["date", "long_short"])
+    .set_index("date")
+    .rolling(window=126).mean().reset_index()
+    .dropna()
+    .rename(columns={"long_short": "rolling_avg_return"})
+)
+
+# Calculate ymin and ymax based on rolling average returns data
+ymin = rolling_ls["rolling_avg_return"].min()
+ymax = rolling_ls["rolling_avg_return"].max()
+std = rolling_ls["rolling_avg_return"].std()
+
+# Define start and end dates for each regime type
+regime_highlights = (
+    regimes.groupby((regimes['label'] != regimes['label'].shift()).cumsum())
+    .agg(start_date=('date', 'first'), end_date=('date', 'last'), label=('label', 'first'))
+    .assign(ymin=ymin - std, ymax=ymax + std)  # Set ymin and ymax dynamically
+)
+
+# Plot regimes with rolling average line
+p_signal = (
+    ggplot() +
+    # Regime shaded areas using geom_rect with dynamic ymin and ymax
+    geom_rect(regime_highlights, aes(
+        xmin='start_date', xmax='end_date', ymin='ymin', ymax='ymax', fill='label'
+    ), alpha=0.3) +
+    # Rolling average line plot
+    geom_line(rolling_ls, aes(x='date', y='rolling_avg_return')) +
+    geom_hline(yintercept=0, linetype="dashed") + 
+    labs(y="Rolling Avg Return", x="") +
+    scale_fill_manual(values={"Bull": "green", "Bear": "red"}) +  # Green for Bull, Red for Bear
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(
+        axis_text_x=element_text(angle=45, hjust=1),
+        legend_position="none"  # Hide legend if it distracts from the main plot
+    )
+)
+
+ggplot.draw(p_signal)
+        ''')       
 
 # rolling return of the long_short
 rolling_ls = (
@@ -507,22 +599,176 @@ p_signal = (
 
 st.pyplot(ggplot.draw(p_signal))
 
+st.write(r'''
+         The rolling average returns of the long-short strategy
+         are mostly positive across the bull and bear regimes.
+            The strategy seems to be able to capture the
+            regime changes effectively. We can also see if the strategy
+         was profitable over the period by plotting the cumulative returns.
+            ''')
 
-# cum_ret = (
-#     long_short
-#     .get(["date", "long_short"])
-#     .set_index("date")
-#     .assign(
-#         long_short=lambda x: (1 + x["long_short"]).cumprod() - 1
-#     )
-#     .reset_index()
-# )
+st.code(r'''
+cum_ret = (
+    long_short
+    .get(["date", "long_short"])
+    .set_index("date")
+    .assign(
+        long_short=lambda x: (1 + x["long_short"]).cumprod() - 1
+    )
+    .reset_index()
+)
+
+plot_cum_ret = (
+    ggplot(cum_ret) +
+    geom_line(aes(x="date", y="long_short")) +
+    labs(y="Cumulative Return", x="") +
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(axis_text_x=element_text(angle=45, hjust=1))
+)
+
+ggplot.draw(plot_cum_ret)
+        ''')
+
+cum_ret = (
+    long_short
+    .get(["date", "long_short"])
+    .set_index("date")
+    .assign(
+        long_short=lambda x: (1 + x["long_short"]).cumprod() - 1
+    )
+    .reset_index()
+)
+
+plot_cum_ret = (
+    ggplot(cum_ret) +
+    geom_line(aes(x="date", y="long_short")) +
+    labs(y="Cumulative Return", x="") +
+    scale_x_datetime(breaks=date_breaks("1 year"), labels=date_format("%Y")) +
+    theme(axis_text_x=element_text(angle=45, hjust=1))
+)
+
+st.pyplot(ggplot.draw(plot_cum_ret))
 
 
 st.subheader('Performance Metrics')
 
+st.write(r'''
+            We can evaluate the performance of the long-short strategy
+            by calculating the average return, the standard deviation of the return,
+            and the Sharpe ratio.
+         
+            The Sharpe ratio is a measure of risk-adjusted return,
+            which is calculated as the ratio of the average return to the standard deviation.
+            A higher Sharpe ratio indicates a better risk-adjusted return.
+            ''')
+
+st.code(r'''
+def evaluate_performance(ret_strats,
+                       length_year=252):
+    """Calculate portfolio evaluation measures."""
+
+    evaluation_stats = (ret_strats
+        .groupby("strat")["ret"]
+        .aggregate([
+          ("Average return", lambda x: np.mean(length_year*x)*100),
+          ("SD return", lambda x: np.std(x)*np.sqrt(length_year)*100),
+          ("Sharpe ratio", lambda x: (np.mean(x)/np.std(x)* 
+                                        np.sqrt(length_year)))
+        ])
+    )
+        
+    evaluation_stats = (evaluation_stats
+      .transpose()
+      .rename_axis(columns=None)
+    )
+
+    return evaluation_stats
+        ''')
+
+def evaluate_performance(ret_strats,
+                       length_year=252):
+    """Calculate portfolio evaluation measures."""
+
+    evaluation_stats = (ret_strats
+        .groupby("strat")["ret"]
+        .aggregate([
+          ("Average return", lambda x: np.mean(length_year*x)*100),
+          ("SD return", lambda x: np.std(x)*np.sqrt(length_year)*100),
+          ("Sharpe ratio", lambda x: (np.mean(x)/np.std(x)* 
+                                        np.sqrt(length_year)))
+        ])
+    )
+        
+    evaluation_stats = (evaluation_stats
+      .transpose()
+      .rename_axis(columns=None)
+    )
+
+    return evaluation_stats
+
+st.write(r'''The code above implements the function `evaluate_performance` that calculates our performance metrics.''')
+
+
+st.write(r'''We add the market return to the DataFrame and evaluate the performance of the long-short strategy,
+        the benchmark and the initial green ETF.''')
+
+st.code(r'''
+market = (returns_daily
+          .query("symbol == 'IWRD.L'")
+          .set_index("date")
+          .ret
+          .reset_index(name = "IWRD.L")
+)
+
+ret_strats = (
+    long_short 
+    .drop(columns = ['regime'])
+    .merge(market, on = 'date', how = 'inner')
+    .melt(id_vars = ['date'], var_name = 'strat', value_name = 'ret')
+)
+
+
+perf = evaluate_performance(ret_strats)
+        ''')
+
+market = (returns_daily
+          .query("symbol == 'IWRD.L'")
+          .set_index("date")
+          .ret
+          .reset_index(name = "IWRD.L")
+)
+
+ret_strats = (
+    long_short 
+    .drop(columns = ['regime'])
+    .merge(market, on = 'date', how = 'inner')
+    .melt(id_vars = ['date'], var_name = 'strat', value_name = 'ret')
+)
+
+
+perf = evaluate_performance(ret_strats)
+perf
+
+st.write(r'''
+Our long-short strategy significantly outperforms the benchmark and the initial green ETF.
+         ''')
 
 st.subheader('Conclusion')
 
+st.write(r'''
+In this section, we implemented a long-short strategy based on the Jump Model signal.
+We trained the model over a four-year period and then used the inferred regimes to construct the strategy.
+The strategy dynamically changes positions based on the signal, allowing us to evaluate its performance in real-time.
+We found that the long-short strategy significantly outperformed the benchmark and the initial green ETF.
+         This demonstrates that investors can benefit from the green factor outperformance (underperformance) regimes
+            by actively adjusting their portfolio positions.
+            ''')
+
+
 
 st.subheader('Exercices')
+
+st.write(r'''
+1. **Backtesting Protocol**: Implement the backtesting protocol with a different buffer period and backtest period.
+2. **Performance Metrics**: Implement a function that calculates the maximum drawdown of a return series.
+''')
