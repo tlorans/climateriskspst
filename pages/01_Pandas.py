@@ -139,4 +139,28 @@ print(data.melt(id_vars=['Date'], value_vars=['TRI_innovation_weekly'], var_name
 
 st.dataframe(data.melt(id_vars=['Date'], value_vars=['TRI_innovation_weekly'], var_name='TRI', value_name='value'))
 
-st.subheader('Pipeline')
+st.subheader('Chaining Methods')
+
+st.write("""
+         Pandas also supports method chaining, which allows you to perform multiple operations.""")
+
+
+st.code('''
+results = (
+    pd.read_excel('data/tri.xlsx', sheet_name="weekly")
+    .query('Date > "2020-01-01"')
+    .rename(columns={"Date": "date"})
+    .assign(cum_tri = lambda x: x['TRI_innovation_weekly'].rolling(4).mean())
+    .get(['date', 'cum_tri', 'TRI_innovation_weekly'])
+)
+        ''', language='python')
+
+results = (
+    pd.read_excel('data/tri.xlsx', sheet_name="weekly")
+    .query('Date > "2020-01-01"')
+    .rename(columns={"Date": "date"})
+    .assign(cum_tri = lambda x: x['TRI_innovation_weekly'].rolling(4).mean())
+    .get(['date', 'cum_tri', 'TRI_innovation_weekly'])
+)
+
+st.dataframe(results)
