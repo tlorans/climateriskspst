@@ -112,20 +112,7 @@ st.plotly_chart(fig2)
 
 st.write(r"""
         This is the specificity of climate risks, taken into account 
-in the PST model. In this model, there is a continuum of investors $i$. 
-Investors have different beliefs about future climate risks. 
-$c_i \geq 0$ is a scalar that represents the investor's perception 
-of the impact of climate risks. If 
-$c_i = 0$, the investor does not think that 
-climate risks will have an impact on the economy,
-or will happen at all. Climate risks enter the investor $i$ utility function
-as $c_i \tilde{C}_1$.
-Figure below shows the impact of climate shocks 
-on the investor $i$ utility. This is exactly the same as the
-previous one, representing the ambiguity in the economic impact
-of climate shocks. This formulation, with $c_i$ representing the investor's perception
-of the impact of climate risks, allows to take into account the ambiguity
-component of climate change uncertainty.
+in the PST model. 
 """)
 
 utility_impact = simulate_economic_impact(0, c_i_variable, 1, num_simulations)

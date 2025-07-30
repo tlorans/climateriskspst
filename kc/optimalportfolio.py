@@ -4,10 +4,21 @@ import plotly.graph_objs as go
 import numpy as np
 
 
-st.title("Optimal Portfolio with Climate Change Uncertainty")
+st.title("Optimal Portfolio with Heterogeneous Beliefs about Climate Risks")
 
 st.write(r"""
+In the PST, there is a continuum of investors $i$. 
+Investors have different beliefs about future climate risks. 
+$c_i \geq 0$ is a scalar that represents the investor's perception 
+of the impact of climate risks. If 
+$c_i = 0$, the investor does not think that 
+climate risks will have an impact on the economy,
+or will happen at all. Climate risks enter the investor $i$ utility function
+as $c_i \tilde{C}_1$.
 
+This formulation, with $c_i$ representing the investor's perception
+of the impact of climate risks, allows to take into account the ambiguity
+component of climate change uncertainty.
 To see the implications of climate change uncertainty in 
 a CAPM model, we first need to extend a bit the model.
 We have $N$ firms, and we denote $\tilde{r}_1$ the
@@ -59,7 +70,7 @@ investor $i$ seeks to maximize its expected utility.
 We obtain the first order conditions 
 by computing the expectation of the utility function 
 and differentiating it with respect to $X_i$ (
-see the companion paper for details).
+see the footnote for the full derivation).
 The investor $i$'s portfolio weights $X_i$ are:
 """)
 
@@ -123,8 +134,8 @@ fig.add_trace(go.Scatter(
 ))
 
 fig.update_layout(
-    title=f'Portfolio Weights vs. Covariance with Climate Transition Risk',
-    xaxis_title='Covariance Between Unexpected Returns and Climate Transition Risk',
+    title=f'Portfolio Weights vs. Covariance with Climate Risk',
+    xaxis_title='Covariance Between Unexpected Returns and Climate Risk',
     yaxis_title='Portfolio Weight',
     template='plotly_white'
 )
